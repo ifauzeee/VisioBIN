@@ -47,6 +47,10 @@ __pycache__/
 *.py[cod]
 /ai-model/runs/
 /ai-model/weights/
+/ai-model/visiobin_cls_dataset/
+/ai-model/archive/
+*.zip
+*.pt
 *.tflite
 *.onnx
 

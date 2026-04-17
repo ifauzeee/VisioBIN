@@ -37,7 +37,7 @@ def main():
         for cls_name in ["Organic", "Inorganic"]:
             (base_dst / split / cls_name).mkdir(parents=True, exist_ok=True)
 
-    print("🚀 Mulai mengatur dataset classification YOLOv5...")
+    print("Mulai mengatur dataset classification YOLOv5...")
 
     # Mapping nama Kaggle ke nama kelas AI kita
     mapping = {
@@ -53,7 +53,7 @@ def main():
             dst_dir = base_dst / "train" / dst_cls
             if src_dir.exists():
                 files = list(src_dir.glob("*.jpg"))
-                print(f"📦 Copying {len(files)} files dari TRAIN/{src_cls} ke train/{dst_cls}...")
+                print(f"Copying {len(files)} files dari TRAIN/{src_cls} ke train/{dst_cls}...")
                 for f in files:
                     shutil.copy2(f, dst_dir / f.name)
 
@@ -65,12 +65,12 @@ def main():
             dst_dir = base_dst / "val" / dst_cls
             if src_dir.exists():
                 files = list(src_dir.glob("*.jpg"))
-                print(f"📦 Copying {len(files)} files dari TEST/{src_cls} ke val/{dst_cls}...")
+                print(f"Copying {len(files)} files dari TEST/{src_cls} ke val/{dst_cls}...")
                 for f in files:
                     shutil.copy2(f, dst_dir / f.name)
 
-    print("✅ Berhasil! Dataset siap digunakan untuk YOLOv5-cls.")
-    print("   Upload folder 'visiobin_cls_dataset' tersebut (di zip lebih dulu) ke Google Drive untuk ditraining di Colab!")
+    print("Berhasil! Dataset siap digunakan untuk YOLOv5-cls.")
+    print("Upload folder 'visiobin_cls_dataset' tersebut (di zip lebih dulu) ke Google Drive untuk ditraining di Colab!")
 
 if __name__ == "__main__":
     main()

@@ -155,7 +155,7 @@ func main() {
 	client := &http.Client{Timeout: 5 * time.Second}
 
 	fmt.Println("🔑 Logging in...")
-	loginBody := map[string]string{"username": "admin", "password": "admin123"}
+	loginBody := map[string]string{"username": "admin2", "password": "admin123"}
 	loginJSON, _ := json.Marshal(loginBody)
 
 	resp, err := client.Post(baseURL+"/auth/login", "application/json", bytes.NewBuffer(loginJSON))

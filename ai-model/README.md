@@ -65,4 +65,4 @@ Setelah di-download, taruh file model kamu (`best.pt`) ke dalam folder `ai-model
 2. Pastikan sudah install dependensi: 
    `pip install torch torchvision torchaudio opencv-python numpy`
 3. Hitupkan Webcam laptop dan tes:
-   `python test_inference_cls.py --weights best.pt`
+   `py test_inference_cls.py --weights best.pt`
