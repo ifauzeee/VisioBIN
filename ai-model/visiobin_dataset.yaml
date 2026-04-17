@@ -1,0 +1,13 @@
+# Dataset Configuration for VisioBin YOLOv5n
+# Update the path to point to your actual dataset directory
+
+path: ../datasets/visiobin_dataset # root dir
+train: images/train
+val: images/val
+test: images/test # optional
+
+# Classes
+nc: 2
+names:
+  0: organic
+  1: inorganic
