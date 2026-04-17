@@ -1,59 +1,68 @@
-# 🧠 VisioBin AI Model (YOLOv5n)
+# 🧠 VisioBin AI Model (YOLOv5 Classification)
 
-Mengingat laptop lokal seringkali belum ter-setup dengan Python dan GPU (CUDA), sangan disarankan untuk melakukan *Training* model di **Google Colab** secara gratis.
+Mengingat dataset kaggle yang kita gunakan adalah kumpulan foto *"full image"* tanpa _bounding box_, maka kita akan melatih model **YOLOv5 - Classification** (`yolov5n-cls.pt`). AI ini akan menjawab: *"Foto ini kelasnya Organik atau Anorganik?"*
 
-Folder ini menyimpan konfigurasi dataset dan script pengetesan *real-time* dengan webcam.
+Disarankan untuk melakukan *Training* model di **Google Colab** secara gratis karena butuh GPU.
 
-## 🚀 Langkah 1: Kumpulkan Dataset
-1. Kumpulkan dataset foto sampah (minimal 300-500 foto, campur organik dan anorganik).
-2. Lakukan anotasi *Bounding-Box* (bisa menggunakan [Roboflow](https://roboflow.com/) agar mudah direlasikan bentuk YOLOv5 PyTorch).
-3. Export dataset dari Roboflow.
+## 🚀 Langkah 1: Format Kaggle Dataset
+Agar bisa dilatih oleh YOLOv5-cls, dataset kamu sudah kita format ke struktur seperti ini otomatis oleh sistem:
 
-Struktur folder hasil export harus seperti ini:
 ```text
-visiobin_dataset/
+visiobin_cls_dataset/
   ├── train/
-  │   ├── images/
-  │   └── labels/
-  ├── valid/
-  │   ├── images/
-  │   └── labels/
-  └── visiobin_dataset.yaml
+  │   ├── Organic/
+  │   └── Inorganic/
+  └── val/
+      ├── Organic/
+      └── Inorganic/
 ```
+
+**Tugasmu:** Buka folder `ai-model` di laptopmu, jadikan folder `visiobin_cls_dataset` menjadi zip (`visiobin_cls_dataset.zip`) lalu **Upload ZIP itu ke Google Drive kamu**.
 
 ## 🚀 Langkah 2: Training di Google Colab
 1. Buka [Google Colab](https://colab.research.google.com/).
 2. Buat Notebook baru, lalu **pilih runtime T4 GPU** (Runtime > Change runtime type > T4 GPU).
-3. Jalankan kode di bawah ini pada cell (copy paste):
+3. Jalankan kode di bawah ini pada cell satu-per-satu (copy paste):
 
+### 1. Mount Google Drive & Setup YOLO
 ```python
-# 1. Clone YOLOv5
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Install YOLOv5 dari ultralytics
 !git clone https://github.com/ultralytics/yolov5
 %cd yolov5
 !pip install -qr requirements.txt
+```
 
-# 2. Download Dataset dari Roboflow (ganti dengan link export-mu)
-!pip install roboflow
-# Paste import code snippet dari roboflow di cell sini...
+### 2. Copy Dataset dari GDrive
+```python
+# Sesuaikan path-nya jika kamu taruh zip di dalam folder/sub-folder
+!cp /content/drive/MyDrive/visiobin_cls_dataset.zip /content/
+!unzip /content/visiobin_cls_dataset.zip -d /content/dataset/
+```
 
-# 3. Mulai Training! (kita pakai yolov5n karena paling kecil & ringan untuk Raspberry Pi)
-!python train.py --img 416 --batch 16 --epochs 100 --data ../visiobin_dataset/data.yaml --weights yolov5n.pt --cache
+### 3. Mulai Training (Classification Mode - 20 Epoch)
+```python
+# Kita menggunakan modul "classify/train.py" khusus classification
+!python classify/train.py --model yolov5n-cls.pt --data /content/dataset/visiobin_cls_dataset --epochs 20 --img 224
 ```
 
 ## 🚀 Langkah 3: Ekspor untuk Raspberry Pi (ONNX/TFLite)
-Model hasil training (`best.pt`) bisa langsung dijalankan, tetapi untuk Raspberry Pi disarankan mengekspor ke `.onnx` atau `.tflite` agar lebih cepat:
+Model hasil training biasanya ada di `runs/train-cls/exp/weights/best.pt`.
+Ekspor ke format yang ringan untuk Raspberry Pi:
 
 ```python
 # Jalankan di Colab setelah training selesai
-!python export.py --weights runs/train/exp/weights/best.pt --include onnx tflite --img 416
+!python export.py --weights runs/train-cls/exp/weights/best.pt --include onnx tflite --img 224
 ```
-Kemudian **Download** file `best.onnx` atau `best.tflite` yang di-generate.
+Kemudian **Download** file `best.pt`, `best.onnx`, atau `best.tflite` dari navigasi file Colab di sebelah kiri layarmu.
 
 ## 🚀 Langkah 4: Test Real-Time di Laptop Kamu
-Setelah di-download, taruh file model kamu (misal: `best.pt`) ke dalam folder `ai-model/` ini.
+Setelah di-download, taruh file model kamu (`best.pt`) ke dalam folder `ai-model/` ini.
 
 1. Buka terminal (CMD / PowerShell).
 2. Pastikan sudah install dependensi: 
    `pip install torch torchvision torchaudio opencv-python numpy`
 3. Hitupkan Webcam laptop dan tes:
-   `python test_inference.py --weights best.pt`
+   `python test_inference_cls.py --weights best.pt`
