@@ -1,0 +1,54 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/backend/bin/
+
+# Go
+/backend/vendor/
+/backend/tmp/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (web-dashboard)
+/web-dashboard/node_modules/
+/web-dashboard/.next/
+/web-dashboard/out/
+
+# Flutter (mobile-app)
+/mobile-app/.dart_tool/
+/mobile-app/.packages
+/mobile-app/build/
+/mobile-app/.flutter-plugins
+/mobile-app/.flutter-plugins-dependencies
+
+# Python (ai-model)
+__pycache__/
+*.py[cod]
+/ai-model/runs/
+/ai-model/weights/
+*.tflite
+*.onnx
+
+# Logs
+*.log

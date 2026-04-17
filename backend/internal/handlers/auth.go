@@ -1,0 +1,158 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/ifauze/visiobin/internal/middleware"
+	"github.com/ifauze/visiobin/internal/models"
+	"github.com/ifauze/visiobin/internal/repository"
+	"golang.org/x/crypto/bcrypt"
+)
+
+// AuthHandler handles authentication endpoints.
+type AuthHandler struct {
+	userRepo  *repository.UserRepository
+	jwtSecret string
+	jwtExpiry int
+}
+
+func NewAuthHandler(ur *repository.UserRepository, secret string, expiry int) *AuthHandler {
+	return &AuthHandler{userRepo: ur, jwtSecret: secret, jwtExpiry: expiry}
+}
+
+// Login authenticates a user and returns a JWT token.
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req models.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Invalid request body",
+		})
+		return
+	}
+
+	if req.Username == "" || req.Password == "" {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Username and password are required",
+		})
+		return
+	}
+
+	user, err := h.userRepo.GetByUsername(r.Context(), req.Username)
+	if err != nil {
+		writeJSON(w, http.StatusUnauthorized, models.APIResponse{
+			Success: false, Message: "Invalid username or password",
+		})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		writeJSON(w, http.StatusUnauthorized, models.APIResponse{
+			Success: false, Message: "Invalid username or password",
+		})
+		return
+	}
+
+	token, err := middleware.GenerateToken(user, h.jwtSecret, h.jwtExpiry)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to generate token",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, models.APIResponse{
+		Success: true,
+		Data: models.AuthResponse{
+			Token: token,
+			User:  *user,
+		},
+	})
+}
+
+// Register creates a new user account.
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var req models.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Invalid request body",
+		})
+		return
+	}
+
+	if req.Username == "" || req.Email == "" || req.Password == "" {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Username, email, and password are required",
+		})
+		return
+	}
+
+	if len(req.Password) < 6 {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Password must be at least 6 characters",
+		})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to hash password",
+		})
+		return
+	}
+
+	user, err := h.userRepo.Create(r.Context(), req.Username, req.Email, string(hashedPassword), req.FullName)
+	if err != nil {
+		writeJSON(w, http.StatusConflict, models.APIResponse{
+			Success: false, Message: "Username or email already exists",
+		})
+		return
+	}
+
+	token, err := middleware.GenerateToken(user, h.jwtSecret, h.jwtExpiry)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "User created but failed to generate token",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, models.APIResponse{
+		Success: true,
+		Data: models.AuthResponse{
+			Token: token,
+			User:  *user,
+		},
+	})
+}
+
+// UpdateFCMToken updates the user's FCM push notification token.
+func (h *AuthHandler) UpdateFCMToken(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetUserClaims(r)
+	if claims == nil {
+		writeJSON(w, http.StatusUnauthorized, models.APIResponse{Success: false, Message: "Unauthorized"})
+		return
+	}
+
+	var body struct {
+		FCMToken string `json:"fcm_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.FCMToken == "" {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "fcm_token is required",
+		})
+		return
+	}
+
+	if err := h.userRepo.UpdateFCMToken(r.Context(), claims.UserID, body.FCMToken); err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to update FCM token",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, models.APIResponse{
+		Success: true, Message: "FCM token updated",
+	})
+}
