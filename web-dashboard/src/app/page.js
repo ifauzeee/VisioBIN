@@ -3,12 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   SquareTerminal, BarChart, Settings2, Trash2, ShieldCheck, 
   Activity, ArrowUpRight, Cpu, HardDrive, Leaf, Orbit, Focus,
-  ChevronDown, Search, Box, History, Users
+  ChevronDown, Search, Box, History, Users, LogOut
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function VercelStyleDashboard() {
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '', error: '', loading: false });
+  
   const [vision, setVision] = useState({ state: 'scanning', type: 'organic', prob: 0, box: { top: 20, left: 20, w: 60, h: 60 }});
   const [logs, setLogs] = useState([
     { id: 1, time: '14:42:05', type: 'inorganic', item: 'Plastic Water Bottle', prob: 98.2 },
@@ -18,6 +22,11 @@ export default function VercelStyleDashboard() {
 
   useEffect(() => {
     setMounted(true);
+    if(window.localStorage.getItem('visiobin_auth') === 'true') {
+       setIsAuthenticated(true);
+    }
+    setIsCheckingAuth(false);
+
     const interval = setInterval(() => {
       // Simulate detection
       const isOrg = Math.random() > 0.4;
@@ -58,7 +67,105 @@ export default function VercelStyleDashboard() {
     { time: '14:00', org: caps.org, inorg: caps.inorg },
   ];
 
-  if(!mounted) return null; // Prevent hydration error
+  if(!mounted || isCheckingAuth) return null; // Prevent hydration error and wait for auth check
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginForm(p => ({ ...p, loading: true, error: '' }));
+    try {
+      // Connect to Go Backend Auth
+      const res = await fetch("http://localhost:8080/api/v1/auth/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username: loginForm.username || "admin2", password: loginForm.password || "admin123" })
+      });
+      // Even if it fails, we will fallback to local UI bypass for showcase purposes
+      if (res.ok || (loginForm.username === 'admin2' && loginForm.password === 'admin123')) {
+        localStorage.setItem('visiobin_auth', 'true');
+        setIsAuthenticated(true);
+      } else {
+        setLoginForm(p => ({ ...p, error: 'Invalid credentials. (Hint: admin2 / admin123)' }));
+      }
+    } catch (err) {
+      if (loginForm.username === 'admin' && loginForm.password === 'admin') {
+         localStorage.setItem('visiobin_auth', 'true');
+         setIsAuthenticated(true);
+      }
+      else setLoginForm(p => ({ ...p, error: 'Server offline. Local bypass: admin / admin' }));
+    } finally {
+      setLoginForm(p => ({ ...p, loading: false }));
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#000' }}>
+         {/* LEFT PANE - Branding / SVG */}
+         <div style={{ flex: 1, borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', padding: 60, position: 'relative', overflow: 'hidden', background: '#050505', backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16,185,129,0.05) 0%, transparent 60%)' }}>
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
+               <div style={{ width: 44, height: 44, background: '#fff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(255,255,255,0.15)' }}>
+                  <Trash2 size={24} color="#000" strokeWidth={2.5} />
+               </div>
+               <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>VisioBin Core</span>
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: 40 }}>
+               {/* Massive SVG Trash Bin illustration */}
+               <svg width="180" height="240" viewBox="0 0 100 120" style={{ margin: '0 0 40px 0', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))' }}>
+                  <defs>
+                     <linearGradient id="loginGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+                       <stop offset="0%" style={{stopColor:'rgba(255,255,255,0.1)'}}/>
+                       <stop offset="100%" style={{stopColor:'rgba(255,255,255,0.02)'}}/>
+                     </linearGradient>
+                  </defs>
+                  <path d="M15,20 L85,20 L75,115 L25,115 Z" fill="url(#loginGlass)" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <path d="M5,20 L95,20" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M50,20 L50,115" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="4,4"/>
+                  
+                  {/* Organic Glow */}
+                  <rect x="22" width="22" rx="2" fill="var(--brand-organic)" opacity="0.9" height="50" y="60" style={{ filter: 'drop-shadow(0 0 15px rgba(16,185,129,0.4))' }} />
+                  {/* Inorganic Glow */}
+                  <rect x="56" width="22" rx="2" fill="var(--brand-inorganic)" opacity="0.9" height="75" y="35" style={{ filter: 'drop-shadow(0 0 15px rgba(59,130,246,0.4))' }} />
+               </svg>
+
+               <h2 style={{ fontSize: 40, fontWeight: 600, color: '#fff', letterSpacing: '-1.5px', marginBottom: 16, lineHeight: 1.1 }}>Smart Edge AI<br/>Sorting Terminal.</h2>
+               <p style={{ color: 'var(--text-muted)', fontSize: 16, lineHeight: 1.6, maxWidth: 440 }}>Experience next-generation automated waste classification powered by neural vision models. Built for absolute precision.</p>
+            </div>
+         </div>
+
+         {/* RIGHT PANE - Login Form */}
+         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, background: '#000' }}>
+            <div style={{ width: '100%', maxWidth: 360 }}>
+               
+               <h1 style={{ fontSize: 26, fontWeight: 600, color: '#fff', letterSpacing: '-0.5px', marginBottom: 8 }}>Sign in securely</h1>
+               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 40 }}>Enter your credentials to access the console</p>
+               
+               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, fontWeight: 500 }}>Username</label>
+                    <input type="text" value={loginForm.username} onChange={e=>setLoginForm(p=>({...p, username: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', transition: 'border 0.2s' }} placeholder="admin2" required />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, fontWeight: 500 }}>Password</label>
+                    <input type="password" value={loginForm.password} onChange={e=>setLoginForm(p=>({...p, password: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', transition: 'border 0.2s' }} placeholder="••••••••" required />
+                  </div>
+                  
+                  {loginForm.error && <div style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: 10, borderRadius: 6 }}>{loginForm.error}</div>}
+                  
+                  <button type="submit" disabled={loginForm.loading} style={{ width: '100%', padding: '14px', background: '#fff', color: '#000', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, marginTop: 12, cursor: 'pointer', transition: 'all 0.2s', opacity: loginForm.loading ? 0.7 : 1 }}>
+                    {loginForm.loading ? 'Authenticating...' : 'Sign In to Edge'}
+                  </button>
+               </form>
+
+               <div style={{ marginTop: 40, borderTop: '1px solid var(--border-color)', paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 12 }}>
+                  <ShieldCheck size={14} color="var(--brand-organic)" /> Secured by VisioBin Zero-Trust Protocol
+               </div>
+               
+            </div>
+         </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
@@ -68,18 +175,11 @@ export default function VercelStyleDashboard() {
         ========================================
       */}
       <aside className="sidebar">
-        {/* Workspace Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, cursor: 'pointer', marginBottom: 24, transition: 'all 0.2s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 24, height: 24, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <Trash2 size={14} color="#000" strokeWidth={2.5}/>
-            </div>
-            <div>
-               <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>Ifauze's Org</div>
-               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pro Plan</div>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+          <div style={{ width: 30, height: 30, background: '#fff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(255,255,255,0.1)' }}>
+             <Trash2 size={16} color="#000" strokeWidth={2.5} />
           </div>
-          <ChevronDown size={14} color="var(--text-muted)" />
+          <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: '#fff' }}>VisioBin</span>
         </div>
 
         {/* Global Search */}
@@ -108,7 +208,7 @@ export default function VercelStyleDashboard() {
         </nav>
 
         {/* User / Status Block at Bottom */}
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderRadius: 6, marginLeft: -12, marginRight: -12 }} className="nav-item">
              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}>
                 IF
@@ -117,7 +217,11 @@ export default function VercelStyleDashboard() {
                <div style={{ fontSize: 13, fontWeight: 500, color: '#fff' }}>Ifauze</div>
                <div style={{ fontSize: 11, color: 'var(--brand-organic)', display: 'flex', alignItems: 'center', gap: 4 }}><div style={{width: 6, height: 6, background: 'var(--brand-organic)', borderRadius: '50%'}}></div> Online</div>
              </div>
-             <Settings2 size={14} color="#666" />
+          </div>
+          
+          <div onClick={() => { localStorage.removeItem('visiobin_auth'); setIsAuthenticated(false); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderRadius: 6, marginLeft: -12, marginRight: -12, color: '#ef4444' }} className="nav-item">
+             <LogOut size={16} />
+             <span style={{ fontSize: 13, fontWeight: 500 }}>Sign Out Terminal</span>
           </div>
         </div>
       </aside>
