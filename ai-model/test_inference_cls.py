@@ -16,15 +16,26 @@ import cv2
 import torch
 import argparse
 import time
+import pathlib
 
-def main(weights_path):
+# Fix for loading models trained on Linux (Colab) in Windows
+temp = pathlib.PosixPath
+pathlib.PosixPath = pathlib.WindowsPath
+
+def main(weights_path, source):
     print(f"Loading YOLOv5-cls model from {weights_path}...")
     
     # Load classificiation model menggunakan torch.hub
     model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path, force_reload=False)
     
-    # Buka WebCam
-    cap = cv2.VideoCapture(0)
+    # Buka WebCam (0 untuk bawaan, 1, 2, dll untuk webcam external/DroidCam)
+    # Cek jika source bisa berupa angka (kamera USB) atau string (IP Camera)
+    try:
+        source = int(source)
+    except Exception:
+        pass
+        
+    cap = cv2.VideoCapture(source)
     
     if not cap.isOpened():
         print("❌ WebCam tidak terdeteksi!")
@@ -39,24 +50,37 @@ def main(weights_path):
             
         start_time = time.time()
             
-        # Karena ini classification, input langsung pass ke model
-        # Tapi model butuh gambar format RGB.
+        # Karena ini classification, input HANYA menerima format BCHW Tensor (Batch, Channel, Height, Width)
+        import numpy as np
+        
+        # 1. BGR ke RGB
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
-        # Inference
-        results = model(img_rgb)
+        # 2. Resize ke ukuran 224x224 (sesuai setting training kita: --img 224)
+        img_resized = cv2.resize(img_rgb, (224, 224))
         
-        # Ambil probabilitas terbesar
-        # Untuk YOLOv5-cls, results berbentuk list tensor probabilities.
-        pred = results[0] # output tensor for the first image
+        # 3. Ubah format dari HWC (Height, Width, Channel) ke CHW
+        img_chw = np.transpose(img_resized, (2, 0, 1))
+        
+        # 4. Tambah dimensi Batch menjadi -> BCHW (1, 3, 224, 224)
+        img_bchw = np.expand_dims(img_chw, axis=0)
+        
+        # 5. Ubah jadi Tensor PyTorch, dan normalisasi pixel (0 - 1)
+        input_tensor = torch.from_numpy(img_bchw).float() / 255.0
+        
+        # Inference (Masukkan Tensor ke Model)
+        results = model(input_tensor)
+        
+        # Ambil probabilitas (Gunakan Softmax agar skor menjadi 0-100%)
+        pred = torch.softmax(results[0], dim=0) 
         
         # Argmax untuk mendapatkan index prediksi
         pred_idx = torch.argmax(pred).item()
         confidence = pred[pred_idx].item()
         
-        # Nama Label dari model (0: Inorganic, 1: Organic -> Tergantung mapping saat training!)
-        # Secara otomatis YOLO akan menyimpan namelist di model.names
-        class_name = model.names[pred_idx] if hasattr(model, 'names') else f"Class {pred_idx}"
+        # Nama Label (0: Inorganic, 1: Organic)
+        names_mapping = {0: 'Inorganic', 1: 'Organic'} 
+        class_name = names_mapping[pred_idx]
         
         inf_time = (time.time() - start_time) * 1000
         
@@ -80,6 +104,7 @@ def main(weights_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='best.pt', help='path to best.pt')
+    parser.add_argument('--source', type=str, default='0', help='Kamera source (0 untuk laptop, 1/2 untuk DroidCam)')
     args = parser.parse_args()
     
-    main(args.weights)
+    main(args.weights, args.source)
