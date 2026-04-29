@@ -8,7 +8,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds all configuration for the application.
 type Config struct {
 	Port           string
 	Env            string
@@ -18,9 +17,7 @@ type Config struct {
 	FCMServerKey   string
 }
 
-// Load reads configuration from environment variables or .env file.
 func Load() (*Config, error) {
-	// Load .env file if it exists (ignore error if not found)
 	_ = godotenv.Load()
 
 	port := getEnv("PORT", "8080")
@@ -43,14 +40,16 @@ func Load() (*Config, error) {
 		jwtExpiry = 72
 	}
 
-	return &Config{
+	conf := &Config{
 		Port:           port,
 		Env:            env,
 		DatabaseURL:    databaseURL,
 		JWTSecret:      getEnv("JWT_SECRET", "visiobin-dev-secret-key"),
 		JWTExpiryHours: jwtExpiry,
 		FCMServerKey:   getEnv("FCM_SERVER_KEY", ""),
-	}, nil
+	}
+
+	return conf, nil
 }
 
 func getEnv(key, fallback string) string {

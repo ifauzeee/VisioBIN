@@ -9,12 +9,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DB wraps the pgx connection pool.
 type DB struct {
 	Pool *pgxpool.Pool
 }
 
-// Connect creates a new database connection pool.
 func Connect(databaseURL string) (*DB, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
@@ -34,7 +32,6 @@ func Connect(databaseURL string) (*DB, error) {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	// Verify connection
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("unable to ping database: %w", err)
@@ -44,7 +41,6 @@ func Connect(databaseURL string) (*DB, error) {
 	return &DB{Pool: pool}, nil
 }
 
-// Close closes the database connection pool.
 func (db *DB) Close() {
 	if db.Pool != nil {
 		db.Pool.Close()

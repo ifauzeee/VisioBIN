@@ -14,7 +14,6 @@ type contextKey string
 
 const UserContextKey contextKey = "user_claims"
 
-// JWTClaims holds the JWT token claims.
 type JWTClaims struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
@@ -22,7 +21,6 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken creates a new JWT token for a user.
 func GenerateToken(user *models.User, secret string, expiryHours int) (string, error) {
 	claims := JWTClaims{
 		UserID:   user.ID,
@@ -39,7 +37,6 @@ func GenerateToken(user *models.User, secret string, expiryHours int) (string, e
 	return token.SignedString([]byte(secret))
 }
 
-// JWTAuth is a middleware that validates JWT tokens.
 func JWTAuth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +53,7 @@ func JWTAuth(secret string) func(http.Handler) http.Handler {
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 				writeJSON(w, http.StatusUnauthorized, models.APIResponse{
 					Success: false,
-					Message: "Invalid authorization format. Use: Bearer <token>",
+					Message: "Invalid authorization format",
 				})
 				return
 			}
@@ -79,14 +76,12 @@ func JWTAuth(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Store claims in context for handlers to use
 			ctx := context.WithValue(r.Context(), UserContextKey, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// RequireRole checks if the authenticated user has the required role.
 func RequireRole(roles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +109,6 @@ func RequireRole(roles ...string) func(http.Handler) http.Handler {
 	}
 }
 
-// GetUserClaims extracts JWT claims from request context.
 func GetUserClaims(r *http.Request) *JWTClaims {
 	claims, _ := r.Context().Value(UserContextKey).(*JWTClaims)
 	return claims

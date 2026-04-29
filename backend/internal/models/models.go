@@ -2,21 +2,19 @@ package models
 
 import "time"
 
-// ============================================
-// Bin — Unit tempat sampah VisioBin
-// ============================================
+// --- Bin Models ---
 
 type Bin struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Location     string    `json:"location"`
-	Latitude     *float64  `json:"latitude,omitempty"`
-	Longitude    *float64  `json:"longitude,omitempty"`
-	MaxVolumeCm  float64   `json:"max_volume_cm"`
-	MaxWeightKg  float64   `json:"max_weight_kg"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Location      string         `json:"location"`
+	Latitude      *float64       `json:"latitude,omitempty"`
+	Longitude     *float64       `json:"longitude,omitempty"`
+	MaxVolumeCm   float64        `json:"max_volume_cm"`
+	MaxWeightKg   float64        `json:"max_weight_kg"`
+	Status        string         `json:"status"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 	LatestReading *SensorReading `json:"latest_reading,omitempty"`
 }
 
@@ -39,35 +37,31 @@ type UpdateBinRequest struct {
 	Status      *string  `json:"status,omitempty"`
 }
 
-// ============================================
-// SensorReading — Data telemetri dari sensor
-// ============================================
+// --- Telemetry & Sensor Models ---
 
 type SensorReading struct {
-	ID                   int64     `json:"id"`
-	BinID                string    `json:"bin_id"`
-	DistanceOrganicCm    *float64  `json:"distance_organic_cm"`
-	DistanceInorganicCm  *float64  `json:"distance_inorganic_cm"`
-	WeightOrganicKg      *float64  `json:"weight_organic_kg"`
-	WeightInorganicKg    *float64  `json:"weight_inorganic_kg"`
-	GasAmoniaPpm         *float64  `json:"gas_amonia_ppm"`
-	VolumeOrganicPct     *float64  `json:"volume_organic_pct"`
-	VolumeInorganicPct   *float64  `json:"volume_inorganic_pct"`
-	RecordedAt           time.Time `json:"recorded_at"`
+	ID                  int64     `json:"id"`
+	BinID               string    `json:"bin_id"`
+	DistanceOrganicCm   *float64  `json:"distance_organic_cm"`
+	DistanceInorganicCm *float64  `json:"distance_inorganic_cm"`
+	WeightOrganicKg     *float64  `json:"weight_organic_kg"`
+	WeightInorganicKg   *float64  `json:"weight_inorganic_kg"`
+	GasAmoniaPpm        *float64  `json:"gas_amonia_ppm"`
+	VolumeOrganicPct    *float64  `json:"volume_organic_pct"`
+	VolumeInorganicPct  *float64  `json:"volume_inorganic_pct"`
+	RecordedAt          time.Time `json:"recorded_at"`
 }
 
 type TelemetryRequest struct {
-	BinID                string  `json:"bin_id"`
-	DistanceOrganicCm    float64 `json:"distance_organic_cm"`
-	DistanceInorganicCm  float64 `json:"distance_inorganic_cm"`
-	WeightOrganicKg      float64 `json:"weight_organic_kg"`
-	WeightInorganicKg    float64 `json:"weight_inorganic_kg"`
-	GasAmoniaPpm         float64 `json:"gas_amonia_ppm"`
+	BinID               string  `json:"bin_id"`
+	DistanceOrganicCm   float64 `json:"distance_organic_cm"`
+	DistanceInorganicCm float64 `json:"distance_inorganic_cm"`
+	WeightOrganicKg     float64 `json:"weight_organic_kg"`
+	WeightInorganicKg   float64 `json:"weight_inorganic_kg"`
+	GasAmoniaPpm        float64 `json:"gas_amonia_ppm"`
 }
 
-// ============================================
-// ClassificationLog — Hasil klasifikasi AI
-// ============================================
+// --- Classification Models ---
 
 type ClassificationLog struct {
 	ID              int64     `json:"id"`
@@ -85,9 +79,7 @@ type ClassificationRequest struct {
 	InferenceTimeMs int     `json:"inference_time_ms"`
 }
 
-// ============================================
-// Alert — Notifikasi peringatan
-// ============================================
+// --- Alert Models ---
 
 type Alert struct {
 	ID        int64     `json:"id"`
@@ -100,9 +92,7 @@ type Alert struct {
 	BinName   string    `json:"bin_name,omitempty"`
 }
 
-// ============================================
-// User — Admin dan petugas operasional
-// ============================================
+// --- User & Auth Models ---
 
 type User struct {
 	ID           string    `json:"id"`
@@ -133,36 +123,30 @@ type AuthResponse struct {
 	User  User   `json:"user"`
 }
 
-// ============================================
-// Forecast — Estimasi waktu penuh
-// ============================================
+// --- Analysis & Dashboard Models ---
 
 type ForecastResult struct {
-	BinID                  string     `json:"bin_id"`
-	CurrentVolumeOrganic   float64    `json:"current_volume_organic_pct"`
-	CurrentVolumeInorganic float64    `json:"current_volume_inorganic_pct"`
-	FillRateOrganicPerHr   float64    `json:"fill_rate_organic_per_hr"`
-	FillRateInorganicPerHr float64    `json:"fill_rate_inorganic_per_hr"`
-	EstimatedFullOrganic   *time.Time `json:"estimated_full_organic"`
-	EstimatedFullInorganic *time.Time `json:"estimated_full_inorganic"`
-	HoursUntilFullOrganic  *float64   `json:"hours_until_full_organic"`
-	HoursUntilFullInorganic *float64  `json:"hours_until_full_inorganic"`
+	BinID                   string     `json:"bin_id"`
+	CurrentVolumeOrganic    float64    `json:"current_volume_organic_pct"`
+	CurrentVolumeInorganic  float64    `json:"current_volume_inorganic_pct"`
+	FillRateOrganicPerHr    float64    `json:"fill_rate_organic_per_hr"`
+	FillRateInorganicPerHr  float64    `json:"fill_rate_inorganic_per_hr"`
+	EstimatedFullOrganic    *time.Time `json:"estimated_full_organic"`
+	EstimatedFullInorganic  *time.Time `json:"estimated_full_inorganic"`
+	HoursUntilFullOrganic   *float64   `json:"hours_until_full_organic"`
+	HoursUntilFullInorganic *float64   `json:"hours_until_full_inorganic"`
 }
 
-// ============================================
-// Dashboard — Data ringkasan untuk dashboard
-// ============================================
-
 type DashboardSummary struct {
-	TotalBins          int                `json:"total_bins"`
-	ActiveBins         int                `json:"active_bins"`
-	BinsNearFull       int                `json:"bins_near_full"`
-	UnreadAlerts       int                `json:"unread_alerts"`
-	TotalClassToday    int                `json:"total_classifications_today"`
-	OrganicCountToday  int                `json:"organic_count_today"`
-	InorganicCountToday int               `json:"inorganic_count_today"`
-	RecentAlerts       []Alert            `json:"recent_alerts"`
-	BinStatuses        []BinStatusSummary `json:"bin_statuses"`
+	TotalBins           int                `json:"total_bins"`
+	ActiveBins          int                `json:"active_bins"`
+	BinsNearFull        int                `json:"bins_near_full"`
+	UnreadAlerts        int                `json:"unread_alerts"`
+	TotalClassToday     int                `json:"total_classifications_today"`
+	OrganicCountToday   int                `json:"organic_count_today"`
+	InorganicCountToday int                `json:"inorganic_count_today"`
+	RecentAlerts        []Alert            `json:"recent_alerts"`
+	BinStatuses         []BinStatusSummary `json:"bin_statuses"`
 }
 
 type BinStatusSummary struct {
@@ -174,9 +158,7 @@ type BinStatusSummary struct {
 	GasAmoniaPpm       *float64 `json:"gas_amonia_ppm"`
 }
 
-// ============================================
-// API Helpers
-// ============================================
+// --- Response Helpers ---
 
 type APIResponse struct {
 	Success bool        `json:"success"`

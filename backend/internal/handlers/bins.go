@@ -12,7 +12,6 @@ import (
 	"github.com/ifauze/visiobin/internal/services"
 )
 
-// BinHandler handles bin and telemetry endpoints.
 type BinHandler struct {
 	binRepo       *repository.BinRepository
 	telemetryRepo *repository.TelemetryRepository
@@ -37,11 +36,8 @@ func NewBinHandler(
 	}
 }
 
-// ============================================
-// Bin CRUD
-// ============================================
+// --- Bin Management ---
 
-// ListBins returns all bins.
 func (h *BinHandler) ListBins(w http.ResponseWriter, r *http.Request) {
 	bins, err := h.binRepo.GetAll(r.Context())
 	if err != nil {
@@ -50,13 +46,14 @@ func (h *BinHandler) ListBins(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	if bins == nil {
 		bins = []models.Bin{}
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: bins})
 }
 
-// GetBin returns a single bin with its latest reading.
 func (h *BinHandler) GetBin(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	bin, err := h.binRepo.GetByID(r.Context(), id)
@@ -66,10 +63,10 @@ func (h *BinHandler) GetBin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: bin})
 }
 
-// CreateBin creates a new bin.
 func (h *BinHandler) CreateBin(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateBinRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -100,10 +97,10 @@ func (h *BinHandler) CreateBin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: bin})
 }
 
-// UpdateBin modifies a bin.
 func (h *BinHandler) UpdateBin(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var req models.UpdateBinRequest
@@ -121,10 +118,10 @@ func (h *BinHandler) UpdateBin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: bin})
 }
 
-// DeleteBin removes a bin.
 func (h *BinHandler) DeleteBin(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if err := h.binRepo.Delete(r.Context(), id); err != nil {
@@ -133,14 +130,12 @@ func (h *BinHandler) DeleteBin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Message: "Bin deleted"})
 }
 
-// ============================================
-// Telemetry
-// ============================================
+// --- Telemetry & Sensors ---
 
-// IngestTelemetry receives sensor data from Raspberry Pi.
 func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 	var req models.TelemetryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -165,33 +160,27 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check thresholds and create alerts if needed (async-like, non-blocking)
+	// Async threshold check
 	go h.forecastSvc.CheckThresholds(r.Context(), reading, h.alertRepo)
 
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: reading})
 }
 
-// GetSensorHistory returns historical sensor data for a bin.
 func (h *BinHandler) GetSensorHistory(w http.ResponseWriter, r *http.Request) {
 	binID := chi.URLParam(r, "id")
 
-	// Parse query params
-	limitStr := r.URL.Query().Get("limit")
 	limit := 100
-	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+	if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
 		limit = l
 	}
 
-	fromStr := r.URL.Query().Get("from")
-	toStr := r.URL.Query().Get("to")
-
-	from := time.Now().Add(-24 * time.Hour) // default: last 24 hours
+	from := time.Now().Add(-24 * time.Hour)
 	to := time.Now()
 
-	if t, err := time.Parse(time.RFC3339, fromStr); err == nil {
+	if t, err := time.Parse(time.RFC3339, r.URL.Query().Get("from")); err == nil {
 		from = t
 	}
-	if t, err := time.Parse(time.RFC3339, toStr); err == nil {
+	if t, err := time.Parse(time.RFC3339, r.URL.Query().Get("to")); err == nil {
 		to = t
 	}
 
@@ -202,17 +191,16 @@ func (h *BinHandler) GetSensorHistory(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	if readings == nil {
 		readings = []models.SensorReading{}
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: readings})
 }
 
-// ============================================
-// Forecast
-// ============================================
+// --- Analytics & Predictions ---
 
-// GetForecast returns the estimated time until a bin is full.
 func (h *BinHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 	binID := chi.URLParam(r, "id")
 
@@ -223,14 +211,10 @@ func (h *BinHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: forecast})
 }
 
-// ============================================
-// Classifications
-// ============================================
-
-// LogClassification stores an AI classification result.
 func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 	var req models.ClassificationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -254,10 +238,10 @@ func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: log})
 }
 
-// ListClassifications returns classification logs.
 func (h *BinHandler) ListClassifications(w http.ResponseWriter, r *http.Request) {
 	binID := r.URL.Query().Get("bin_id")
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
@@ -278,6 +262,7 @@ func (h *BinHandler) ListClassifications(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+
 	if logs == nil {
 		logs = []models.ClassificationLog{}
 	}
@@ -287,11 +272,8 @@ func (h *BinHandler) ListClassifications(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// ============================================
-// Alerts
-// ============================================
+// --- Alerts ---
 
-// ListAlerts returns alerts with pagination.
 func (h *BinHandler) ListAlerts(w http.ResponseWriter, r *http.Request) {
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -312,6 +294,7 @@ func (h *BinHandler) ListAlerts(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	if alerts == nil {
 		alerts = []models.Alert{}
 	}
@@ -321,7 +304,6 @@ func (h *BinHandler) ListAlerts(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// MarkAlertRead marks an alert as read.
 func (h *BinHandler) MarkAlertRead(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -338,14 +320,12 @@ func (h *BinHandler) MarkAlertRead(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Message: "Alert marked as read"})
 }
 
-// ============================================
-// Dashboard
-// ============================================
+// --- Dashboard ---
 
-// GetDashboardSummary returns aggregated data for the web dashboard.
 func (h *BinHandler) GetDashboardSummary(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.dashboardSvc.GetSummary(r.Context())
 	if err != nil {
@@ -354,5 +334,6 @@ func (h *BinHandler) GetDashboardSummary(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: summary})
 }

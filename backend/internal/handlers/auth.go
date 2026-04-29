@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// AuthHandler handles authentication endpoints.
 type AuthHandler struct {
 	userRepo  *repository.UserRepository
 	jwtSecret string
@@ -18,10 +17,13 @@ type AuthHandler struct {
 }
 
 func NewAuthHandler(ur *repository.UserRepository, secret string, expiry int) *AuthHandler {
-	return &AuthHandler{userRepo: ur, jwtSecret: secret, jwtExpiry: expiry}
+	return &AuthHandler{
+		userRepo:  ur,
+		jwtSecret: secret,
+		jwtExpiry: expiry,
+	}
 }
 
-// Login authenticates a user and returns a JWT token.
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -70,7 +72,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Register creates a new user account.
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -127,17 +128,19 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateFCMToken updates the user's FCM push notification token.
 func (h *AuthHandler) UpdateFCMToken(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetUserClaims(r)
 	if claims == nil {
-		writeJSON(w, http.StatusUnauthorized, models.APIResponse{Success: false, Message: "Unauthorized"})
+		writeJSON(w, http.StatusUnauthorized, models.APIResponse{
+			Success: false, Message: "Unauthorized",
+		})
 		return
 	}
 
 	var body struct {
 		FCMToken string `json:"fcm_token"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.FCMToken == "" {
 		writeJSON(w, http.StatusBadRequest, models.APIResponse{
 			Success: false, Message: "fcm_token is required",

@@ -3,11 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ifauze/visiobin/internal/models"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DashboardService aggregates data for the dashboard summary.
 type DashboardService struct {
 	pool *pgxpool.Pool
 }
@@ -16,18 +15,18 @@ func NewDashboardService(pool *pgxpool.Pool) *DashboardService {
 	return &DashboardService{pool: pool}
 }
 
-// GetSummary returns the full dashboard summary.
 func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSummary, error) {
-	summary := &models.DashboardSummary{}
+	summary := &models.DashboardSummary{
+		RecentAlerts: []models.Alert{},
+		BinStatuses:  []models.BinStatusSummary{},
+	}
 
-	// Total bins
 	s.pool.QueryRow(ctx, "SELECT COUNT(*) FROM bins").Scan(&summary.TotalBins)
-
-	// Active bins
 	s.pool.QueryRow(ctx, "SELECT COUNT(*) FROM bins WHERE status = 'active'").Scan(&summary.ActiveBins)
+	s.pool.QueryRow(ctx, "SELECT COUNT(*) FROM alerts WHERE is_read = FALSE").Scan(&summary.UnreadAlerts)
 
-	// Bins near full (either compartment > 80%)
-	s.pool.QueryRow(ctx, `
+	// Bins near full (threshold > 80%)
+	const nearFullQuery = `
 		SELECT COUNT(DISTINCT sr.bin_id)
 		FROM sensor_readings sr
 		INNER JOIN (
@@ -35,44 +34,44 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 			FROM sensor_readings GROUP BY bin_id
 		) latest ON sr.bin_id = latest.bin_id AND sr.recorded_at = latest.max_time
 		WHERE sr.volume_organic_pct > 80 OR sr.volume_inorganic_pct > 80
-	`).Scan(&summary.BinsNearFull)
+	`
+	s.pool.QueryRow(ctx, nearFullQuery).Scan(&summary.BinsNearFull)
 
-	// Unread alerts
-	s.pool.QueryRow(ctx, "SELECT COUNT(*) FROM alerts WHERE is_read = FALSE").Scan(&summary.UnreadAlerts)
+	// Today's classification stats (optimized into one query)
+	const statsQuery = `
+		SELECT 
+			COUNT(*),
+			COUNT(*) FILTER (WHERE predicted_class = 'organic'),
+			COUNT(*) FILTER (WHERE predicted_class = 'inorganic')
+		FROM classification_logs 
+		WHERE classified_at::date = CURRENT_DATE
+	`
+	s.pool.QueryRow(ctx, statsQuery).Scan(
+		&summary.TotalClassToday,
+		&summary.OrganicCountToday,
+		&summary.InorganicCountToday,
+	)
 
-	// Classification stats today
-	s.pool.QueryRow(ctx,
-		"SELECT COUNT(*) FROM classification_logs WHERE classified_at::date = CURRENT_DATE",
-	).Scan(&summary.TotalClassToday)
-
-	s.pool.QueryRow(ctx,
-		"SELECT COUNT(*) FROM classification_logs WHERE classified_at::date = CURRENT_DATE AND predicted_class = 'organic'",
-	).Scan(&summary.OrganicCountToday)
-
-	s.pool.QueryRow(ctx,
-		"SELECT COUNT(*) FROM classification_logs WHERE classified_at::date = CURRENT_DATE AND predicted_class = 'inorganic'",
-	).Scan(&summary.InorganicCountToday)
-
-	// Recent alerts (top 5)
-	alertRows, err := s.pool.Query(ctx, `
+	// Recent alerts
+	const alertQuery = `
 		SELECT a.id, a.bin_id, a.alert_type, a.message, a.severity, a.is_read, a.created_at, b.name
-		FROM alerts a JOIN bins b ON a.bin_id = b.id
+		FROM alerts a 
+		JOIN bins b ON a.bin_id = b.id
 		ORDER BY a.created_at DESC LIMIT 5
-	`)
+	`
+	alertRows, err := s.pool.Query(ctx, alertQuery)
 	if err == nil {
 		defer alertRows.Close()
 		for alertRows.Next() {
 			var a models.Alert
-			alertRows.Scan(&a.ID, &a.BinID, &a.AlertType, &a.Message, &a.Severity, &a.IsRead, &a.CreatedAt, &a.BinName)
-			summary.RecentAlerts = append(summary.RecentAlerts, a)
+			if err := alertRows.Scan(&a.ID, &a.BinID, &a.AlertType, &a.Message, &a.Severity, &a.IsRead, &a.CreatedAt, &a.BinName); err == nil {
+				summary.RecentAlerts = append(summary.RecentAlerts, a)
+			}
 		}
-	}
-	if summary.RecentAlerts == nil {
-		summary.RecentAlerts = []models.Alert{}
 	}
 
 	// Bin statuses with latest readings
-	binRows, err := s.pool.Query(ctx, `
+	const statusQuery = `
 		SELECT b.id, b.name, b.status, sr.volume_organic_pct, sr.volume_inorganic_pct, sr.gas_amonia_ppm
 		FROM bins b
 		LEFT JOIN LATERAL (
@@ -81,18 +80,18 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 			ORDER BY recorded_at DESC LIMIT 1
 		) sr ON TRUE
 		ORDER BY b.name
-	`)
+	`
+	binRows, err := s.pool.Query(ctx, statusQuery)
 	if err == nil {
 		defer binRows.Close()
 		for binRows.Next() {
 			var bs models.BinStatusSummary
-			binRows.Scan(&bs.BinID, &bs.BinName, &bs.Status,
+			err := binRows.Scan(&bs.BinID, &bs.BinName, &bs.Status,
 				&bs.VolumeOrganicPct, &bs.VolumeInorganicPct, &bs.GasAmoniaPpm)
-			summary.BinStatuses = append(summary.BinStatuses, bs)
+			if err == nil {
+				summary.BinStatuses = append(summary.BinStatuses, bs)
+			}
 		}
-	}
-	if summary.BinStatuses == nil {
-		summary.BinStatuses = []models.BinStatusSummary{}
 	}
 
 	return summary, nil
