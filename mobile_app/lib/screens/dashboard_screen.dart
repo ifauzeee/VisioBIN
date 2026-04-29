@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -12,30 +12,52 @@ class DashboardScreen extends StatelessWidget {
     
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 30),
-              _buildStatusCards(isDark),
-              const SizedBox(height: 30),
-              Text(
-                'Bin Capacity',
-                style: Theme.of(context).textTheme.titleLarge,
+        bottom: false,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(24.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildHeader(context),
+                  const SizedBox(height: 32),
+                  _buildStatusCards(isDark),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Real-time Capacity',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCapacityIndicators(context, isDark),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Weekly Scan Analytics',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildAnalyticsChart(context, isDark),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('View All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRecentActivityList(isDark),
+                  const SizedBox(height: 100), // padding for bottom nav
+                ]),
               ),
-              const SizedBox(height: 16),
-              _buildCapacityIndicators(context, isDark),
-              const SizedBox(height: 30),
-              Text(
-                'Today\'s Summary',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              _buildSummaryStats(isDark),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -49,15 +71,19 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Good Morning,',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 16,
+              'Dashboard',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
             ),
+            const SizedBox(height: 4),
             Text(
-              'VisioBin Admin',
-              style: Theme.of(context).textTheme.headlineMedium,
+              'VisioBin Analytics Overview',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -66,10 +92,10 @@ class DashboardScreen extends StatelessWidget {
           height: 50,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primaryContainer,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
-            LucideIcons.user,
+            LucideIcons.bell,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
@@ -82,20 +108,22 @@ class DashboardScreen extends StatelessWidget {
       children: [
         Expanded(
           child: _StatusCard(
-            title: 'Connection',
-            value: 'Online',
-            icon: LucideIcons.wifi,
-            color: const Color(0xFF10b981),
+            title: 'Total Scans',
+            value: '1,248',
+            trend: '+12% this week',
+            icon: LucideIcons.scanLine,
+            color: const Color(0xFF8b5cf6),
             isDark: isDark,
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _StatusCard(
-            title: 'Battery',
-            value: '84%',
-            icon: LucideIcons.batteryCharging,
-            color: const Color(0xFF3b82f6),
+            title: 'Avg. Accuracy',
+            value: '98.5%',
+            trend: 'Stable',
+            icon: LucideIcons.target,
+            color: const Color(0xFF10b981),
             isDark: isDark,
           ),
         ),
@@ -108,12 +136,12 @@ class DashboardScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -128,6 +156,11 @@ class DashboardScreen extends StatelessWidget {
                 color: const Color(0xFF10b981),
                 isDark: isDark,
               ),
+              Container(
+                height: 80,
+                width: 1,
+                color: isDark ? Colors.white12 : Colors.grey[200],
+              ),
               _CapacityCircle(
                 title: 'Non-Organic',
                 percentage: 0.82,
@@ -137,48 +170,234 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              Icon(LucideIcons.alertTriangle, 
-                color: const Color(0xFFf59e0b), 
-                size: 20
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf59e0b).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFf59e0b).withValues(alpha: 0.2),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Non-Organic bin is almost full. Needs attention soon.',
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black87,
-                    fontSize: 14,
+            ),
+            child: Row(
+              children: [
+                const Icon(LucideIcons.alertTriangle, 
+                  color: Color(0xFFf59e0b), 
+                  size: 20
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Non-Organic bin needs emptying today.',
+                    style: TextStyle(
+                      color: isDark ? Colors.orange[200] : Colors.orange[800],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryStats(bool isDark) {
-    return Column(
+  Widget _buildAnalyticsChart(BuildContext context, bool isDark) {
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.activity, size: 20, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text(
+                'Organic vs Non-Organic',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: 100,
+                barTouchData: BarTouchData(enabled: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        const style = TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        );
+                        String text;
+                        switch (value.toInt()) {
+                          case 0: text = 'Mon'; break;
+                          case 1: text = 'Tue'; break;
+                          case 2: text = 'Wed'; break;
+                          case 3: text = 'Thu'; break;
+                          case 4: text = 'Fri'; break;
+                          case 5: text = 'Sat'; break;
+                          case 6: text = 'Sun'; break;
+                          default: text = ''; break;
+                        }
+                        return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(text, style: style));
+                      },
+                    ),
+                  ),
+                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barGroups: [
+                  _makeGroupData(0, 45, 30),
+                  _makeGroupData(1, 60, 40),
+                  _makeGroupData(2, 55, 35),
+                  _makeGroupData(3, 70, 50),
+                  _makeGroupData(4, 85, 60),
+                  _makeGroupData(5, 40, 25),
+                  _makeGroupData(6, 50, 45),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem('Organic', const Color(0xFF10b981)),
+              const SizedBox(width: 24),
+              _buildLegendItem('Non-Organic', const Color(0xFFf59e0b)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String title, Color color) {
+    return Row(
       children: [
-        _SummaryTile(
-          title: 'Total Items Scanned',
-          value: '142',
-          icon: LucideIcons.scanLine,
-          color: const Color(0xFF8b5cf6),
-          isDark: isDark,
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         ),
-        const SizedBox(height: 12),
-        _SummaryTile(
-          title: 'Accuracy Rate',
-          value: '98.5%',
-          icon: LucideIcons.checkCircle2,
+        const SizedBox(width: 8),
+        Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
+      ],
+    );
+  }
+
+  BarChartGroupData _makeGroupData(int x, double y1, double y2) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y1,
           color: const Color(0xFF10b981),
-          isDark: isDark,
+          width: 12,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
+        ),
+        BarChartRodData(
+          toY: y2,
+          color: const Color(0xFFf59e0b),
+          width: 12,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
         ),
       ],
+    );
+  }
+
+  Widget _buildRecentActivityList(bool isDark) {
+    final activities = [
+      {'item': 'Plastic Bottle', 'type': 'Non-Organic', 'time': '2 mins ago', 'color': const Color(0xFFf59e0b)},
+      {'item': 'Banana Peel', 'type': 'Organic', 'time': '15 mins ago', 'color': const Color(0xFF10b981)},
+      {'item': 'Cardboard Box', 'type': 'Non-Organic', 'time': '1 hour ago', 'color': const Color(0xFFf59e0b)},
+    ];
+
+    return Column(
+      children: activities.map((activity) {
+        final color = activity['color'] as Color;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1F2937) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  activity['type'] == 'Organic' ? LucideIcons.leaf : LucideIcons.packageOpen,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activity['item'] as String,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      activity['type'] as String,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                activity['time'] as String,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -186,6 +405,7 @@ class DashboardScreen extends StatelessWidget {
 class _StatusCard extends StatelessWidget {
   final String title;
   final String value;
+  final String trend;
   final IconData icon;
   final Color color;
   final bool isDark;
@@ -193,6 +413,7 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.title,
     required this.value,
+    required this.trend,
     required this.icon,
     required this.color,
     required this.isDark,
@@ -201,35 +422,42 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              Icon(LucideIcons.moreHorizontal, color: isDark ? Colors.white30 : Colors.black26),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4),
@@ -238,6 +466,23 @@ class _StatusCard extends StatelessWidget {
             style: TextStyle(
               color: isDark ? Colors.white54 : Colors.black54,
               fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              trend,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -264,93 +509,30 @@ class _CapacityCircle extends StatelessWidget {
     return Column(
       children: [
         CircularPercentIndicator(
-          radius: 50.0,
-          lineWidth: 10.0,
+          radius: 55.0,
+          lineWidth: 12.0,
           animation: true,
           percent: percentage,
           center: Text(
             "${(percentage * 100).toInt()}%",
             style: const TextStyle(
-              fontWeight: FontWeight.bold, 
-              fontSize: 20.0
+              fontWeight: FontWeight.w900, 
+              fontSize: 22.0
             ),
           ),
           circularStrokeCap: CircularStrokeCap.round,
           progressColor: color,
-          backgroundColor: isDark ? const Color(0xFF374151) : Colors.grey.shade200,
+          backgroundColor: isDark ? const Color(0xFF374151) : Colors.grey.shade100,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Text(
           title,
           style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SummaryTile extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final bool isDark;
-
-  const _SummaryTile({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
