@@ -66,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.barChart2, 'Analytics', 1, isDark, primaryColor),
+                    _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
                     _buildNavItem(LucideIcons.settings, 'Config', 2, isDark, primaryColor),
                   ],
                 ),

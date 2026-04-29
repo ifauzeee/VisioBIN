@@ -25,6 +25,13 @@ class DashboardScreen extends StatelessWidget {
                   _buildStatusCards(isDark),
                   const SizedBox(height: 32),
                   Text(
+                    'System Status',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSystemStatus(isDark),
+                  const SizedBox(height: 32),
+                  Text(
                     'Real-time Capacity',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
@@ -37,6 +44,13 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildAnalyticsChart(context, isDark),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(context, isDark),
                   const SizedBox(height: 32),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -398,6 +412,84 @@ class DashboardScreen extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+  Widget _buildSystemStatus(bool isDark) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatusCard(
+            title: 'Battery',
+            value: '84%',
+            trend: 'Charging',
+            icon: LucideIcons.batteryCharging,
+            color: const Color(0xFF3b82f6),
+            isDark: isDark,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _StatusCard(
+            title: 'Temperature',
+            value: '28°C',
+            trend: 'Normal',
+            icon: LucideIcons.thermometer,
+            color: const Color(0xFFef4444),
+            isDark: isDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context, bool isDark) {
+    return Row(
+      children: [
+        _buildActionBtn(context, 'Empty Bin', LucideIcons.trash2, const Color(0xFFef4444), isDark),
+        const SizedBox(width: 16),
+        _buildActionBtn(context, 'Calibrate', LucideIcons.settings2, const Color(0xFF3b82f6), isDark),
+        const SizedBox(width: 16),
+        _buildActionBtn(context, 'Lock', LucideIcons.lock, const Color(0xFF8b5cf6), isDark),
+      ],
+    );
+  }
+
+  Widget _buildActionBtn(BuildContext context, String title, IconData icon, Color color, bool isDark) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1F2937) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
