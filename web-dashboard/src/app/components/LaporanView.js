@@ -160,7 +160,7 @@ export default function LaporanView() {
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyData.slice(0, 7)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                 <XAxis dataKey="tanggal" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: "#111", border: "1px solid #333", borderRadius: 8 }} />
