@@ -89,7 +89,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
                 value={loginForm.username}
                 onChange={e => setLoginForm(p => ({ ...p, username: e.target.value }))}
                 style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none' }}
-                placeholder="admin2"
+                placeholder="admin"
                 required
               />
             </div>

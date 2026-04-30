@@ -128,8 +128,8 @@ function DashboardApp() {
     setLoginForm((p) => ({ ...p, loading: true, error: "" }));
 
     const result = await login(
-      loginForm.username || "admin2",
-      loginForm.password || "admin123"
+      loginForm.username,
+      loginForm.password
     );
 
     if (!result.success) {

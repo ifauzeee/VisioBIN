@@ -132,7 +132,15 @@ func main() {
 	intervalPtr := flag.Int("interval", 10, "Seconds between readings")
 	fastPtr := flag.Bool("fast", false, "Fast mode: 2 second interval")
 	urlPtr := flag.String("url", defaultBaseURL, "Backend API base URL")
+	userPtr := flag.String("user", "", "Username for authentication (required)")
+	passPtr := flag.String("pass", "", "Password for authentication (required)")
 	flag.Parse()
+
+	if *userPtr == "" || *passPtr == "" {
+		fmt.Println("❌ Error: Username (-user) and Password (-pass) are required.")
+		flag.Usage()
+		return
+	}
 
 	interval := *intervalPtr
 	if *fastPtr {
@@ -151,7 +159,7 @@ func main() {
 	var token string
 	for {
 		fmt.Println("🔑 Logging in...")
-		loginBody := map[string]string{"username": "admin2", "password": "admin123"}
+		loginBody := map[string]string{"username": *userPtr, "password": *passPtr}
 		loginJSON, _ := json.Marshal(loginBody)
 
 		resp, err := client.Post(baseURL+"/auth/login", "application/json", bytes.NewBuffer(loginJSON))
@@ -165,10 +173,10 @@ func main() {
 			fmt.Println("   User not found, registering...")
 			resp.Body.Close()
 			regBody := map[string]string{
-				"username":  "simulator",
-				"email":     "simulator@visiobin.local",
-				"password":  "sim123456",
-				"full_name": "IoT Simulator",
+				"username":  *userPtr,
+				"email":     *userPtr + "@visiobin.local",
+				"password":  *passPtr,
+				"full_name": "IoT Simulator (" + *userPtr + ")",
 			}
 			regJSON, _ := json.Marshal(regBody)
 			resp, err = client.Post(baseURL+"/auth/register", "application/json", bytes.NewBuffer(regJSON))

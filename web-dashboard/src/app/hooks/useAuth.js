@@ -43,15 +43,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, error: "Kredensial tidak valid." };
     } catch (err) {
-      // Offline fallback for demo
-      if (username === "admin" && password === "admin") {
-        localStorage.setItem("visiobin_auth", "true");
-        setIsAuthenticated(true);
-        return { success: true };
-      }
       return {
         success: false,
-        error: "Server offline. Bypass lokal: admin / admin",
+        error: "Gagal menghubungkan ke server. Silakan periksa koneksi Anda.",
       };
     }
   }, []);
