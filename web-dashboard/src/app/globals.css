@@ -524,9 +524,163 @@ h3 {
   background: #555;
 }
 
-/* Media Queries */
-@media (max-width: 1400px) {
+/* ========================= */
+/* Skeleton Shimmer           */
+/* ========================= */
 
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ========================= */
+/* Alert Bell & Dropdown      */
+/* ========================= */
+
+.alert-badge-pulse {
+  animation: alertPulse 2s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes alertDropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================= */
+/* Data Freshness Pulse       */
+/* ========================= */
+
+.pulse-dot-green {
+  animation: pulseDotGreen 2s ease-in-out infinite;
+}
+
+@keyframes pulseDotGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+}
+
+/* ========================= */
+/* View Transitions           */
+/* ========================= */
+
+.view-transition {
+  animation: viewFadeIn 0.3s ease;
+}
+
+@keyframes viewFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================= */
+/* Disabled Nav Items         */
+/* ========================= */
+
+.nav-disabled {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+}
+
+.nav-disabled:hover {
+  background: transparent !important;
+  color: #888888 !important;
+}
+
+/* ========================= */
+/* Bin Selector Cards         */
+/* ========================= */
+
+.bin-selector-card {
+  transition: all 0.2s ease;
+}
+
+.bin-selector-card:hover {
+  border-color: var(--border-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* ========================= */
+/* Mobile Navigation          */
+/* ========================= */
+
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+
+.hamburger-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 11px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text-main);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 998;
+  backdrop-filter: blur(2px);
+}
+
+.desktop-only {
+  display: flex;
+}
+
+/* ========================= */
+/* Media Queries              */
+/* ========================= */
+
+@media (max-width: 1400px) {
   .dashboard-grid-2-1,
   .dashboard-grid-1-1 {
     grid-template-columns: 1fr;
@@ -552,14 +706,70 @@ h3 {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .app-container {
     flex-direction: column;
   }
 
+  .main-content {
+    padding: 16px;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Sidebar becomes a slide-out drawer */
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-right: 1px solid var(--border-color);
+    border-bottom: none;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  /* Smaller header on mobile */
+  .main-content header h1 {
+    font-size: 24px !important;
+  }
+
+  .main-content header p {
+    font-size: 13px !important;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .time-badge {
+    display: none;
+  }
+
+  /* Alert dropdown responsive */
+  .alert-dropdown {
+    width: calc(100vw - 32px) !important;
+    right: -8px !important;
   }
 }
