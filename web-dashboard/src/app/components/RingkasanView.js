@@ -16,9 +16,22 @@ import {
 } from '../dashboardData';
 
 export default function RingkasanView({ summary, binLevel, vision, logs }) {
-  const graphData = dataVolumePerJam.map((d, i) =>
-    i === dataVolumePerJam.length - 1 ? { ...d, volume: binLevel || d.volume } : d
-  );
+  // Use real data from summary if available, fallback to sample data for visual consistency if empty
+  const graphData = summary.volume_history?.length > 0 
+    ? summary.volume_history.map(d => ({ jam: d.hour, volume: d.volume }))
+    : dataVolumePerJam;
+
+  const dailyStats = summary.daily_stats?.length > 0
+    ? summary.daily_stats.map(d => ({ hari: d.day, organik: d.organic, anorganik: d.inorganic }))
+    : dataKlasifikasiHarian;
+
+  const distributionData = summary.distribution?.length > 0
+    ? summary.distribution
+    : dataDistribusiSampah;
+
+  const processingData = summary.processing_history?.length > 0
+    ? summary.processing_history.map(d => ({ jam: d.hour, items: d.items }))
+    : dataPemrosesanPerJam;
 
   const displayLogs = logs.length ? logs : defaultLogs;
 
@@ -174,15 +187,15 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div style={{ flex: 1, marginTop: 8 }}>
             <ResponsiveContainer width="100%" height={220}>
               <RPieChart>
-                <Pie data={dataDistribusiSampah} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                  {dataDistribusiSampah.map((e, i) => <Cell key={i} fill={e.color} />)}
+                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                  {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
               </RPieChart>
             </ResponsiveContainer>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-            {dataDistribusiSampah.map(d => (
+            {distributionData.map(d => (
               <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)' }}>
                 <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />{d.name}
               </div>
@@ -196,7 +209,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dataKlasifikasiHarian} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -233,7 +246,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">⏱️ Jumlah Item Diproses Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dataPemrosesanPerJam} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={processingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />

@@ -1,6 +1,8 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
+export const WS_BASE = API_BASE.replace("http", "ws").split("/api")[0] + "/ws";
+
 /**
  * Centralized API fetch with auth token injection.
  */

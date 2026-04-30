@@ -17,8 +17,12 @@ func NewDashboardService(pool *pgxpool.Pool) *DashboardService {
 
 func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSummary, error) {
 	summary := &models.DashboardSummary{
-		RecentAlerts: []models.Alert{},
-		BinStatuses:  []models.BinStatusSummary{},
+		RecentAlerts:      []models.Alert{},
+		BinStatuses:       []models.BinStatusSummary{},
+		VolumeHistory:     []models.VolumeHistoryPoint{},
+		DailyStats:        []models.DailyStatPoint{},
+		Distribution:      []models.ClassificationDist{},
+		ProcessingHistory: []models.ProcessingHistoryPoint{},
 	}
 
 	s.pool.QueryRow(ctx, "SELECT COUNT(*) FROM bins").Scan(&summary.TotalBins)
@@ -37,7 +41,7 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 	`
 	s.pool.QueryRow(ctx, nearFullQuery).Scan(&summary.BinsNearFull)
 
-	// Today's classification stats (optimized into one query)
+	// Today's classification stats
 	const statsQuery = `
 		SELECT 
 			COUNT(*),
@@ -51,6 +55,76 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 		&summary.OrganicCountToday,
 		&summary.InorganicCountToday,
 	)
+
+	// Volume History (Last 24 Hours)
+	const volHistQuery = `
+		SELECT 
+			TO_CHAR(date_trunc('hour', recorded_at), 'HH24:00') as hour,
+			AVG((volume_organic_pct + volume_inorganic_pct) / 2) as avg_vol
+		FROM sensor_readings
+		WHERE recorded_at > NOW() - INTERVAL '24 hours'
+		GROUP BY 1
+		ORDER BY date_trunc('hour', recorded_at)
+	`
+	volRows, err := s.pool.Query(ctx, volHistQuery)
+	if err == nil {
+		defer volRows.Close()
+		for volRows.Next() {
+			var p models.VolumeHistoryPoint
+			if err := volRows.Scan(&p.Hour, &p.Volume); err == nil {
+				summary.VolumeHistory = append(summary.VolumeHistory, p)
+			}
+		}
+	}
+
+	// Daily Classification Stats (Last 7 Days)
+	const dailyStatsQuery = `
+		SELECT 
+			TO_CHAR(classified_at, 'DD/MM') as day,
+			COUNT(*) FILTER (WHERE predicted_class = 'organic') as org,
+			COUNT(*) FILTER (WHERE predicted_class = 'inorganic') as inorg
+		FROM classification_logs
+		WHERE classified_at > NOW() - INTERVAL '7 days'
+		GROUP BY 1, date_trunc('day', classified_at)
+		ORDER BY date_trunc('day', classified_at)
+	`
+	dailyRows, err := s.pool.Query(ctx, dailyStatsQuery)
+	if err == nil {
+		defer dailyRows.Close()
+		for dailyRows.Next() {
+			var p models.DailyStatPoint
+			if err := dailyRows.Scan(&p.Day, &p.Organic, &p.Inorganic); err == nil {
+				summary.DailyStats = append(summary.DailyStats, p)
+			}
+		}
+	}
+
+	// Overall Distribution
+	summary.Distribution = []models.ClassificationDist{
+		{Name: "Organik", Value: summary.OrganicCountToday, Color: "var(--brand-organic)"},
+		{Name: "Anorganik", Value: summary.InorganicCountToday, Color: "var(--brand-inorganic)"},
+	}
+
+	// Processing History (Last 24 Hours)
+	const procHistQuery = `
+		SELECT 
+			TO_CHAR(date_trunc('hour', classified_at), 'HH24:00') as hour,
+			COUNT(*) as items
+		FROM classification_logs
+		WHERE classified_at > NOW() - INTERVAL '24 hours'
+		GROUP BY 1, date_trunc('hour', classified_at)
+		ORDER BY date_trunc('hour', classified_at)
+	`
+	procRows, err := s.pool.Query(ctx, procHistQuery)
+	if err == nil {
+		defer procRows.Close()
+		for procRows.Next() {
+			var p models.ProcessingHistoryPoint
+			if err := procRows.Scan(&p.Hour, &p.Items); err == nil {
+				summary.ProcessingHistory = append(summary.ProcessingHistory, p)
+			}
+		}
+	}
 
 	// Recent alerts
 	const alertQuery = `

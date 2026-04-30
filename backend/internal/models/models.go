@@ -137,16 +137,42 @@ type ForecastResult struct {
 	HoursUntilFullInorganic *float64   `json:"hours_until_full_inorganic"`
 }
 
+type VolumeHistoryPoint struct {
+	Hour   string  `json:"hour"`
+	Volume float64 `json:"volume"`
+}
+
+type DailyStatPoint struct {
+	Day       string `json:"day"`
+	Organic   int    `json:"organic"`
+	Inorganic int    `json:"inorganic"`
+}
+
+type ClassificationDist struct {
+	Name  string `json:"name"`
+	Value int    `json:"value"`
+	Color string `json:"color"`
+}
+
+type ProcessingHistoryPoint struct {
+	Hour  string `json:"hour"`
+	Items int    `json:"items"`
+}
+
 type DashboardSummary struct {
-	TotalBins           int                `json:"total_bins"`
-	ActiveBins          int                `json:"active_bins"`
-	BinsNearFull        int                `json:"bins_near_full"`
-	UnreadAlerts        int                `json:"unread_alerts"`
-	TotalClassToday     int                `json:"total_classifications_today"`
-	OrganicCountToday   int                `json:"organic_count_today"`
-	InorganicCountToday int                `json:"inorganic_count_today"`
-	RecentAlerts        []Alert            `json:"recent_alerts"`
-	BinStatuses         []BinStatusSummary `json:"bin_statuses"`
+	TotalBins           int                      `json:"total_bins"`
+	ActiveBins          int                      `json:"active_bins"`
+	BinsNearFull        int                      `json:"bins_near_full"`
+	UnreadAlerts        int                      `json:"unread_alerts"`
+	TotalClassToday     int                      `json:"total_classifications_today"`
+	OrganicCountToday   int                      `json:"organic_count_today"`
+	InorganicCountToday int                      `json:"inorganic_count_today"`
+	RecentAlerts        []Alert                  `json:"recent_alerts"`
+	BinStatuses         []BinStatusSummary       `json:"bin_statuses"`
+	VolumeHistory       []VolumeHistoryPoint     `json:"volume_history"`
+	DailyStats          []DailyStatPoint         `json:"daily_stats"`
+	Distribution        []ClassificationDist     `json:"distribution"`
+	ProcessingHistory   []ProcessingHistoryPoint `json:"processing_history"`
 }
 
 type BinStatusSummary struct {

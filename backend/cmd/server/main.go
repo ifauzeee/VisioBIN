@@ -40,12 +40,14 @@ func main() {
 	// Service Layer
 	forecastSvc := services.NewForecastService(telemetryRepo, binRepo)
 	dashboardSvc := services.NewDashboardService(db.Pool)
+	broadcaster := services.NewBroadcaster()
+	go broadcaster.Run()
 
 	// Handler Layer
 	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
-	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc)
+	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
 
-	r := router.Setup(authHandler, binHandler, cfg.JWTSecret)
+	r := router.Setup(authHandler, binHandler, cfg.JWTSecret, broadcaster)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

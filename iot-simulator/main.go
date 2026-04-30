@@ -148,41 +148,76 @@ func main() {
 
 	client := &http.Client{Timeout: 5 * time.Second}
 
-	fmt.Println("🔑 Logging in...")
-	loginBody := map[string]string{"username": "admin2", "password": "admin123"}
-	loginJSON, _ := json.Marshal(loginBody)
-
-	resp, err := client.Post(baseURL+"/auth/login", "application/json", bytes.NewBuffer(loginJSON))
 	var token string
+	for {
+		fmt.Println("🔑 Logging in...")
+		loginBody := map[string]string{"username": "admin2", "password": "admin123"}
+		loginJSON, _ := json.Marshal(loginBody)
 
-	if err != nil || resp.StatusCode != http.StatusOK {
-		fmt.Println("   User not found, registering...")
-		regBody := map[string]string{
-			"username":  "simulator",
-			"email":     "simulator@visiobin.local",
-			"password":  "sim123456",
-			"full_name": "IoT Simulator",
+		resp, err := client.Post(baseURL+"/auth/login", "application/json", bytes.NewBuffer(loginJSON))
+		if err != nil {
+			fmt.Printf("   ❌ Backend unreachable: %v. Retrying in 3s...\n", err)
+			time.Sleep(3 * time.Second)
+			continue
 		}
-		regJSON, _ := json.Marshal(regBody)
-		resp, _ = client.Post(baseURL+"/auth/register", "application/json", bytes.NewBuffer(regJSON))
-	}
-	defer resp.Body.Close()
 
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-	data, _ := result["data"].(map[string]interface{})
-	token = data["token"].(string)
+		if resp.StatusCode != http.StatusOK {
+			fmt.Println("   User not found, registering...")
+			resp.Body.Close()
+			regBody := map[string]string{
+				"username":  "simulator",
+				"email":     "simulator@visiobin.local",
+				"password":  "sim123456",
+				"full_name": "IoT Simulator",
+			}
+			regJSON, _ := json.Marshal(regBody)
+			resp, err = client.Post(baseURL+"/auth/register", "application/json", bytes.NewBuffer(regJSON))
+			if err != nil {
+				fmt.Printf("   ❌ Registration failed: %v. Retrying...\n", err)
+				time.Sleep(3 * time.Second)
+				continue
+			}
+		}
+
+		var result map[string]interface{}
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		resp.Body.Close()
+
+		if err == nil && result["success"] == true {
+			data, _ := result["data"].(map[string]interface{})
+			token = data["token"].(string)
+			fmt.Println("   🔓 Login successful!")
+			break
+		}
+
+		fmt.Println("   ❌ Login failed, retrying in 3s...")
+		time.Sleep(3 * time.Second)
+	}
 
 	fmt.Println("📡 Fetching bins from API...")
 	req, _ := http.NewRequest("GET", baseURL+"/bins", nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 
-	resp, _ = client.Do(req)
-	defer resp.Body.Close()
+	var binsData []interface{}
+	for {
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println("   ❌ Error fetching bins, retrying...")
+			time.Sleep(2 * time.Second)
+			continue
+		}
 
-	var binsResult map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&binsResult)
-	binsData := binsResult["data"].([]interface{})
+		var binsResult map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&binsResult)
+		resp.Body.Close()
+
+		if data, ok := binsResult["data"].([]interface{}); ok {
+			binsData = data
+			break
+		}
+		fmt.Println("   ❌ No bins data found, retrying...")
+		time.Sleep(2 * time.Second)
+	}
 
 	if len(binsData) == 0 {
 		fmt.Println("❌ No bins found!")

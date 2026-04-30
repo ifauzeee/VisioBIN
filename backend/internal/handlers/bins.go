@@ -18,6 +18,7 @@ type BinHandler struct {
 	alertRepo     *repository.AlertRepository
 	forecastSvc   *services.ForecastService
 	dashboardSvc  *services.DashboardService
+	broadcaster   *services.Broadcaster
 }
 
 func NewBinHandler(
@@ -26,6 +27,7 @@ func NewBinHandler(
 	ar *repository.AlertRepository,
 	fs *services.ForecastService,
 	ds *services.DashboardService,
+	bc *services.Broadcaster,
 ) *BinHandler {
 	return &BinHandler{
 		binRepo:       br,
@@ -33,6 +35,7 @@ func NewBinHandler(
 		alertRepo:     ar,
 		forecastSvc:   fs,
 		dashboardSvc:  ds,
+		broadcaster:   bc,
 	}
 }
 
@@ -163,6 +166,12 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 	// Async threshold check
 	go h.forecastSvc.CheckThresholds(r.Context(), reading, h.alertRepo)
 
+	// Broadcast via WebSocket
+	h.broadcaster.Broadcast(map[string]interface{}{
+		"event": "telemetry_updated",
+		"data":  reading,
+	})
+
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: reading})
 }
 
@@ -238,6 +247,12 @@ func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	// Broadcast via WebSocket
+	h.broadcaster.Broadcast(map[string]interface{}{
+		"event": "classification_logged",
+		"data":  log,
+	})
 
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: log})
 }

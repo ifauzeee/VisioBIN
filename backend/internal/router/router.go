@@ -5,12 +5,14 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/ifauze/visiobin/internal/handlers"
 	"github.com/ifauze/visiobin/internal/middleware"
+	"github.com/ifauze/visiobin/internal/services"
 )
 
 func Setup(
 	authHandler *handlers.AuthHandler,
 	binHandler *handlers.BinHandler,
 	jwtSecret string,
+	broadcaster *services.Broadcaster,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -26,6 +28,7 @@ func Setup(
 	}))
 
 	r.Get("/health", handlers.HealthCheck)
+	r.Get("/ws", broadcaster.ServeWS)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Auth

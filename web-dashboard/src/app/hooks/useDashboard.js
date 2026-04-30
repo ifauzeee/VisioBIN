@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getDashboardSummary, listClassifications } from "../services/api";
+import { getDashboardSummary, listClassifications, WS_BASE } from "../services/api";
 import { POLL_DASHBOARD } from "../utils/constants";
 
 /**
@@ -20,6 +20,10 @@ export function useDashboard(token) {
     total_bins: 0,
     active_bins: 0,
     bin_statuses: [],
+    volume_history: [],
+    daily_stats: [],
+    distribution: [],
+    processing_history: [],
   });
   const [logs, setLogs] = useState([]);
   const [binLevel, setBinLevel] = useState(0);
@@ -55,6 +59,10 @@ export function useDashboard(token) {
           total_bins: s.total_bins || 0,
           active_bins: s.active_bins || 0,
           bin_statuses: s.bin_statuses || [],
+          volume_history: s.volume_history || [],
+          daily_stats: s.daily_stats || [],
+          distribution: s.distribution || [],
+          processing_history: s.processing_history || [],
         });
 
         // Calculate bin level from first bin
@@ -120,11 +128,83 @@ export function useDashboard(token) {
 
     fetchData();
     const interval = setInterval(fetchData, POLL_DASHBOARD);
+
+    // WebSocket for Real-time
+    const ws = new WebSocket(WS_BASE);
+
+    ws.onmessage = (event) => {
+      try {
+        const { event: evType, data } = JSON.parse(event.data);
+
+        if (evType === "telemetry_updated") {
+          // Incrementally update summary or refetch
+          // For charts consistency, a refetch is better
+          fetchData();
+        }
+
+        if (evType === "classification_logged") {
+          // Update logs locally for instant feedback
+          const newLog = {
+            id: data.id,
+            time: new Date(data.classified_at).toLocaleTimeString("id-ID", {
+              hour12: false,
+            }),
+            type: "tempat-sampah",
+            item: data.predicted_class,
+            prob: +(data.confidence * 100).toFixed(1),
+            inference_ms: data.inference_time_ms,
+            bin_id: data.bin_id,
+          };
+
+          setLogs((prev) => [newLog, ...prev.filter((l) => l.id !== newLog.id).slice(0, 9)]);
+
+          // Visual Feedback for AI Vision
+          setVision({
+            state: "locked",
+            label: data.predicted_class,
+            prob: +(data.confidence * 100).toFixed(1),
+            box: {
+              top: 25 + Math.random() * 10,
+              left: 25 + Math.random() * 10,
+              w: 40,
+              h: 40,
+            },
+          });
+
+          if (visionTimeoutRef.current) clearTimeout(visionTimeoutRef.current);
+          visionTimeoutRef.current = setTimeout(
+            () => setVision((v) => ({ ...v, state: "scanning" })),
+            3000
+          );
+
+          // Update summary counts
+          setSummary((prev) => ({
+            ...prev,
+            total_processed: prev.total_processed + 1,
+            organic: data.predicted_class === "organic" ? prev.organic + 1 : prev.organic,
+            inorganic: data.predicted_class === "inorganic" ? prev.inorganic + 1 : prev.inorganic,
+          }));
+        }
+      } catch (err) {
+        console.error("WS Message Error:", err);
+      }
+    };
+
     return () => {
       clearInterval(interval);
+      ws.close();
       if (visionTimeoutRef.current) clearTimeout(visionTimeoutRef.current);
     };
   }, [token, fetchData]);
 
-  return { summary, logs, binLevel, vision, loading, error, lastUpdated, refetch: fetchData };
+  return {
+    summary,
+    logs,
+    binLevel,
+    vision,
+    loading,
+    error,
+    lastUpdated,
+    refetch: fetchData,
+  };
 }

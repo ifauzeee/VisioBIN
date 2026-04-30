@@ -23,17 +23,20 @@ func Load() (*Config, error) {
 	port := getEnv("PORT", "8080")
 	env := getEnv("ENV", "development")
 
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "5432")
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
-	dbName := getEnv("DB_NAME", "visiobin")
-	dbSSLMode := getEnv("DB_SSLMODE", "disable")
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		dbHost := getEnv("DB_HOST", "localhost")
+		dbPort := getEnv("DB_PORT", "5432")
+		dbUser := getEnv("DB_USER", "postgres")
+		dbPassword := getEnv("DB_PASSWORD", "postgres")
+		dbName := getEnv("DB_NAME", "visiobin")
+		dbSSLMode := getEnv("DB_SSLMODE", "disable")
 
-	databaseURL := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode,
-	)
+		databaseURL = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+			dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode,
+		)
+	}
 
 	jwtExpiry, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
 	if err != nil {
