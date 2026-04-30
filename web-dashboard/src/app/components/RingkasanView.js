@@ -165,7 +165,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">📈 Riwayat Volume Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <defs>
                   <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />
@@ -186,7 +186,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">🥧 Distribusi Jenis Sampah</div>
           <div style={{ flex: 1, marginTop: 8 }}>
             <ResponsiveContainer width="100%" height={220}>
-              <RPieChart>
+              <RPieChart style={{ background: 'transparent' }}>
                 <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                   {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
@@ -209,7 +209,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -246,7 +246,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div className="card-title">⏱️ Jumlah Item Diproses Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={processingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={processingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />

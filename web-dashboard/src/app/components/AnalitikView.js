@@ -105,7 +105,7 @@ export default function AnalitikView() {
           {hourly.length > 0 ? (
             <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={hourly} margin={{ top:10, right:12, left:0, bottom:0 }}>
+                <AreaChart data={hourly} margin={{ top:10, right:12, left:0, bottom:0 }} style={{ background: 'transparent' }}>
                   <defs>
                     <linearGradient id="gTp" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--brand-inorganic)" stopOpacity={0.28} />
@@ -156,7 +156,7 @@ export default function AnalitikView() {
           {daily.length > 0 ? (
             <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={daily} margin={{ top:10, right:10, left:0, bottom:0 }}>
+                <BarChart data={daily} margin={{ top:10, right:10, left:0, bottom:0 }} style={{ background: 'transparent' }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                   <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis domain={[90,100]} stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
