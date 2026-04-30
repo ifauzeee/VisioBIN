@@ -113,13 +113,24 @@ export default function LaporanView() {
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="card-title">📋 Laporan Harian</div>
-          <button onClick={exportCSV} style={{
-            background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)",
-            borderRadius: 8, padding: "6px 14px", cursor: "pointer", display: "flex",
-            alignItems: "center", gap: 6, color: "var(--text-main)", fontSize: 12, fontWeight: 500,
-          }}>
-            <Download size={13} /> Export CSV
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={exportCSV} style={{
+              background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)",
+              borderRadius: 8, padding: "6px 14px", cursor: "pointer", display: "flex",
+              alignItems: "center", gap: 6, color: "var(--text-main)", fontSize: 12, fontWeight: 500,
+            }}>
+              <Download size={13} /> Export Ringkasan
+            </button>
+            <button onClick={() => {
+              window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank");
+            }} style={{
+              background: "var(--brand-organic)", border: "none",
+              borderRadius: 8, padding: "6px 14px", cursor: "pointer", display: "flex",
+              alignItems: "center", gap: 6, color: "white", fontSize: 12, fontWeight: 500,
+            }}>
+              <Download size={13} /> Export Detail (Excel/CSV)
+            </button>
+          </div>
         </div>
         <div style={{ marginTop: 16, overflowX: "auto" }}>
           <table className="report-table">

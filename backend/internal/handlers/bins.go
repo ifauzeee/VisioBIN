@@ -257,6 +257,38 @@ func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: log})
 }
 
+func (h *BinHandler) ExportClassifications(w http.ResponseWriter, r *http.Request) {
+	// Simple CSV Export
+	rows, err := h.telemetryRepo.GetPool().Query(r.Context(), `
+		SELECT c.id, b.name, c.predicted_class, c.confidence, c.inference_time_ms, c.classified_at
+		FROM classification_logs c
+		JOIN bins b ON c.bin_id = b.id
+		ORDER BY c.classified_at DESC
+	`)
+	if err != nil {
+		http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment;filename=visiobin_report.csv")
+
+	w.Write([]byte("ID,Bin Name,Class,Confidence,Inference(ms),Timestamp\n"))
+
+	for rows.Next() {
+		var id, binName, class string
+		var conf float64
+		var infer int
+		var createdAt time.Time
+		if err := rows.Scan(&id, &binName, &class, &conf, &infer, &createdAt); err == nil {
+			line := fmt.Sprintf("%s,%s,%s,%.2f,%d,%s\n",
+				id, binName, class, conf, infer, createdAt.Format(time.RFC3339))
+			w.Write([]byte(line))
+		}
+	}
+}
+
 func (h *BinHandler) ListClassifications(w http.ResponseWriter, r *http.Request) {
 	binID := r.URL.Query().Get("bin_id")
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))

@@ -16,6 +16,10 @@ func NewTelemetryRepository(pool *pgxpool.Pool) *TelemetryRepository {
 	return &TelemetryRepository{pool: pool}
 }
 
+func (r *TelemetryRepository) GetPool() *pgxpool.Pool {
+	return r.pool
+}
+
 func (r *TelemetryRepository) InsertReading(ctx context.Context, req *models.TelemetryRequest) (*models.SensorReading, error) {
 	var maxVolumeCm float64
 	err := r.pool.QueryRow(ctx, "SELECT max_volume_cm FROM bins WHERE id = $1", req.BinID).Scan(&maxVolumeCm)

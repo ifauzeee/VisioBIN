@@ -62,6 +62,7 @@ func Setup(
 			})
 
 			r.Get("/classifications", binHandler.ListClassifications)
+			r.Get("/classifications/export", binHandler.ExportClassifications)
 
 			r.Get("/alerts", binHandler.ListAlerts)
 			r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)

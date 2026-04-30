@@ -40,25 +40,27 @@ func GenerateToken(user *models.User, secret string, expiryHours int) (string, e
 func JWTAuth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenString := ""
 			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
+			if authHeader != "" {
+				parts := strings.SplitN(authHeader, " ", 2)
+				if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+					tokenString = parts[1]
+				}
+			}
+
+			// Fallback to query param for file exports
+			if tokenString == "" {
+				tokenString = r.URL.Query().Get("token")
+			}
+
+			if tokenString == "" {
 				writeJSON(w, http.StatusUnauthorized, models.APIResponse{
 					Success: false,
-					Message: "Authorization header required",
+					Message: "Authorization required",
 				})
 				return
 			}
-
-			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				writeJSON(w, http.StatusUnauthorized, models.APIResponse{
-					Success: false,
-					Message: "Invalid authorization format",
-				})
-				return
-			}
-
-			tokenString := parts[1]
 			claims := &JWTClaims{}
 
 			token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
