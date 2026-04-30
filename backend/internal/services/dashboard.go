@@ -63,7 +63,7 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 			AVG((volume_organic_pct + volume_inorganic_pct) / 2) as avg_vol
 		FROM sensor_readings
 		WHERE recorded_at > NOW() - INTERVAL '24 hours'
-		GROUP BY 1
+		GROUP BY 1, date_trunc('hour', recorded_at)
 		ORDER BY date_trunc('hour', recorded_at)
 	`
 	volRows, err := s.pool.Query(ctx, volHistQuery)

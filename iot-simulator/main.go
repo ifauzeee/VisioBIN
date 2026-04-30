@@ -170,6 +170,10 @@ func main() {
 		}
 
 		if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode == http.StatusConflict {
+				fmt.Println("   ❌ Error: User exists but login failed (wrong password?). Please check credentials.")
+				return
+			}
 			fmt.Println("   User not found, registering...")
 			resp.Body.Close()
 			regBody := map[string]string{
@@ -184,6 +188,10 @@ func main() {
 				fmt.Printf("   ❌ Registration failed: %v. Retrying...\n", err)
 				time.Sleep(3 * time.Second)
 				continue
+			}
+			if resp.StatusCode == http.StatusConflict {
+				fmt.Println("   ❌ Error: Username already exists. Please use the correct password.")
+				return
 			}
 		}
 
