@@ -18,6 +18,8 @@ import AnalitikView from "./components/AnalitikView";
 import LaporanView from "./components/LaporanView";
 import PerangkatView from "./components/PerangkatView";
 import StasiunBinView from "./components/StasiunBinView";
+import TeamView from "./components/TeamView";
+import ConfigView from "./components/ConfigView";
 import AlertBell from "./components/shared/AlertBell";
 import DataFreshness from "./components/shared/DataFreshness";
 import { formatFullDateTime } from "./utils/formatters";
@@ -105,6 +107,20 @@ function DashboardApp() {
       color: "var(--brand-organic)",
       icon: Box,
     },
+    team: {
+      title: "Anggota Tim",
+      subtitle: "Kelola akses pengguna dan peran dalam tim.",
+      badge: "Manajemen Akses",
+      color: "#8B5CF6",
+      icon: Users,
+    },
+    config: {
+      title: "Konfigurasi Sistem",
+      subtitle: "Pengaturan threshold, polling, dan preferensi notifikasi.",
+      badge: "Pengaturan",
+      color: "#64748b",
+      icon: Settings2,
+    },
   };
 
   const handleLogin = async (e) => {
@@ -167,8 +183,8 @@ function DashboardApp() {
     {
       section: "Pengaturan",
       items: [
-        { key: "_team", label: "Anggota Tim", icon: Users },
-        { key: "_config", label: "Konfigurasi", icon: Settings2 },
+        { key: "team", label: "Anggota Tim", icon: Users },
+        { key: "config", label: "Konfigurasi", icon: Settings2 },
       ],
     },
   ];
@@ -461,6 +477,8 @@ function DashboardApp() {
           {activeView === "laporan" && <LaporanView />}
           {activeView === "perangkat" && <PerangkatView />}
           {activeView === "stasiun" && <StasiunBinView />}
+          {activeView === "team" && <TeamView />}
+          {activeView === "config" && <ConfigView />}
         </div>
       </main>
     </div>

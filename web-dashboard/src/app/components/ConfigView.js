@@ -1,0 +1,182 @@
+"use client";
+
+import React, { useState } from "react";
+import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw } from "lucide-react";
+
+const DEFAULT_CONFIG = {
+  apiUrl: "http://localhost:8080/api/v1",
+  pollDashboard: 5,
+  pollAlerts: 8,
+  pollBins: 10,
+  binWarningPct: 60,
+  binCriticalPct: 80,
+  gasWarningPpm: 30,
+  gasCriticalPpm: 80,
+  enableBrowserNotif: false,
+  enableSoundAlert: false,
+  autoRefresh: true,
+};
+
+export default function ConfigView() {
+  const [config, setConfig] = useState(() => {
+    try {
+      const stored = localStorage.getItem("visiobin_config");
+      return stored ? { ...DEFAULT_CONFIG, ...JSON.parse(stored) } : DEFAULT_CONFIG;
+    } catch { return DEFAULT_CONFIG; }
+  });
+  const [saved, setSaved] = useState(false);
+
+  const update = (key, value) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+    setSaved(false);
+  };
+
+  const save = () => {
+    localStorage.setItem("visiobin_config", JSON.stringify(config));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const reset = () => {
+    setConfig(DEFAULT_CONFIG);
+    localStorage.removeItem("visiobin_config");
+    setSaved(false);
+  };
+
+  const InputRow = ({ icon: Icon, label, desc, children }) => (
+    <div style={{
+      display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "14px 0", borderBottom: "1px solid var(--border-color)",
+    }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flex: 1 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={15} color="var(--text-muted)" />
+        </div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}>{label}</div>
+          {desc && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{desc}</div>}
+        </div>
+      </div>
+      <div style={{ flexShrink: 0 }}>{children}</div>
+    </div>
+  );
+
+  const NumInput = ({ value, onChange, unit, min = 1, max = 300 }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <input type="number" value={value} min={min} max={max}
+        onChange={e => onChange(Number(e.target.value))}
+        style={{
+          width: 70, padding: "6px 10px", background: "rgba(255,255,255,0.04)",
+          border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff",
+          fontSize: 13, outline: "none", textAlign: "right",
+        }}
+      />
+      {unit && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{unit}</span>}
+    </div>
+  );
+
+  const Toggle = ({ value, onChange }) => (
+    <button onClick={() => onChange(!value)} style={{
+      width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
+      background: value ? "var(--brand-organic)" : "rgba(255,255,255,0.1)",
+      position: "relative", transition: "background 0.2s",
+    }}>
+      <div style={{
+        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+        position: "absolute", top: 3, left: value ? 23 : 3, transition: "left 0.2s",
+      }} />
+    </button>
+  );
+
+  return (
+    <>
+      {/* Connection */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-title"><Wifi size={16} /> Koneksi API</div>
+        <div style={{ marginTop: 8 }}>
+          <InputRow icon={Database} label="API Base URL" desc="Endpoint backend VisioBin">
+            <input type="text" value={config.apiUrl}
+              onChange={e => update("apiUrl", e.target.value)}
+              style={{
+                width: 280, padding: "6px 12px", background: "rgba(255,255,255,0.04)",
+                border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff",
+                fontSize: 13, outline: "none", fontFamily: "JetBrains Mono, monospace",
+              }}
+            />
+          </InputRow>
+        </div>
+      </div>
+
+      {/* Polling */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-title"><Clock size={16} /> Interval Polling</div>
+        <div style={{ marginTop: 8 }}>
+          <InputRow icon={Clock} label="Dashboard" desc="Ringkasan & klasifikasi">
+            <NumInput value={config.pollDashboard} onChange={v => update("pollDashboard", v)} unit="detik" />
+          </InputRow>
+          <InputRow icon={Bell} label="Notifikasi" desc="Cek alert baru">
+            <NumInput value={config.pollAlerts} onChange={v => update("pollAlerts", v)} unit="detik" />
+          </InputRow>
+          <InputRow icon={Cpu} label="Perangkat" desc="Status bin & sensor">
+            <NumInput value={config.pollBins} onChange={v => update("pollBins", v)} unit="detik" />
+          </InputRow>
+          <InputRow icon={Settings2} label="Auto Refresh" desc="Aktifkan polling otomatis">
+            <Toggle value={config.autoRefresh} onChange={v => update("autoRefresh", v)} />
+          </InputRow>
+        </div>
+      </div>
+
+      {/* Thresholds */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-title">⚠️ Threshold Peringatan</div>
+        <div style={{ marginTop: 8 }}>
+          <InputRow icon={Settings2} label="Volume Peringatan" desc="Warna kuning saat melebihi">
+            <NumInput value={config.binWarningPct} onChange={v => update("binWarningPct", v)} unit="%" max={100} />
+          </InputRow>
+          <InputRow icon={Settings2} label="Volume Kritis" desc="Warna merah saat melebihi">
+            <NumInput value={config.binCriticalPct} onChange={v => update("binCriticalPct", v)} unit="%" max={100} />
+          </InputRow>
+          <InputRow icon={Settings2} label="Gas Peringatan" desc="Alert gas amonia">
+            <NumInput value={config.gasWarningPpm} onChange={v => update("gasWarningPpm", v)} unit="ppm" max={500} />
+          </InputRow>
+          <InputRow icon={Settings2} label="Gas Kritis" desc="Alert kritis gas amonia">
+            <NumInput value={config.gasCriticalPpm} onChange={v => update("gasCriticalPpm", v)} unit="ppm" max={500} />
+          </InputRow>
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-title"><Bell size={16} /> Notifikasi</div>
+        <div style={{ marginTop: 8 }}>
+          <InputRow icon={Bell} label="Notifikasi Browser" desc="Push notification saat alert kritis">
+            <Toggle value={config.enableBrowserNotif} onChange={v => update("enableBrowserNotif", v)} />
+          </InputRow>
+          <InputRow icon={Bell} label="Suara Alert" desc="Bunyi saat ada peringatan baru">
+            <Toggle value={config.enableSoundAlert} onChange={v => update("enableSoundAlert", v)} />
+          </InputRow>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+        <button onClick={reset} style={{
+          padding: "10px 20px", background: "transparent", border: "1px solid var(--border-color)",
+          borderRadius: 8, color: "var(--text-muted)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <RotateCcw size={14} /> Reset Default
+        </button>
+        <button onClick={save} style={{
+          padding: "10px 24px", background: saved ? "var(--brand-organic)" : "#fff",
+          border: "none", borderRadius: 8, color: saved ? "#fff" : "#000",
+          fontSize: 13, fontWeight: 600, cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 6,
+          transition: "all 0.2s",
+        }}>
+          <Save size={14} /> {saved ? "✓ Tersimpan" : "Simpan Konfigurasi"}
+        </button>
+      </div>
+    </>
+  );
+}
