@@ -509,6 +509,19 @@ h3 {
   margin-bottom: 4px;
 }
 
+/* Fix Recharts White Background */
+.recharts-surface {
+  background: transparent !important;
+}
+
+.recharts-wrapper {
+  background: transparent !important;
+}
+
+.recharts-responsive-container {
+  background: transparent !important;
+}
+
 /* Scrollbar Customization */
 ::-webkit-scrollbar {
   width: 8px;
