@@ -48,6 +48,28 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
+// Forward optional interfaces so wrapped ResponseWriter still supports them.
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hj, ok := rw.ResponseWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+	return nil, nil, fmt.Errorf("underlying ResponseWriter does not support Hijacker")
+}
+
+func (rw *responseWriter) Flush() {
+	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+func (rw *responseWriter) CloseNotify() <-chan bool {
+	if cn, ok := rw.ResponseWriter.(http.CloseNotifier); ok {
+		return cn.CloseNotify()
+	}
+	ch := make(chan bool)
+	return ch
+}
+
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
