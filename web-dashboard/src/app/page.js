@@ -5,6 +5,7 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   ShieldCheck, Activity, Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText, Clock,
+  Sun, Moon,
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -36,6 +37,20 @@ function DashboardApp() {
   });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState("dark");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("visiobin-theme") || "dark";
+    setTheme(savedTheme);
+    document.body.classList.toggle("light-mode", savedTheme === "light");
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("visiobin-theme", newTheme);
+    document.body.classList.toggle("light-mode", newTheme === "light");
+  };
 
   const {
     summary,
@@ -212,26 +227,45 @@ function DashboardApp() {
             style={{
               width: 30,
               height: 30,
-              background: "#fff",
+              background: "var(--text-main)",
               borderRadius: 8,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 15px rgba(255,255,255,0.1)",
+              boxShadow: "var(--shadow-card)",
             }}
           >
-            <Trash2 size={16} color="#000" strokeWidth={2.5} />
+            <Trash2 size={16} color="var(--bg-page)" strokeWidth={2.5} />
           </div>
           <span
             style={{
               fontSize: 20,
               fontWeight: 700,
               letterSpacing: "-0.5px",
-              color: "#fff",
+              color: "var(--text-main)",
+              flex: 1,
             }}
           >
             VisioBin
           </span>
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border-color)",
+              borderRadius: 8,
+              padding: 6,
+              cursor: "pointer",
+              color: "var(--text-main)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
 
         <div style={{ position: "relative", marginBottom: 16 }}>
@@ -246,10 +280,10 @@ function DashboardApp() {
             style={{
               width: "100%",
               padding: "8px 12px 8px 32px",
-              background: "transparent",
+              background: "var(--bg-page)",
               border: "1px solid var(--border-color)",
               borderRadius: 6,
-              color: "#fff",
+              color: "var(--text-main)",
               fontSize: 13,
               outline: "none",
             }}
@@ -334,7 +368,7 @@ function DashboardApp() {
             </div>
             <div style={{ flex: 1 }}>
               <div
-                style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}
+                style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}
               >
                 Ifauze
               </div>
@@ -390,8 +424,8 @@ function DashboardApp() {
             <span />
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Trash2 size={16} color="#fff" />
-            <span style={{ fontWeight: 700, fontSize: 16, color: "#fff" }}>VisioBin</span>
+            <Trash2 size={16} color="var(--text-main)" />
+            <span style={{ fontWeight: 700, fontSize: 16, color: "var(--text-main)" }}>VisioBin</span>
           </div>
           <AlertBell
             alerts={alerts}

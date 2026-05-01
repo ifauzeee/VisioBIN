@@ -120,7 +120,7 @@ export default function AnalitikView() {
                   <XAxis dataKey="waktu" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis yAxisId="left" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis yAxisId="right" orientation="right" domain={[80,100]} stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background:"#111", border:"1px solid #333", borderRadius:8 }} />
+                  <Tooltip contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border-color)", borderRadius:8, color: "var(--text-main)" }} itemStyle={{ color: "var(--text-main)" }} />
                   <Legend wrapperStyle={{ fontSize:12 }} />
                   <Area yAxisId="left" type="monotone" dataKey="throughput" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gTp)" name="Throughput" />
                   <Area yAxisId="right" type="monotone" dataKey="kepercayaan" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gCf)" name="Kepercayaan (%)" />
@@ -137,7 +137,7 @@ export default function AnalitikView() {
               <div key={s.label}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6, fontSize:12 }}>
                   <span style={{ color:"var(--text-muted)" }}>{s.label}</span>
-                  <span className="mono" style={{ color:"#f4f4f4" }}>{s.value}%</span>
+                  <span className="mono" style={{ color:"var(--text-main)" }}>{s.value}%</span>
                 </div>
                 <div className="mix-track"><div className="mix-fill" style={{ width:`${s.value}%`, background:s.tone }} /></div>
               </div>

@@ -62,7 +62,7 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "2px solid var(--bg-page)",
+              border: "2px solid var(--bg-card)",
             }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -80,10 +80,10 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
             right: 0,
             width: 380,
             maxHeight: 480,
-            background: "#0A0A0A",
+            background: "var(--bg-card)",
             border: "1px solid var(--border-color)",
             borderRadius: 12,
-            boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
             zIndex: 100,
             display: "flex",
             flexDirection: "column",
@@ -100,7 +100,7 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
               alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-main)" }}>
               Notifikasi
               {unreadCount > 0 && (
                 <span
@@ -170,7 +170,7 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
                       marginBottom: 4,
                       background: alert.is_read
                         ? "transparent"
-                        : "rgba(255,255,255,0.03)",
+                        : "var(--bg-hover)",
                       borderLeft: alert.is_read
                         ? "3px solid transparent"
                         : `3px solid ${config.color}`,

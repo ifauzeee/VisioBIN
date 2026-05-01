@@ -49,11 +49,11 @@ export default function ConfigView() {
       padding: "14px 0", borderBottom: "1px solid var(--border-color)",
     }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flex: 1 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--bg-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon size={15} color="var(--text-muted)" />
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}>{label}</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}>{label}</div>
           {desc && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{desc}</div>}
         </div>
       </div>
@@ -66,8 +66,8 @@ export default function ConfigView() {
       <input type="number" value={value} min={min} max={max}
         onChange={e => onChange(Number(e.target.value))}
         style={{
-          width: 70, padding: "6px 10px", background: "rgba(255,255,255,0.04)",
-          border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff",
+          width: 70, padding: "6px 10px", background: "var(--bg-page)",
+          border: "1px solid var(--border-color)", borderRadius: 6, color: "var(--text-main)",
           fontSize: 13, outline: "none", textAlign: "right",
         }}
       />
@@ -78,11 +78,11 @@ export default function ConfigView() {
   const Toggle = ({ value, onChange }) => (
     <button onClick={() => onChange(!value)} style={{
       width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
-      background: value ? "var(--brand-organic)" : "rgba(255,255,255,0.1)",
+      background: value ? "var(--brand-organic)" : "var(--border-color)",
       position: "relative", transition: "background 0.2s",
     }}>
       <div style={{
-        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+        width: 18, height: 18, borderRadius: "50%", background: "var(--bg-card)",
         position: "absolute", top: 3, left: value ? 23 : 3, transition: "left 0.2s",
       }} />
     </button>
@@ -98,8 +98,8 @@ export default function ConfigView() {
             <input type="text" value={config.apiUrl}
               onChange={e => update("apiUrl", e.target.value)}
               style={{
-                width: 280, padding: "6px 12px", background: "rgba(255,255,255,0.04)",
-                border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff",
+                width: 280, padding: "6px 12px", background: "var(--bg-page)",
+                border: "1px solid var(--border-color)", borderRadius: 6, color: "var(--text-main)",
                 fontSize: 13, outline: "none", fontFamily: "JetBrains Mono, monospace",
               }}
             />
@@ -168,8 +168,8 @@ export default function ConfigView() {
           <RotateCcw size={14} /> Reset Default
         </button>
         <button onClick={save} style={{
-          padding: "10px 24px", background: saved ? "var(--brand-organic)" : "#fff",
-          border: "none", borderRadius: 8, color: saved ? "#fff" : "#000",
+          padding: "10px 24px", background: saved ? "var(--brand-organic)" : "var(--text-main)",
+          border: "none", borderRadius: 8, color: saved ? "#fff" : "var(--bg-page)",
           fontSize: 13, fontWeight: 600, cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
           transition: "all 0.2s",

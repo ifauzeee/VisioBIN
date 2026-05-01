@@ -41,7 +41,7 @@ export default function PemantauanView() {
                 <div
                   className="live-feed-preview"
                   style={{
-                    backgroundImage: `radial-gradient(circle at 20% 20%, ${s.tint} 0%, transparent 60%), linear-gradient(180deg, #111111 0%, #040404 100%)`
+                    backgroundImage: `radial-gradient(circle at 20% 20%, ${s.tint} 0%, transparent 60%), linear-gradient(180deg, var(--bg-hover) 0%, var(--bg-card) 100%)`
                   }}
                 >
                   <div className="live-feed-scan" />
@@ -53,12 +53,12 @@ export default function PemantauanView() {
 
                 <div style={{ padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#f4f4f4' }}>{s.zone}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)' }}>{s.zone}</div>
                     <div className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.latency}</div>
                   </div>
                   <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
                     <span>Frame rate</span>
-                    <span className="mono" style={{ color: '#f4f4f4' }}>{s.fps} FPS</span>
+                    <span className="mono" style={{ color: 'var(--text-main)' }}>{s.fps} FPS</span>
                   </div>
                 </div>
               </div>

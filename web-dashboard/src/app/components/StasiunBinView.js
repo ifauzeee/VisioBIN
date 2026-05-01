@@ -112,7 +112,7 @@ export default function StasiunBinView() {
               )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 4 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", marginBottom: 4 }}>
                     {bin.name}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -226,7 +226,7 @@ export default function StasiunBinView() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                       <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
-                      <Tooltip contentStyle={{ background: "#111", border: "1px solid #333", borderRadius: 8 }} />
+                      <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} itemStyle={{ color: "var(--text-main)" }} />
                       <Area type="monotone" dataKey="volOrganik" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gHistOrg)" name="Organik %" />
                       <Area type="monotone" dataKey="volAnorganik" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gHistInorg)" name="Anorganik %" />
                     </AreaChart>

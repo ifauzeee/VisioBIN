@@ -163,7 +163,7 @@ export default function LaporanView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                 <XAxis dataKey="tanggal" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "#111", border: "1px solid #333", borderRadius: 8 }} />
+                <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} itemStyle={{ color: "var(--text-main)" }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4,4,0,0]} name="Organik" />
                 <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4,4,0,0]} name="Anorganik" />

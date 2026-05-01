@@ -258,13 +258,13 @@ export default function PerangkatView() {
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                  }}
-                >
+                  <div
+                    style={{
+                      background: "var(--bg-hover)",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                    }}
+                  >
                   <div style={{ fontSize: 11, color: "var(--text-muted)" }}>🟢 Organik</div>
                   <div
                     className="mono"
@@ -277,13 +277,13 @@ export default function PerangkatView() {
                     {Math.round(s.volOrganik)}%
                   </div>
                 </div>
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                  }}
-                >
+                  <div
+                    style={{
+                      background: "var(--bg-hover)",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                    }}
+                  >
                   <div style={{ fontSize: 11, color: "var(--text-muted)" }}>🔵 Anorganik</div>
                   <div
                     className="mono"
@@ -296,25 +296,25 @@ export default function PerangkatView() {
                     {Math.round(s.volAnorganik)}%
                   </div>
                 </div>
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                  }}
-                >
+                  <div
+                    style={{
+                      background: "var(--bg-hover)",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                    }}
+                  >
                   <div style={{ fontSize: 11, color: "var(--text-muted)" }}>⚖️ Berat</div>
                   <div className="mono" style={{ fontSize: 18, fontWeight: 600 }}>
                     {totalWeight.toFixed(1)} kg
                   </div>
                 </div>
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                  }}
-                >
+                  <div
+                    style={{
+                      background: "var(--bg-hover)",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                    }}
+                  >
                   <div style={{ fontSize: 11, color: "var(--text-muted)" }}>💨 Gas</div>
                   <div className="mono" style={{
                     fontSize: 18,

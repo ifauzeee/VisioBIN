@@ -70,7 +70,7 @@ export default function TeamView() {
                 }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 2 }}>{member.name}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", marginBottom: 2 }}>{member.name}</div>
                 <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>{member.nim}</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <span style={{
@@ -80,7 +80,7 @@ export default function TeamView() {
                   <span style={{
                     fontSize: 11, padding: "3px 10px", borderRadius: 999,
                     color: member.status === "online" ? "#10B981" : "var(--text-muted)",
-                    background: member.status === "online" ? "rgba(16,185,129,0.1)" : "rgba(255,255,255,0.04)",
+                    background: member.status === "online" ? "rgba(16,185,129,0.1)" : "var(--bg-hover)",
                   }}>{member.status === "online" ? "● Online" : "○ Offline"}</span>
                 </div>
                 <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)" }}>
@@ -103,7 +103,7 @@ export default function TeamView() {
             color: "#fff", fontSize: 16, fontWeight: 700, flexShrink: 0,
           }}>PO</div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>Dr. Prihatin Oktivasari, S.Si., M.Si</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)" }}>Dr. Prihatin Oktivasari, S.Si., M.Si</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
               Program Studi Teknik Multimedia Dan Jaringan — Politeknik Negeri Jakarta
             </div>

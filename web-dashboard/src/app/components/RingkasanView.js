@@ -128,7 +128,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 height: `${vision.box.h}%`
               }}
             >
-              <div className="mono" style={{ position: 'absolute', top: -25, left: -1, background: 'var(--brand-organic)', color: '#000', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
+              <div className="mono" style={{ position: 'absolute', top: -25, left: -1, background: 'var(--brand-organic)', color: 'var(--bg-card)', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
                 {(vision.label || 'TERDETEKSI').toUpperCase()} {(vision.prob).toFixed(1)}%
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
             <svg width="200" height="220" viewBox="0 0 100 120">
               <path d="M10,20 L90,20 L80,110 L20,110 Z" fill="none" stroke="var(--border-hover)" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M0,20 L100,20" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+              <path d="M0,20 L100,20" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round" />
               <path d="M50,20 L50,110" stroke="var(--border-color)" strokeWidth="2" strokeDasharray="4,4" />
               <rect
                 x="28" width="44" rx="2" fill="var(--brand-organic)" opacity="0.9"
@@ -175,7 +175,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                 <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: 8 }} />
+                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -190,7 +190,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                   {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff' }} />
+                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
               </RPieChart>
             </ResponsiveContainer>
           </div>
@@ -213,7 +213,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                 <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: 8 }} />
+                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" />
                 <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" />
@@ -228,7 +228,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
             {displayLogs.map(log => (
               <div key={log.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{log.item}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
                   <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

@@ -5,7 +5,7 @@ import { Trash2, ShieldCheck } from 'lucide-react';
 
 export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#000' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
       <div style={{
         flex: 1,
         borderRight: '1px solid var(--border-color)',
@@ -14,23 +14,23 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
         padding: 60,
         position: 'relative',
         overflow: 'hidden',
-        background: '#050505',
+        background: 'var(--bg-card)',
         backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16,185,129,0.05) 0%, transparent 60%)'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44,
             height: 44,
-            background: '#fff',
+            background: 'var(--text-main)',
             borderRadius: 10,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(255,255,255,0.15)'
+            boxShadow: 'var(--shadow-card)'
           }}>
-            <Trash2 size={24} color="#000" strokeWidth={2.5} />
+            <Trash2 size={24} color="var(--bg-card)" strokeWidth={2.5} />
           </div>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
+          <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
             VisioBin Core
           </span>
         </div>
@@ -60,7 +60,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
               style={{ filter: 'drop-shadow(0 0 15px rgba(16,185,129,0.4))' }}
             />
           </svg>
-          <h2 style={{ fontSize: 40, fontWeight: 600, color: '#fff', letterSpacing: '-1.5px', marginBottom: 16, lineHeight: 1.1 }}>
+          <h2 style={{ fontSize: 40, fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-1.5px', marginBottom: 16, lineHeight: 1.1 }}>
             Terminal Sortir AI<br />Pintar & Otomatis.
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 16, lineHeight: 1.6, maxWidth: 440 }}>
@@ -70,9 +70,9 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, background: '#000' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, background: 'var(--bg-page)' }}>
         <div style={{ width: '100%', maxWidth: 360 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: '#fff', letterSpacing: '-0.5px', marginBottom: 8 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.5px', marginBottom: 8 }}>
             Masuk dengan aman
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 40 }}>
@@ -88,7 +88,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
                 type="text"
                 value={loginForm.username}
                 onChange={e => setLoginForm(p => ({ ...p, username: e.target.value }))}
-                style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none' }}
+                style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', fontSize: 14, outline: 'none' }}
                 placeholder="admin"
                 required
               />
@@ -128,8 +128,8 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: '#fff',
-                color: '#000',
+                background: 'var(--text-main)',
+                color: 'var(--bg-page)',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 14,
