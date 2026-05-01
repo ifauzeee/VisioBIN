@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { TrendingUp, Activity, Zap, Database, RefreshCw } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
@@ -125,6 +125,7 @@ export default function AnalitikView() {
                   <Legend wrapperStyle={{ fontSize:12 }} />
                   <Area yAxisId="left" type="monotone" dataKey="throughput" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gTp)" name="Throughput" />
                   <Area yAxisId="right" type="monotone" dataKey="kepercayaan" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gCf)" name="Kepercayaan (%)" />
+                  <Brush dataKey="waktu" height={30} stroke="var(--brand-inorganic)" fill="var(--bg-card)" tickFormatter={() => ''} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

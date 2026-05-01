@@ -8,9 +8,10 @@ import {
 import {
   AreaChart, Area, BarChart, Bar, PieChart as RPieChart,
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
+  ResponsiveContainer, Legend, Brush
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import {
   dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
@@ -36,8 +37,78 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
 
   const displayLogs = logs.length ? logs : defaultLogs;
 
+  // AI Insight Logic
+  const generateInsight = () => {
+    const total = summary.total_processed || 0;
+    const co2 = summary.co2 || 0;
+    const trend = 12; // Sample trend
+    
+    if (total > 500) {
+      return {
+        text: `Minggu ini, volume pemrosesan di sektor utama meningkat ${trend}%. Stasiun Bin 04 menunjukkan aktivitas tertinggi. Disarankan untuk menambah jadwal pengangkutan di hari Jumat malam.`,
+        type: 'warning',
+        icon: <TrendingUp size={16} />
+      };
+    }
+    return {
+      text: `Sistem beroperasi optimal. Efisiensi pemilahan mencapai 97.8% hari ini. Emisi CO2 berhasil dikurangi sebanyak ${co2}kg secara kumulatif.`,
+      type: 'success',
+      icon: <Sparkles size={16} />
+    };
+  };
+  const insight = generateInsight();
+
   return (
     <>
+      {/* AI Insight Narrative */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card"
+        style={{ 
+          marginBottom: 24, 
+          background: "linear-gradient(90deg, var(--bg-card) 0%, var(--bg-hover) 100%)",
+          border: "1px solid var(--border-color)",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          padding: "16px 24px"
+        }}
+      >
+        <div style={{ 
+          width: 40, 
+          height: 40, 
+          borderRadius: 12, 
+          background: insight.type === 'success' ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: insight.type === 'success' ? "var(--brand-organic)" : "#f59e0b"
+        }}>
+          {insight.icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>VisioBin AI Insight</span>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--border-hover)" }} />
+            <span style={{ fontSize: 11, color: "var(--brand-organic)", fontWeight: 600 }}>Baru saja</span>
+          </div>
+          <div style={{ fontSize: 14, color: "var(--text-main)", lineHeight: 1.5 }}>
+            {insight.text}
+          </div>
+        </div>
+        <button style={{ 
+          background: "transparent", 
+          border: "1px solid var(--border-color)", 
+          padding: "8px 16px", 
+          borderRadius: 8,
+          fontSize: 12,
+          color: "var(--text-main)",
+          cursor: "pointer"
+        }}>
+          Detail Analisis
+        </button>
+      </motion.div>
       <div className="kpi-grid">
         <motion.div
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
@@ -208,6 +279,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" />
+                <Brush dataKey="jam" height={30} stroke="var(--brand-organic)" fill="var(--bg-card)" tickFormatter={() => ''} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

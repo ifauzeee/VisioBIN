@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
 import { Download } from "lucide-react";
 import { motion } from "framer-motion";
@@ -168,6 +168,7 @@ export default function LaporanView() {
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4,4,0,0]} name="Organik" />
                 <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4,4,0,0]} name="Anorganik" />
+                <Brush dataKey="tanggal" height={30} stroke="var(--brand-organic)" fill="var(--bg-card)" tickFormatter={() => ''} />
               </BarChart>
             </ResponsiveContainer>
           </div>

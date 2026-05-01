@@ -15,6 +15,7 @@ import { useAlerts } from "./hooks/useAlerts";
 import LoginScreen from "./components/LoginScreen";
 import RingkasanView from "./components/RingkasanView";
 import PemantauanView from "./components/PemantauanView";
+import PetaView from "./components/PetaView";
 import AnalitikView from "./components/AnalitikView";
 import LaporanView from "./components/LaporanView";
 import PerangkatView from "./components/PerangkatView";
@@ -58,6 +59,7 @@ function DashboardApp() {
     logs,
     binLevel,
     vision,
+    bins,
     loading: dashLoading,
     error: dashError,
     lastUpdated,
@@ -94,6 +96,13 @@ function DashboardApp() {
       badge: "8 Stream Aktif",
       color: "#22d3ee",
       icon: Video,
+    },
+    map: {
+      title: "Peta Lokasi",
+      subtitle: "Monitoring persebaran unit stasiun bin secara geografis.",
+      badge: "Live View",
+      color: "#ef4444",
+      icon: MapPin,
     },
     analitik: {
       title: "Analitik",
@@ -174,6 +183,7 @@ function DashboardApp() {
       items: [
         { key: "ringkasan", label: "Ringkasan", icon: SquareTerminal },
         { key: "pemantauan", label: "Pemantauan Langsung", icon: Activity },
+        { key: "map", label: "Peta Lokasi", icon: MapPin },
         { key: "analitik", label: "Analitik", icon: BarChart },
       ],
     },
@@ -517,6 +527,7 @@ function DashboardApp() {
               />
             )}
             {activeView === "pemantauan" && <PemantauanView />}
+            {activeView === "map" && <PetaView bins={bins} />}
             {activeView === "analitik" && <AnalitikView />}
             {activeView === "laporan" && <LaporanView />}
             {activeView === "perangkat" && <PerangkatView />}
