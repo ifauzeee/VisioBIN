@@ -566,12 +566,13 @@ h3 {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.04) 100%
+    var(--bg-hover) 0%,
+    var(--border-color) 50%,
+    var(--bg-hover) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0.6;
 }
 
 @keyframes shimmer {

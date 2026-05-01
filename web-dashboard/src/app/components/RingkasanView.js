@@ -10,6 +10,7 @@ import {
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from 'recharts';
+import { motion } from 'framer-motion';
 import {
   dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
@@ -38,7 +39,10 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
   return (
     <>
       <div className="kpi-grid">
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title">
             <Leaf size={16} color="var(--brand-organic)" /> Total Diproses Hari Ini
           </div>
@@ -51,9 +55,12 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
             </span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>item terklasifikasi</div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title">
             <Trash2 size={16} color="#22d3ee" /> Level Tempat Sampah
           </div>
@@ -70,47 +77,63 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               }}
             />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title"><Orbit size={16} /> CO2 Dikurangi</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{summary.co2}</span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>kg</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>estimasi bulan ini</div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title"><Cpu size={16} /> Latensi Edge</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{summary.latency}</span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>ms</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>waktu respons model</div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title"><Award size={16} color="#f59e0b" /> Akurasi Model AI</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>97.8</span>
             <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>rata-rata 7 hari</div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          className="card"
+        >
           <div className="card-title"><ShieldCheck size={16} color="var(--brand-organic)" /> Uptime Sistem</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>99.94</span>
             <span style={{ color: 'var(--brand-organic)', fontSize: 13 }}>%</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>30 hari terakhir</div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ padding: 0, display: 'flex', flexDirection: 'column' }}
+        >
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="card-title" style={{ margin: 0 }}><Focus size={16} /> Mesin Visi AI</div>
             <div style={{ width: 8, height: 8, background: vision.state === 'locked' ? 'var(--brand-organic)' : 'var(--text-muted)', borderRadius: '50%' }} />
@@ -133,9 +156,13 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title"><Activity size={16} /> Reservoir Tempat Sampah</div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
             <svg width="200" height="220" viewBox="0 0 100 120">
@@ -157,11 +184,15 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               {binLevel > 80 ? '⚠️ Segera kosongkan!' : binLevel > 60 ? '🟡 Mulai penuh' : '✅ Normal'}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">📈 Riwayat Volume Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -180,9 +211,13 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">🥧 Distribusi Jenis Sampah</div>
           <div style={{ flex: 1, marginTop: 8 }}>
             <ResponsiveContainer width="100%" height={220}>
@@ -201,11 +236,15 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -220,9 +259,13 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title"><Activity size={16} /> Log Aktivitas Terbaru</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {displayLogs.map(log => (
@@ -238,11 +281,15 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">⏱️ Jumlah Item Diproses Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -255,9 +302,13 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 320 }}>
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="card"
+          style={{ minHeight: 320 }}
+        >
           <div className="card-title">🌿 Dampak Lingkungan</div>
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {dampakLingkungan.map(d => (
@@ -275,7 +326,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );

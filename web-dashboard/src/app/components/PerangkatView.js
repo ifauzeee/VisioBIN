@@ -8,6 +8,7 @@ import { SkeletonCard, SkeletonTable } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { getBinLevelColor } from "../utils/formatters";
 import { dataSensor } from "../dashboardData";
+import { motion } from "framer-motion";
 
 export default function PerangkatView() {
   const { token } = useAuth();
@@ -62,7 +63,7 @@ export default function PerangkatView() {
           [1, 2, 3].map((i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            <div className="card">
+            <motion.div className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <Cpu size={16} /> Total Perangkat
               </div>
@@ -72,9 +73,9 @@ export default function PerangkatView() {
               <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
                 unit terdaftar di sistem
               </div>
-            </div>
+            </motion.div>
 
-            <div className="card">
+            <motion.div className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <Wifi size={16} color="var(--brand-organic)" /> Aktif
               </div>
@@ -91,9 +92,9 @@ export default function PerangkatView() {
               <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
                 beroperasi normal
               </div>
-            </div>
+            </motion.div>
 
-            <div className="card">
+            <motion.div className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <AlertTriangle size={16} color="#f59e0b" /> Peringatan
               </div>
@@ -110,7 +111,7 @@ export default function PerangkatView() {
               <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
                 butuh perhatian
               </div>
-            </div>
+            </motion.div>
           </>
         )}
       </div>
@@ -127,7 +128,7 @@ export default function PerangkatView() {
           />
         </div>
       ) : (
-        <div className="card" style={{ marginBottom: 24 }}>
+        <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.01 }}>
           <div className="card-title">📡 Status Perangkat IoT</div>
           <div style={{ marginTop: 16, overflowX: "auto" }}>
             <table className="report-table">
@@ -209,7 +210,7 @@ export default function PerangkatView() {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Device Cards */}

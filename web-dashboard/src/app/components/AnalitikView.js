@@ -6,6 +6,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
+import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
 import { SkeletonCard, SkeletonChart } from "./shared/Skeleton";
@@ -88,16 +89,16 @@ export default function AnalitikView() {
     <>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, marginBottom:24 }}>
         {kpi.map(item => (
-          <div key={item.label} className="card analytics-kpi-card">
+          <motion.div key={item.label} className="card analytics-kpi-card" whileHover={{ scale: 1.02 }}>
             <div className="card-title">{item.label}</div>
             <div style={{ marginTop:8, fontSize:34, fontWeight:600, letterSpacing:"-1px" }}>{item.value}</div>
             <div style={{ marginTop:10, fontSize:12, color:item.tone, fontWeight:600 }}>{item.delta} vs kemarin</div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
-        <div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }}>
+        <motion.div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
             {has && <button onClick={fetch_} style={{ background:"transparent", border:"none", cursor:"pointer", padding:4 }}><RefreshCw size={14} color="var(--text-muted)" /></button>}
@@ -128,9 +129,9 @@ export default function AnalitikView() {
               </ResponsiveContainer>
             </div>
           ) : <EmptyState title="Belum Ada Data Tren" description="Data muncul setelah klasifikasi pertama." />}
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }}>
+        <motion.div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
           <div className="card-title">🔀 Komposisi Klasifikasi</div>
           <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
             {split.map(s => (
@@ -147,11 +148,11 @@ export default function AnalitikView() {
             <div className="mini-stat"><Zap size={14} color="var(--brand-organic)" /><span className="mono">P95: {avgMs>0?Math.round(avgMs*1.7):64}ms</span></div>
             <div className="mini-stat"><Database size={14} color="var(--brand-inorganic)" /><span className="mono">Total: {total}</span></div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
-        <div className="card" style={{ minHeight:300, display:"flex", flexDirection:"column" }}>
+        <motion.div className="card" style={{ minHeight:300, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
           <div className="card-title">📈 Tren Akurasi Model Harian</div>
           {daily.length > 0 ? (
             <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>
@@ -166,9 +167,9 @@ export default function AnalitikView() {
               </ResponsiveContainer>
             </div>
           ) : <EmptyState title="Belum Ada Data Akurasi" />}
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div className="card" whileHover={{ scale: 1.01 }}>
           <div className="card-title"><Activity size={16} /> Ringkasan Performa</div>
           <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
             {[
@@ -184,7 +185,7 @@ export default function AnalitikView() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );

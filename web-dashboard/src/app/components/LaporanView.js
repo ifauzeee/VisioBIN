@@ -6,6 +6,7 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { Download } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
 import { SkeletonCard, SkeletonChart, SkeletonTable } from "./shared/Skeleton";
@@ -87,30 +88,30 @@ export default function LaporanView() {
     <>
       {/* KPI */}
       <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="card">
+        <motion.div className="card" whileHover={{ scale: 1.02 }}>
           <div className="card-title">📦 Total Item</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{totalItems}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>dari {dailyData.length} hari data</div>
-        </div>
-        <div className="card">
+        </motion.div>
+        <motion.div className="card" whileHover={{ scale: 1.02 }}>
           <div className="card-title">🎯 Rata-rata Akurasi</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{avgAcc}%</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>confidence model AI</div>
-        </div>
-        <div className="card">
+        </motion.div>
+        <motion.div className="card" whileHover={{ scale: 1.02 }}>
           <div className="card-title">♻️ Tingkat Daur Ulang</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "var(--brand-organic)" }}>{Math.min(recycleRate, 99)}%</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>target: 85%</div>
-        </div>
-        <div className="card">
+        </motion.div>
+        <motion.div className="card" whileHover={{ scale: 1.02 }}>
           <div className="card-title">🌍 CO2 Dicegah</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#22d3ee" }}>{co2} kg</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>estimasi kumulatif</div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Table with Export */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.01 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="card-title">📋 Laporan Harian</div>
           <div style={{ display: "flex", gap: 10 }}>
@@ -151,11 +152,11 @@ export default function LaporanView() {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Charts */}
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ minHeight: 320, display: "flex", flexDirection: "column" }}>
+        <motion.div className="card" style={{ minHeight: 320, display: "flex", flexDirection: "column" }} whileHover={{ y: -5 }}>
           <div className="card-title">📊 Perbandingan Organik vs Anorganik</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -170,9 +171,9 @@ export default function LaporanView() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 320 }}>
+        <motion.div className="card" style={{ minHeight: 320 }} whileHover={{ y: -5 }}>
           <div className="card-title">🌿 Dampak Lingkungan</div>
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
             {[
@@ -193,7 +194,7 @@ export default function LaporanView() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );

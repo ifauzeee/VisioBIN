@@ -24,6 +24,7 @@ import ConfigView from "./components/ConfigView";
 import AlertBell from "./components/shared/AlertBell";
 import DataFreshness from "./components/shared/DataFreshness";
 import { formatFullDateTime } from "./utils/formatters";
+import { motion, AnimatePresence } from "framer-motion";
 
 function DashboardApp() {
   const { mounted, isAuthenticated, isCheckingAuth, token, login, logout } =
@@ -301,8 +302,10 @@ function DashboardApp() {
                 const Icon = item.icon;
                 const isDisabled = item.key.startsWith("_");
                 return (
-                  <div
+                  <motion.div
                     key={item.key}
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() =>
                       !isDisabled && setActiveView(item.key)
                     }
@@ -328,7 +331,7 @@ function DashboardApp() {
                         soon
                       </span>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </React.Fragment>
@@ -497,23 +500,31 @@ function DashboardApp() {
           </div>
         </header>
 
-        <div className="view-transition">
-          {activeView === "ringkasan" && (
-            <RingkasanView
-              summary={summary}
-              binLevel={binLevel}
-              vision={vision}
-              logs={logs}
-            />
-          )}
-          {activeView === "pemantauan" && <PemantauanView />}
-          {activeView === "analitik" && <AnalitikView />}
-          {activeView === "laporan" && <LaporanView />}
-          {activeView === "perangkat" && <PerangkatView />}
-          {activeView === "stasiun" && <StasiunBinView />}
-          {activeView === "team" && <TeamView />}
-          {activeView === "config" && <ConfigView />}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeView}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {activeView === "ringkasan" && (
+              <RingkasanView
+                summary={summary}
+                binLevel={binLevel}
+                vision={vision}
+                logs={logs}
+              />
+            )}
+            {activeView === "pemantauan" && <PemantauanView />}
+            {activeView === "analitik" && <AnalitikView />}
+            {activeView === "laporan" && <LaporanView />}
+            {activeView === "perangkat" && <PerangkatView />}
+            {activeView === "stasiun" && <StasiunBinView />}
+            {activeView === "team" && <TeamView />}
+            {activeView === "config" && <ConfigView />}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

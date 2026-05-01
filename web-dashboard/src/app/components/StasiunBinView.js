@@ -9,6 +9,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
 } from "recharts";
+import { motion } from "framer-motion";
 import { useBins } from "../hooks/useBins";
 import { useAuth } from "../hooks/useAuth";
 import { SkeletonCard, SkeletonChart } from "./shared/Skeleton";
@@ -42,13 +43,13 @@ export default function StasiunBinView() {
 
   if (error || bins.length === 0) {
     return (
-      <div className="card">
+      <motion.div className="card" whileHover={{ scale: 1.02 }}>
         <EmptyState
           icon={Box}
           title="Belum Ada Stasiun Bin"
           description="Belum ada unit tempat sampah VisioBin yang terdaftar. Tambahkan melalui API atau hubungi administrator."
         />
-      </div>
+      </motion.div>
     );
   }
 
