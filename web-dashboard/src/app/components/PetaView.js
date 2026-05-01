@@ -1,56 +1,91 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Info, Battery, Zap, Trash2 } from "lucide-react";
+import { Battery, Zap, Trash2 } from "lucide-react";
 import { getBinLevelColor } from "../utils/formatters";
 
-// Fix for Leaflet default icon issues in Next.js
-const DefaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-// Custom Marker for VisioBin Status
-const createCustomIcon = (level) => {
-  const color = getBinLevelColor(level);
-  return L.divIcon({
-    className: "custom-bin-marker",
-    html: `
-      <div style="
-        width: 32px;
-        height: 32px;
-        background: var(--bg-card);
-        border: 2px solid ${color};
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: pulse-${level > 80 ? 'red' : 'green'} 2s infinite;
-      ">
-        <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-  });
-};
-
-function ChangeView({ center, zoom }) {
-  const map = useMap();
-  map.setView(center, zoom);
-  return null;
-}
-
+// We will load Leaflet dynamically inside the component
 export default function PetaView({ bins }) {
   const [activeBin, setActiveBin] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [LeafletComponents, setLeafletComponents] = useState(null);
+
+  useEffect(() => {
+    // Load Leaflet and its React wrappers only on the client
+    const loadLeaflet = async () => {
+      const L = await import("leaflet");
+      await import("leaflet/dist/leaflet.css");
+      
+      // Fix for Leaflet default icon issues in Next.js
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      const { MapContainer, TileLayer, Marker, Popup, useMap } = await import("react-leaflet");
+      
+      setLeafletComponents({
+        L,
+        MapContainer,
+        TileLayer,
+        Marker,
+        Popup,
+        useMap
+      });
+      setIsMounted(true);
+    };
+
+    loadLeaflet();
+  }, []);
+
+  const ChangeView = ({ center, zoom }) => {
+    const map = LeafletComponents.useMap();
+    useEffect(() => {
+      map.setView(center, zoom);
+    }, [center, zoom, map]);
+    return null;
+  };
+
+  const createCustomIcon = (level) => {
+    const { L } = LeafletComponents;
+    const color = getBinLevelColor(level);
+    return L.divIcon({
+      className: "custom-bin-marker",
+      html: `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: var(--bg-card);
+          border: 2px solid ${color};
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          animation: pulse-${level > 80 ? 'red' : 'green'} 2s infinite;
+        ">
+          <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%;"></div>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+  };
+
+  if (!isMounted || !LeafletComponents) {
+    return (
+      <div className="card" style={{ height: "calc(100vh - 180px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div className="shimmer" style={{ width: 40, height: 40, borderRadius: "50%", margin: "0 auto 16px" }} />
+          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Inisialisasi Peta...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const { MapContainer, TileLayer, Marker, Popup } = LeafletComponents;
 
   // Sample center (Jakarta/Depok area)
   const defaultCenter = [-6.3625, 106.8241]; // Near PNJ/UI Depok
@@ -58,8 +93,7 @@ export default function PetaView({ bins }) {
     ? [activeBin.latitude || defaultCenter[0], activeBin.longitude || defaultCenter[1]]
     : defaultCenter;
 
-  // Enhance bins with sample locations if they don't have them
-  const enrichedBins = bins.map((bin, i) => ({
+  const enrichedBins = (bins || []).map((bin) => ({
     ...bin,
     latitude: bin.latitude || defaultCenter[0] + (Math.random() - 0.5) * 0.01,
     longitude: bin.longitude || defaultCenter[1] + (Math.random() - 0.5) * 0.01,
@@ -132,7 +166,6 @@ export default function PetaView({ bins }) {
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            // Use dark tiles for dark mode if possible, or just standard
           />
           <ChangeView center={mapCenter} zoom={activeBin ? 17 : 15} />
           
@@ -202,9 +235,6 @@ export default function PetaView({ bins }) {
       <style jsx global>{`
         .leaflet-container {
           filter: var(--theme-name) === 'dark' ? 'invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%)' : 'none';
-        }
-        .leaflet-tile-pane {
-          filter: var(--map-filter);
         }
         @keyframes pulse-red {
           0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }

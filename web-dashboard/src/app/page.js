@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   SquareTerminal, BarChart, Settings2, Trash2,
   ShieldCheck, Activity, Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText, Clock,
-  Sun, Moon,
+  Sun, Moon, MapPin
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -15,7 +16,7 @@ import { useAlerts } from "./hooks/useAlerts";
 import LoginScreen from "./components/LoginScreen";
 import RingkasanView from "./components/RingkasanView";
 import PemantauanView from "./components/PemantauanView";
-import PetaView from "./components/PetaView";
+const PetaView = dynamic(() => import("./components/PetaView"), { ssr: false });
 import AnalitikView from "./components/AnalitikView";
 import LaporanView from "./components/LaporanView";
 import PerangkatView from "./components/PerangkatView";
