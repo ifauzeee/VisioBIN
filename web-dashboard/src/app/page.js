@@ -304,7 +304,7 @@ function DashboardApp() {
 
         <nav
           style={{ flex: 1, overflowY: "auto", marginRight: -8, paddingRight: 8 }}
-          className="custom-scrollbar"
+          className="hide-scrollbar"
         >
           {navItems.map((group) => (
             <React.Fragment key={group.section}>
@@ -349,9 +349,10 @@ function DashboardApp() {
           ))}
         </nav>
 
+        {/* 3. Spacer otomatis & Widget IoT / Sistem */}
         <div
           style={{
-            marginTop: 24,
+            marginTop: "auto",
             paddingTop: 16,
             borderTop: "1px solid var(--border-color)",
             display: "flex",
@@ -359,6 +360,34 @@ function DashboardApp() {
             gap: 4,
           }}
         >
+          {/* Mini System Status Widget */}
+          <div
+            style={{
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border-color)",
+              borderRadius: 8,
+              padding: "10px 12px",
+              marginBottom: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px" }}>
+              SYSTEM STATUS
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+              <span style={{ color: "var(--text-muted)" }}>AI Vision</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--brand-organic)", fontWeight: 500 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-organic)" }} />
+                Online
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+              <span style={{ color: "var(--text-muted)" }}>Storage</span>
+              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>45%</span>
+            </div>
+          </div>
           <div
             className="nav-item"
             style={{ marginLeft: -12, marginRight: -12 }}
