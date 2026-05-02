@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math"
 	"time"
@@ -13,12 +14,21 @@ import (
 type ForecastService struct {
 	telemetryRepo *repository.TelemetryRepository
 	binRepo       *repository.BinRepository
+	userRepo      *repository.UserRepository
+	notifSvc      *NotificationService
 }
 
-func NewForecastService(tr *repository.TelemetryRepository, br *repository.BinRepository) *ForecastService {
+func NewForecastService(
+	tr *repository.TelemetryRepository,
+	br *repository.BinRepository,
+	ur *repository.UserRepository,
+	ns *NotificationService,
+) *ForecastService {
 	return &ForecastService{
 		telemetryRepo: tr,
 		binRepo:       br,
+		userRepo:      ur,
+		notifSvc:      ns,
 	}
 }
 
@@ -114,31 +124,43 @@ func (s *ForecastService) calculateFillRate(readings []models.SensorReading, get
 }
 
 func (s *ForecastService) CheckThresholds(ctx context.Context, reading *models.SensorReading, alertRepo *repository.AlertRepository) {
+	// Ambil nama bin untuk notifikasi yang lebih informatif
+	binName := reading.BinID
+	if bin, err := s.binRepo.GetByID(ctx, reading.BinID); err == nil {
+		binName = bin.Name
+	}
+
 	// Volume Checks
-	s.checkVolume(ctx, alertRepo, reading.BinID, "ORGANIK", reading.VolumeOrganicPct)
-	s.checkVolume(ctx, alertRepo, reading.BinID, "ANORGANIK", reading.VolumeInorganicPct)
+	s.checkVolume(ctx, alertRepo, reading.BinID, binName, "ORGANIK", reading.VolumeOrganicPct)
+	s.checkVolume(ctx, alertRepo, reading.BinID, binName, "ANORGANIK", reading.VolumeInorganicPct)
 
 	// Ammonia Checks
 	if reading.GasAmoniaPpm != nil {
 		gas := *reading.GasAmoniaPpm
 		if gas >= 50 {
 			s.createAlert(ctx, alertRepo, reading.BinID, "gas_critical", "Kadar amonia TINGGI (>50 ppm)! Sampah organik membusuk.", "critical")
+			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, gas)
 		} else if gas >= 25 {
 			s.createAlert(ctx, alertRepo, reading.BinID, "gas_warning", "Kadar amonia meningkat (>25 ppm)", "warning")
+			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, gas)
 		}
 	}
 }
 
-func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository.AlertRepository, binID, label string, volPtr *float64) {
+func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository.AlertRepository, binID, binName, label string, volPtr *float64) {
 	if volPtr == nil {
 		return
 	}
 
 	vol := *volPtr
 	if vol >= 95 {
-		s.createAlert(ctx, alertRepo, binID, "volume_critical", "Kompartemen "+label+" hampir penuh (>95%)!", "critical")
+		msg := fmt.Sprintf("Kompartemen %s hampir penuh (>95%)!", label)
+		s.createAlert(ctx, alertRepo, binID, "volume_critical", msg, "critical")
+		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, "volume_critical", "critical", vol)
 	} else if vol >= 80 {
-		s.createAlert(ctx, alertRepo, binID, "volume_high", "Volume kompartemen "+label+" melebihi 80%", "warning")
+		msg := fmt.Sprintf("Volume kompartemen %s melebihi 80%%", label)
+		s.createAlert(ctx, alertRepo, binID, "volume_high", msg, "warning")
+		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, "volume_high", "warning", vol)
 	}
 }
 

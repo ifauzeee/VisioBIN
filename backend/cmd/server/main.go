@@ -38,7 +38,8 @@ func main() {
 	userRepo := repository.NewUserRepository(db.Pool)
 
 	// Service Layer
-	forecastSvc := services.NewForecastService(telemetryRepo, binRepo)
+	notifSvc    := services.NewNotificationService()
+	forecastSvc := services.NewForecastService(telemetryRepo, binRepo, userRepo, notifSvc)
 	dashboardSvc := services.NewDashboardService(db.Pool)
 	broadcaster := services.NewBroadcaster()
 	go broadcaster.Run()

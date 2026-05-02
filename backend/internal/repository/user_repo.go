@@ -109,3 +109,32 @@ func (r *UserRepository) GetOperators(ctx context.Context) ([]models.User, error
 
 	return users, nil
 }
+
+// GetAllFCMTokens mengembalikan semua FCM token dari operator dan admin yang terdaftar.
+// Digunakan oleh NotificationService untuk broadcast alert ke semua petugas.
+func (r *UserRepository) GetAllFCMTokens(ctx context.Context) ([]string, error) {
+	query := `
+		SELECT fcm_token
+		FROM users 
+		WHERE role IN ('operator', 'admin') 
+		  AND fcm_token IS NOT NULL 
+		  AND fcm_token != ''
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("get fcm tokens: %w", err)
+	}
+	defer rows.Close()
+
+	var tokens []string
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err != nil {
+			continue
+		}
+		tokens = append(tokens, token)
+	}
+
+	return tokens, nil
+}
