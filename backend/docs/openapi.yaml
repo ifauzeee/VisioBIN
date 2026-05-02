@@ -1,0 +1,172 @@
+openapi: 3.0.3
+info:
+  title: VisioBin API
+  description: API Documentation for VisioBin Smart Waste Management System. Handles telemetry ingestion from IoT edge devices and serves dashboard analytics.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.visiobin.local/api/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: User Login
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+
+  /health:
+    get:
+      summary: API Health Check
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  /dashboard/summary:
+    get:
+      summary: Get Dashboard Overview
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Dashboard statistics and charts data
+
+  /telemetry:
+    post:
+      summary: Ingest Sensor Telemetry
+      description: Endpoint for ESP32/Raspberry Pi to send sensor data (ToF, Load Cell, Gas)
+      tags:
+        - IoT Data
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bin_id:
+                  type: string
+                volume_organic_pct:
+                  type: number
+                volume_inorganic_pct:
+                  type: number
+                volume_total_pct:
+                  type: number
+                weight_kg:
+                  type: number
+                gas_ppm:
+                  type: number
+      responses:
+        '201':
+          description: Telemetry saved
+
+  /classifications:
+    post:
+      summary: Log AI Vision Classification
+      description: Endpoint for Raspberry Pi AI Edge (YOLOv5) to log waste classification events
+      tags:
+        - IoT Data
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bin_id:
+                  type: string
+                predicted_class:
+                  type: string
+                  enum: [organic, inorganic]
+                confidence:
+                  type: number
+                inference_time_ms:
+                  type: number
+      responses:
+        '201':
+          description: Classification logged
+    
+    get:
+      summary: List Recent Classifications
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Array of classifications
+
+  /bins:
+    get:
+      summary: List all active VisioBin stations
+      tags:
+        - Bins
+      responses:
+        '200':
+          description: List of bins
+    
+    post:
+      summary: Register a new VisioBin station
+      tags:
+        - Bins
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+      responses:
+        '201':
+          description: Bin created
+
+  /alerts:
+    get:
+      summary: List system alerts (Full volume, Gas leak)
+      tags:
+        - Alerts
+      responses:
+        '200':
+          description: List of alerts
