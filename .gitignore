@@ -56,3 +56,7 @@ __pycache__/
 
 # Logs
 *.log
+
+# Firebase secrets
+firebase-service-account.json
+backend/firebase-service-account.json
