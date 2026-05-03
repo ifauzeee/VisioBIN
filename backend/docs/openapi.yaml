@@ -1,8 +1,18 @@
 openapi: 3.0.3
 info:
   title: VisioBin API
-  description: API Documentation for VisioBin Smart Waste Management System. Handles telemetry ingestion from IoT edge devices and serves dashboard analytics.
-  version: 1.0.0
+  description: |
+    API Documentation for VisioBin Smart Waste Management System. 
+    
+    VisioBin is an AI-powered waste management system that uses:
+    * **Edge AI**: YOLOv5 on Raspberry Pi for real-time classification.
+    * **IoT Sensors**: ESP32 with Load Cells and Gas Sensors for telemetry.
+    * **Cloud Analytics**: Go-based backend for forecasting and reporting.
+  version: 1.1.0
+  contact:
+    name: VisioBin Team
+    url: https://github.com/ifauze/visiobin
+
 servers:
   - url: http://localhost:8080/api/v1
     description: Local development server
@@ -15,16 +25,169 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key for IoT devices (Raspberry Pi & ESP32)
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, guest]
+        created_at:
+          type: string
+          format: date-time
+
+    Bin:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, maintenance]
+        volume_organic_pct:
+          type: number
+        volume_inorganic_pct:
+          type: number
+        weight_kg:
+          type: number
+        last_seen:
+          type: string
+          format: date-time
+
+    Telemetry:
+      type: object
+      properties:
+        id:
+          type: integer
+        bin_id:
+          type: string
+        volume_organic_pct:
+          type: number
+        volume_inorganic_pct:
+          type: number
+        weight_kg:
+          type: number
+        gas_amonia_ppm:
+          type: number
+        recorded_at:
+          type: string
+          format: date-time
+
+    Classification:
+      type: object
+      properties:
+        id:
+          type: string
+        bin_id:
+          type: string
+        predicted_class:
+          type: string
+          enum: [organic, inorganic]
+        confidence:
+          type: number
+        inference_time_ms:
+          type: integer
+        classified_at:
+          type: string
+          format: date-time
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        bin_id:
+          type: string
+        type:
+          type: string
+          enum: [volume_high, volume_critical, gas_warning, gas_critical]
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Forecast:
+      type: object
+      properties:
+        bin_id:
+          type: string
+        current_volume_organic:
+          type: number
+        current_volume_inorganic:
+          type: number
+        fill_rate_per_hour:
+          type: number
+        hours_until_full_organic:
+          type: number
+        estimated_full_organic:
+          type: string
+          format: date-time
+
+    MaintenanceLog:
+      type: object
+      properties:
+        id:
+          type: string
+        bin_id:
+          type: string
+        action:
+          type: string
+        operator_name:
+          type: string
+        notes:
+          type: string
+        performed_at:
+          type: string
+          format: date-time
 
 security:
   - bearerAuth: []
 
 paths:
+  # --- AUTHENTICATION ---
   /auth/login:
     post:
       summary: User Login
-      tags:
-        - Authentication
+      tags: [Authentication]
       security: []
       requestBody:
         required: true
@@ -32,11 +195,10 @@ paths:
           application/json:
             schema:
               type: object
+              required: [username, password]
               properties:
-                username:
-                  type: string
-                password:
-                  type: string
+                username: { type: string }
+                password: { type: string }
       responses:
         '200':
           description: Login successful
@@ -45,128 +207,307 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                  token:
-                    type: string
+                  success: { type: boolean }
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /auth/register:
+    post:
+      summary: Register New User
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, full_name]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                full_name: { type: string }
+      responses:
+        '201':
+          description: User registered
+        '400':
+          description: Validation error
+
+  /auth/guest:
+    post:
+      summary: Guest Login
+      description: Get a limited JWT token for monitoring-only access
+      tags: [Authentication]
+      security: []
+      responses:
+        '200':
+          description: Guest token provided
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+
+  /auth/profile:
+    put:
+      summary: Update User Profile
+      tags: [Authentication]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Profile updated
+
+  # --- IOT DATA INGESTION ---
+  /telemetry:
+    get:
+      summary: List All Telemetry
+      description: Admin-only access to all historical sensor data
+      tags: [IoT Data]
+      parameters:
+        - name: bin_id
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Telemetry' }
+    post:
+      summary: Ingest Sensor Telemetry
+      description: |
+        Endpoint for ESP32/Raspberry Pi to send sensor data.
+        Requires `X-API-Key` in header.
+      tags: [IoT Data]
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_id]
+              properties:
+                bin_id: { type: string }
+                volume_organic_pct: { type: number }
+                volume_inorganic_pct: { type: number }
+                weight_kg: { type: number }
+                gas_amonia_ppm: { type: number }
+      responses:
+        '201':
+          description: Telemetry saved
+        '401':
+          description: Invalid API Key
+
+  /classifications:
+    get:
+      summary: List Recent Classifications
+      tags: [Analytics]
+      parameters:
+        - name: bin_id
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Array of classifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Classification' }
+    post:
+      summary: Log AI Vision Classification
+      description: |
+        Endpoint for Raspberry Pi AI Edge (YOLOv5) to log events.
+        Requires `X-API-Key` in header.
+      tags: [IoT Data]
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_id, predicted_class, confidence]
+              properties:
+                bin_id: { type: string }
+                predicted_class: { type: string, enum: [organic, inorganic] }
+                confidence: { type: number }
+                inference_time_ms: { type: integer }
+      responses:
+        '201':
+          description: Classification logged
+
+  # --- BIN MANAGEMENT ---
+  /bins:
+    get:
+      summary: List all VisioBin stations
+      tags: [Bins]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Bin' }
+    post:
+      summary: Register a new VisioBin station
+      tags: [Bins]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, location]
+              properties:
+                id: { type: string }
+                name: { type: string }
+                location: { type: string }
+      responses:
+        '201':
+          description: Bin registered
+
+  /bins/{id}:
+    get:
+      summary: Get Bin Details
+      tags: [Bins]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Bin' }
+  
+  /bins/{id}/history:
+    get:
+      summary: Get Bin Sensor History
+      tags: [Bins]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: days
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        '200':
+          description: Success
+
+  /bins/{id}/forecast:
+    get:
+      summary: Get Filling Prediction
+      description: Get AI-calculated estimate of when the bin will be full.
+      tags: [Bins, Analytics]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Forecast' }
+
+  # --- DASHBOARD & ALERTS ---
+  /dashboard/summary:
+    get:
+      summary: Get Dashboard Overview
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Aggregated stats for the dashboard
+
+  /alerts:
+    get:
+      summary: List system alerts
+      tags: [Alerts]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Alert' }
+
+  /alerts/{id}/read:
+    put:
+      summary: Mark Alert as Read
+      tags: [Alerts]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+
+  # --- MAINTENANCE ---
+  /maintenance:
+    get:
+      summary: List Maintenance Logs
+      tags: [Maintenance]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MaintenanceLog' }
+    post:
+      summary: Create Maintenance Log
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_id, action]
+              properties:
+                bin_id: { type: string }
+                action: { type: string }
+                notes: { type: string }
+      responses:
+        '201':
+          description: Log saved
 
   /health:
     get:
       summary: API Health Check
-      tags:
-        - System
+      tags: [System]
       security: []
       responses:
         '200':
           description: OK
-
-  /dashboard/summary:
-    get:
-      summary: Get Dashboard Overview
-      tags:
-        - Dashboard
-      responses:
-        '200':
-          description: Dashboard statistics and charts data
-
-  /telemetry:
-    post:
-      summary: Ingest Sensor Telemetry
-      description: Endpoint for ESP32/Raspberry Pi to send sensor data (ToF, Load Cell, Gas)
-      tags:
-        - IoT Data
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                bin_id:
-                  type: string
-                volume_organic_pct:
-                  type: number
-                volume_inorganic_pct:
-                  type: number
-                volume_total_pct:
-                  type: number
-                weight_kg:
-                  type: number
-                gas_ppm:
-                  type: number
-      responses:
-        '201':
-          description: Telemetry saved
-
-  /classifications:
-    post:
-      summary: Log AI Vision Classification
-      description: Endpoint for Raspberry Pi AI Edge (YOLOv5) to log waste classification events
-      tags:
-        - IoT Data
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                bin_id:
-                  type: string
-                predicted_class:
-                  type: string
-                  enum: [organic, inorganic]
-                confidence:
-                  type: number
-                inference_time_ms:
-                  type: number
-      responses:
-        '201':
-          description: Classification logged
-    
-    get:
-      summary: List Recent Classifications
-      tags:
-        - Analytics
-      responses:
-        '200':
-          description: Array of classifications
-
-  /bins:
-    get:
-      summary: List all active VisioBin stations
-      tags:
-        - Bins
-      responses:
-        '200':
-          description: List of bins
-    
-    post:
-      summary: Register a new VisioBin station
-      tags:
-        - Bins
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                location:
-                  type: string
-      responses:
-        '201':
-          description: Bin created
-
-  /alerts:
-    get:
-      summary: List system alerts (Full volume, Gas leak)
-      tags:
-        - Alerts
-      responses:
-        '200':
-          description: List of alerts

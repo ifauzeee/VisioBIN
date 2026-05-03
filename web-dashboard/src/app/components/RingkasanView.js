@@ -16,7 +16,7 @@ import {
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
 
-export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast }) {
+export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive }) {
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
@@ -233,19 +233,50 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           className="glass-card"
-          style={{ padding: '20px 24px', border: '1px solid rgba(16, 185, 129, 0.2)' }}
+          style={{ 
+            padding: '20px 24px', 
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            background: 'linear-gradient(135deg, var(--glass-bg) 0%, rgba(16, 185, 129, 0.05) 100%)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
         >
-          <div className="card-title"><Clock size={16} color="var(--brand-organic)" /> Estimasi Penuh</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-1px' }}>
-              {forecast?.hours_until_full_organic ? Math.round(forecast.hours_until_full_organic) : '—'}
-            </span>
-            <span style={{ color: 'var(--brand-organic)', fontSize: 13 }}>jam</span>
+          <div className="card-title">
+            <Clock size={16} color="var(--brand-organic)" /> 
+            Estimasi Penuh
+            {wsActive && (
+              <div className="pulse-dot-green" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-organic)', marginLeft: 'auto' }} title="Live Connection Active" />
+            )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-1px' }}>
+                {forecast?.hours_until_full_organic ? Math.round(forecast.hours_until_full_organic) : '—'}
+              </span>
+              <span style={{ color: 'var(--brand-organic)', fontSize: 13, fontWeight: 600 }}>jam</span>
+            </div>
+            
+            {/* Sparkline for trend */}
+            <div style={{ width: 80, height: 40 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={rawGraphData.slice(-10)}>
+                  <Area 
+                    type="monotone" 
+                    dataKey="volume" 
+                    stroke="var(--brand-organic)" 
+                    fill="var(--brand-organic)" 
+                    fillOpacity={0.2} 
+                    strokeWidth={2}
+                    isAnimationActive={true}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.4 }}>
             {forecast?.estimated_full_organic 
-              ? `Diprediksi penuh pada ${new Date(forecast.estimated_full_organic).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
-              : 'Data belum cukup untuk prediksi'}
+              ? `Prediksi penuh pada pukul ${new Date(forecast.estimated_full_organic).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
+              : 'Menunggu data telemetri tambahan...'}
           </div>
         </motion.div>
       </motion.div>
@@ -385,7 +416,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-                <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={false} />
+                <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={true} />
                 <Brush 
                   dataKey="jam" 
                   height={30} 
@@ -412,7 +443,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height={220}>
               <RPieChart style={{ background: 'transparent' }}>
-                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={false}>
+                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
                   {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
@@ -454,8 +485,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" isAnimationActive={false} />
-                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" isAnimationActive={false} />
+                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" isAnimationActive={true} />
+                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" isAnimationActive={true} />
               </BarChart>
             </ResponsiveContainer>
           </div>

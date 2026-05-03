@@ -81,6 +81,7 @@ function DashboardApp() {
     vision,
     bins,
     forecast,
+    wsActive,
     loading: dashLoading,
     error: dashError,
     lastUpdated,
@@ -624,6 +625,7 @@ function DashboardApp() {
                 vision={vision}
                 logs={logs}
                 forecast={forecast}
+                wsActive={wsActive}
               />
             )}
             {activeView === "pemantauan" && <PemantauanView />}

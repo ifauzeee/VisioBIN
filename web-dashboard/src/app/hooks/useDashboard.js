@@ -39,6 +39,7 @@ export function useDashboard(token) {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [forecast, setForecast] = useState(null);
+  const [wsActive, setWsActive] = useState(false);
   const visionTimeoutRef = useRef(null);
 
   const fetchData = useCallback(async () => {
@@ -151,6 +152,10 @@ export function useDashboard(token) {
     // WebSocket for Real-time
     const ws = new WebSocket(WS_BASE);
 
+    ws.onopen = () => setWsActive(true);
+    ws.onclose = () => setWsActive(false);
+    ws.onerror = () => setWsActive(false);
+
     ws.onmessage = (event) => {
       try {
         const { event: evType, data } = JSON.parse(event.data);
@@ -224,6 +229,7 @@ export function useDashboard(token) {
     binLevelInorg,
     vision,
     forecast,
+    wsActive,
     bins: summary.bin_statuses,
     loading,
     error,
