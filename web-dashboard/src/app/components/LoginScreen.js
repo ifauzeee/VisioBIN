@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Trash2, ShieldCheck, Eye } from 'lucide-react';
+import { Trash2, ShieldCheck, Eye, Code } from 'lucide-react';
 
-export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin }) {
+export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin, onShowDocs }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
       <div style={{
@@ -175,10 +175,35 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
                 fontWeight: 600,
                 cursor: 'pointer',
                 opacity: loginForm.loading ? 0.7 : 1,
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                marginBottom: 12
               }}
             >
               Masuk sebagai Tamu
+            </button>
+
+            <button
+              type="button"
+              onClick={onShowDocs}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                color: '#8B5CF6',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Code size={18} />
+              Lihat Dokumentasi API
             </button>
           </form>
 

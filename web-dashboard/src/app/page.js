@@ -219,16 +219,43 @@ function DashboardApp() {
     setLoginForm((p) => ({ ...p, loading: false }));
   };
 
+  const [showPublicDocs, setShowPublicDocs] = useState(false);
+
   if (!mounted || isCheckingAuth) return null;
-  if (!isAuthenticated)
+  
+  if (!isAuthenticated && !showPublicDocs)
     return (
       <LoginScreen
         loginForm={loginForm}
         setLoginForm={setLoginForm}
         handleLogin={handleLogin}
         handleGuestLogin={handleGuestLogin}
+        onShowDocs={() => setShowPublicDocs(true)}
       />
     );
+
+  if (showPublicDocs && !isAuthenticated) {
+    return (
+      <div className="app-container">
+        <main className="main-content" style={{ padding: '60px 80px' }}>
+          <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-1px", marginBottom: 8 }}>Dokumentasi API</h1>
+              <p style={{ color: "var(--text-muted)", fontSize: 15 }}>Spesifikasi teknis publik untuk integrasi VisioBin.</p>
+            </div>
+            <button 
+              onClick={() => setShowPublicDocs(false)}
+              className="btn-secondary"
+              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
+            >
+              Kembali ke Login
+            </button>
+          </div>
+          <ApiDocsView />
+        </main>
+      </div>
+    );
+  }
 
   const meta = viewMeta[activeView] || viewMeta.ringkasan;
   const MetaIcon = meta.icon;
