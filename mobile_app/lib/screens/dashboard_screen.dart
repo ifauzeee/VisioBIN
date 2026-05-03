@@ -458,8 +458,8 @@ class DashboardScreen extends StatelessWidget {
     final org = provider.summary.organicCountToday.toDouble();
     final inorg = provider.summary.inorganicCountToday.toDouble();
     final total = org + inorg;
-    final orgPct = total > 0 ? (org / total) * 100 : 50;
-    final inorgPct = total > 0 ? (inorg / total) * 100 : 50;
+    final orgPct = total > 0 ? (org / total) * 100 : 50.0;
+    final inorgPct = total > 0 ? (inorg / total) * 100 : 50.0;
 
     return [
       _makeGroupData(0, orgPct * 0.7, inorgPct * 0.5),

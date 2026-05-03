@@ -298,3 +298,38 @@ class AppUser {
     );
   }
 }
+
+class MaintenanceLog {
+  final int id;
+  final String binId;
+  final String actionType;
+  final String notes;
+  final String performedBy;
+  final DateTime performedAt;
+  final String? binName;
+  final String? performerName;
+
+  MaintenanceLog({
+    required this.id,
+    required this.binId,
+    required this.actionType,
+    this.notes = '',
+    required this.performedBy,
+    required this.performedAt,
+    this.binName,
+    this.performerName,
+  });
+
+  factory MaintenanceLog.fromJson(Map<String, dynamic> json) {
+    return MaintenanceLog(
+      id: json['id'] ?? 0,
+      binId: json['bin_id'] ?? '',
+      actionType: json['action_type'] ?? '',
+      notes: json['notes'] ?? '',
+      performedBy: json['performed_by'] ?? '',
+      performedAt: DateTime.tryParse(json['performed_at'] ?? '') ?? DateTime.now(),
+      binName: json['bin_name'],
+      performerName: json['performer_name'],
+    );
+  }
+}

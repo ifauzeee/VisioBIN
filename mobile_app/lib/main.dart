@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'services/api_service.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/maintenance_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 
@@ -40,11 +41,15 @@ class _VisioBinAppState extends State<VisioBinApp> {
   late final ApiService _apiService;
   late final DashboardProvider _dashboardProvider;
 
+  late final MaintenanceProvider _maintenanceProvider;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
     _apiService = ApiService();
     _dashboardProvider = DashboardProvider(_apiService);
+    _maintenanceProvider = MaintenanceProvider(_apiService);
     _setupPushNotifications();
   }
 
@@ -79,7 +84,33 @@ class _VisioBinAppState extends State<VisioBinApp> {
         debugPrint('User declined or has not accepted permission');
       }
 
-      // Handler saat notifikasi diklik (ketika aplikasi dibuka dari notifikasi)
+      // Handler saat notifikasi diterima saat aplikasi sedang terbuka (foreground)
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Menerima notifikasi foreground: ${message.notification?.title}');
+        final context = _navigatorKey.currentContext;
+        if (context != null && message.notification != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.notification!.title ?? 'Notifikasi Baru',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(message.notification!.body ?? ''),
+                ],
+              ),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      });
+
+      // Handler saat notifikasi diklik (ketika aplikasi dibuka dari background)
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         debugPrint('A new onMessageOpenedApp event was published!');
         if (message.data['screen'] == 'dashboard') {
@@ -94,9 +125,13 @@ class _VisioBinAppState extends State<VisioBinApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _dashboardProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _dashboardProvider),
+        ChangeNotifierProvider.value(value: _maintenanceProvider),
+      ],
       child: MaterialApp(
+        navigatorKey: _navigatorKey,
         title: 'VisioBin',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -136,3 +171,4 @@ class _VisioBinAppState extends State<VisioBinApp> {
     );
   }
 }
+

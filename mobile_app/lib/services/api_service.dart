@@ -190,6 +190,30 @@ class ApiService {
     return _put('/alerts/$alertId/read');
   }
 
+  // ── Maintenance ───────────────────────────────────────
+
+  /// List maintenance logs
+  Future<ApiResponse> listMaintenanceLogs({
+    String? binId,
+    int? page,
+    int? limit,
+  }) async {
+    final params = <String, String>{};
+    if (binId != null) params['bin_id'] = binId;
+    if (page != null) params['page'] = page.toString();
+    if (limit != null) params['limit'] = limit.toString();
+
+    final query = params.isNotEmpty
+        ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}'
+        : '';
+    return _get('/maintenance$query');
+  }
+
+  /// Create a new maintenance log
+  Future<ApiResponse> createMaintenanceLog(Map<String, dynamic> data) async {
+    return _post('/maintenance', body: data);
+  }
+
   // ── Internal HTTP Helpers ─────────────────────────────
 
   Future<ApiResponse> _get(String endpoint) async {
@@ -202,6 +226,24 @@ class ApiService {
       return _parseResponse(res);
     } catch (e) {
       debugPrint('[API] GET $endpoint error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Koneksi gagal: $e',
+      );
+    }
+  }
+
+  Future<ApiResponse> _post(String endpoint, {Map<String, dynamic>? body}) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+
+      return _parseResponse(res);
+    } catch (e) {
+      debugPrint('[API] POST $endpoint error: $e');
       return ApiResponse(
         success: false,
         message: 'Koneksi gagal: $e',
