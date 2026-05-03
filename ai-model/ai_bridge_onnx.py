@@ -20,6 +20,8 @@ DEFAULT_BIN_ID     = os.environ.get("VISIOBIN_BIN_ID", "VBIN-01")
 DEFAULT_THRESHOLD  = float(os.environ.get("VISIOBIN_THRESHOLD", "0.75"))
 DEFAULT_COOLDOWN   = float(os.environ.get("VISIOBIN_COOLDOWN", "3.0"))
 DEFAULT_MOCK_DIR   = "test_images"
+DEFAULT_UART_PORT  = os.environ.get("VISIOBIN_UART_PORT", None) # Default None agar tidak error jika tidak dipakai
+DEFAULT_UART_BAUD  = int(os.environ.get("VISIOBIN_UART_BAUD", "115200"))
 CAPTURE_DIR        = "captures"
 
 class AIBridgeONNX:
@@ -30,7 +32,8 @@ class AIBridgeONNX:
 
     LABELS = {0: "Anorganik", 1: "Organik"}
 
-    def __init__(self, model_path, source, backend_url, bin_id, threshold, cooldown, capture, mock=False, mock_dir=DEFAULT_MOCK_DIR):
+    def __init__(self, model_path, source, backend_url, bin_id, threshold, cooldown, capture, 
+                 mock=False, mock_dir=DEFAULT_MOCK_DIR, uart_port=None, uart_baud=115200):
         self.model_path   = model_path
         self.source       = int(source) if (not mock and str(source).isdigit()) else source
         self.url          = backend_url
@@ -40,7 +43,10 @@ class AIBridgeONNX:
         self.capture      = capture
         self.mock         = mock
         self.mock_dir     = mock_dir
+        self.uart_port    = uart_port
+        self.uart_baud    = uart_baud
         self.last_send    = 0
+        self.ser          = None
 
         if capture and not os.path.exists(CAPTURE_DIR):
             os.makedirs(CAPTURE_DIR)
@@ -50,8 +56,11 @@ class AIBridgeONNX:
         print(f"   Backend  : {backend_url}")
         print(f"   Bin ID   : {bin_id}")
         print(f"   Mode     : {'MOCK (Images)' if mock else 'LIVE (Camera)'}")
+        if uart_port:
+            print(f"   UART     : {uart_port} @ {uart_baud} baud")
         
         self._load_model()
+        self._init_serial()
         if not mock:
             self.cap = cv2.VideoCapture(self.source)
 
@@ -67,6 +76,19 @@ class AIBridgeONNX:
         except Exception as e:
             print(f"❌ Failed to load ONNX model: {e}")
             sys.exit(1)
+
+    def _init_serial(self):
+        """Inisialisasi koneksi serial ke ESP32 (opsional)."""
+        if not self.uart_port:
+            return
+
+        try:
+            import serial
+            self.ser = serial.Serial(self.uart_port, self.uart_baud, timeout=1)
+            print(f"🔌 [SERIAL] Connected to ESP32 on {self.uart_port}")
+        except Exception as e:
+            print(f"⚠️ [SERIAL] Warning: Could not open serial port {self.uart_port}: {e}")
+            print("   (Program tetap berjalan tanpa kontrol servo)")
 
     def _preprocess(self, frame):
         """Persiapkan frame untuk input model (Resize, Transpose, Normalize)."""
@@ -123,10 +145,25 @@ class AIBridgeONNX:
                     fname = f"{CAPTURE_DIR}/{label_clean}_{ts}.jpg"
                     cv2.imwrite(fname, frame)
                     print(f"📸 [CAPTURE] Saved: {fname}")
+                
+                # Kirim perintah ke Servo via UART jika tersedia
+                self._send_servo_command(label)
             else:
                 print(f"⚠️ [BACKEND] HTTP {resp.status_code}: {resp.text[:100]}")
         except Exception as e:
             print(f"❌ [BACKEND] Connection Error: {e}")
+
+    def _send_servo_command(self, label):
+        """Kirim perintah gerak servo ke ESP32."""
+        if not self.ser or not self.ser.is_open:
+            return
+
+        try:
+            cmd = f"CLASSIFY:{label.upper()}\n"
+            self.ser.write(cmd.encode('utf-8'))
+            print(f"⚙️ [SERIAL] Sent to ESP32: {cmd.strip()}")
+        except Exception as e:
+            print(f"❌ [SERIAL] Error sending command: {e}")
 
     def run_live(self):
         """Loop utama pemrosesan kamera."""
@@ -198,8 +235,9 @@ class AIBridgeONNX:
                 self._send_to_backend(label, conf, inf_ms, frame)
                 self.last_send = now
 
-            # Tunggu tombol atau lanjut otomatis
-            key = cv2.waitKey(2000) # Tunggu 2 detik per gambar
+            # Tunggu tombol untuk lanjut ke gambar berikutnya (0 = selamanya)
+            print("   ⌨️  Tekan tombol APA SAJA di jendela gambar untuk lanjut...")
+            key = cv2.waitKey(0) 
             if key & 0xFF == ord('q'):
                 break
 
@@ -225,12 +263,15 @@ if __name__ == "__main__":
     parser.add_argument("--capture",   action="store_true", help="Save successful classification images")
     parser.add_argument("--mock",      action="store_true", help="Mode mock: gunakan gambar dari folder")
     parser.add_argument("--mock-dir",  default=DEFAULT_MOCK_DIR, help="Folder gambar untuk mode mock")
+    parser.add_argument("--uart-port", default=DEFAULT_UART_PORT, help="Serial port untuk ESP32 (misal: COM3 atau /dev/ttyUSB0)")
+    parser.add_argument("--uart-baud", type=int, default=DEFAULT_UART_BAUD, help="Baud rate serial")
     
     args = parser.parse_args()
     
     bridge = AIBridgeONNX(
         args.onnx, args.source, args.url, args.bin_id, 
         args.threshold, args.cooldown, args.capture,
-        args.mock, args.mock_dir
+        args.mock, args.mock_dir,
+        args.uart_port, args.uart_baud
     )
     bridge.run()

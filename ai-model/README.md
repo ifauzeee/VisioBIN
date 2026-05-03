@@ -75,4 +75,13 @@ Gunakan versi ONNX untuk kecepatan maksimal di perangkat Edge:
 3. Jalankan (Mode Mock Gambar - Jika kamera jelek/tidak ada):
    `py ai_bridge_onnx.py --onnx best.onnx --mock --mock-dir test_images`
 
+### ⚙️ Integrasi Hardware (ESP32 Servo Control)
+Script ONNX sekarang bisa mengirim perintah ke ESP32 via kabel USB (Serial).
+1. Hubungkan ESP32 ke Raspberry Pi/Laptop.
+2. Cek nama port (misal: `COM3` di Windows atau `/dev/ttyUSB0` di Linux).
+3. Jalankan dengan flag `--uart-port`:
+   `py ai_bridge_onnx.py --onnx best.onnx --uart-port COM3`
+
+*Setiap kali AI mendeteksi sampah, ia akan mengirim teks `CLASSIFY:ORGANIK\n` atau `CLASSIFY:ANORGANIK\n` ke ESP32.*
+
 *Fitur `--capture` akan menyimpan foto setiap kali klasifikasi berhasil ke folder `captures/`.*
