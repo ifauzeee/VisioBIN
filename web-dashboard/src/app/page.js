@@ -304,7 +304,7 @@ function DashboardApp() {
               boxShadow: "var(--shadow-card)",
             }}
           >
-            <Trash2 size={16} color="var(--bg-page)" strokeWidth={2.5} />
+            <img src="/favicon.png" alt="Logo" style={{ width: 20, height: 20, objectFit: 'contain' }} />
           </div>
           <span
             style={{
@@ -315,7 +315,7 @@ function DashboardApp() {
               flex: 1,
             }}
           >
-            VisioBin
+            VisioBIN
           </span>
           <button
             onClick={toggleTheme}

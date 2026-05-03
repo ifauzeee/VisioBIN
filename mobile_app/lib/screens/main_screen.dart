@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import '../providers/dashboard_provider.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
 import 'maintenance_screen.dart';

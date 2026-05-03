@@ -140,8 +140,6 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-            ),
-          ),
           if (context.read<DashboardProvider>().currentUser?.role != 'guest')
             InkWell(
               onTap: () {

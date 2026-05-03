@@ -6,8 +6,11 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "VisioBin Dashboard",
+  title: "VisioBIN Dashboard",
   description: "Smart Waste Management System Dashboard",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }) {

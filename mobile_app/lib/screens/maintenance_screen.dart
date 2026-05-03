@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../providers/maintenance_provider.dart';
+import '../providers/dashboard_provider.dart';
 import '../models/models.dart';
 
 class MaintenanceScreen extends StatefulWidget {
@@ -153,8 +154,6 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
               },
             ),
           );
-        },
-      ),
         },
       ),
       floatingActionButton: context.read<DashboardProvider>().currentUser?.role == 'guest' 
