@@ -17,16 +17,25 @@ import {
 } from '../dashboardData';
 
 export default React.memo(function RingkasanView({ summary, binLevel, vision, logs }) {
+  const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
   const handleBrushChange = React.useCallback((range) => {
-    setBrushRange({ start: range.startIndex, end: range.endIndex });
+    if (range) {
+      setBrushRange({ start: range.startIndex, end: range.endIndex });
+    }
   }, []);
 
   // Use real data from summary if available, fallback to sample data for visual consistency if empty
-  const graphData = summary.volume_history?.length > 0 
+  const rawGraphData = summary.volume_history?.length > 0 
     ? summary.volume_history.map(d => ({ jam: d.hour, volume: d.volume }))
     : dataVolumePerJam;
+
+  const graphData = React.useMemo(() => {
+    if (filterRange === 'all') return rawGraphData;
+    const hours = parseInt(filterRange);
+    return rawGraphData.slice(-hours);
+  }, [rawGraphData, filterRange]);
 
   const dailyStats = summary.daily_stats?.length > 0
     ? summary.daily_stats.map(d => ({ hari: d.day, organik: d.organic, anorganik: d.inorganic }))
@@ -308,9 +317,36 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="card" 
-          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+          style={{ minHeight: 400, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title">📈 Riwayat Volume Per Jam</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
+            <div className="card-title" style={{ margin: 0 }}>📈 Riwayat Volume Per Jam</div>
+            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8 }}>
+              {['6h', '12h', '24h', 'all'].map(r => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    setFilterRange(r);
+                    setBrushRange({ start: 0, end: undefined });
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    borderRadius: 6,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: filterRange === r ? 'var(--brand-organic)' : 'transparent',
+                    color: filterRange === r ? '#fff' : 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
