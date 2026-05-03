@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Trash2, ShieldCheck, Eye, Code } from 'lucide-react';
+import { Trash2, ShieldCheck, Eye, Code, HelpCircle } from 'lucide-react';
 
-export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin, onShowDocs }) {
+export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin, onShowDocs, onShowHelp }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
       <div style={{
@@ -220,6 +220,24 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
           }}>
             <ShieldCheck size={14} color="var(--brand-organic)" />
             Diamankan oleh Protokol Zero-Trust VisioBin
+          </div>
+
+          <div style={{
+            marginTop: 16,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 20
+          }}>
+            <button 
+              onClick={onShowHelp}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              <HelpCircle size={14} /> Pusat Bantuan
+            </button>
+            <div style={{ width: 1, height: 12, background: 'var(--border-color)' }} />
+            <a href="#" style={{ color: 'var(--text-muted)', fontSize: 12, textDecoration: 'none' }}>
+              Kontak Kami
+            </a>
           </div>
         </div>
       </div>

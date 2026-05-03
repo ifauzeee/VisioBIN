@@ -6,7 +6,7 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   ShieldCheck, Activity, Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText, Clock,
-  Sun, Moon, MapPin, Database, Code
+  Sun, Moon, MapPin, Database, Code, HelpCircle
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -26,6 +26,7 @@ import ConfigView from "./components/ConfigView";
 import ProfileView from "./components/ProfileView";
 import LogPerawatanView from "./components/LogPerawatanView";
 import ApiDocsView from "./components/ApiDocsView";
+import HelpCenterView from "./components/HelpCenterView";
 import DataManagementView from "./components/DataManagementView";
 import { ToastProvider } from "./components/shared/Toast";
 import AlertBell from "./components/shared/AlertBell";
@@ -192,6 +193,13 @@ function DashboardApp() {
       color: "#8B5CF6",
       icon: Code,
     },
+    help: {
+      title: "Pusat Bantuan",
+      subtitle: "Pertanyaan umum, kebijakan privasi, dan ketentuan layanan.",
+      badge: "Help Center",
+      color: "#10b981",
+      icon: HelpCircle,
+    },
   };
 
   const handleLogin = async (e) => {
@@ -220,10 +228,11 @@ function DashboardApp() {
   };
 
   const [showPublicDocs, setShowPublicDocs] = useState(false);
+  const [showPublicHelp, setShowPublicHelp] = useState(false);
 
   if (!mounted || isCheckingAuth) return null;
   
-  if (!isAuthenticated && !showPublicDocs)
+  if (!isAuthenticated && !showPublicDocs && !showPublicHelp)
     return (
       <LoginScreen
         loginForm={loginForm}
@@ -231,6 +240,7 @@ function DashboardApp() {
         handleLogin={handleLogin}
         handleGuestLogin={handleGuestLogin}
         onShowDocs={() => setShowPublicDocs(true)}
+        onShowHelp={() => setShowPublicHelp(true)}
       />
     );
 
@@ -252,6 +262,29 @@ function DashboardApp() {
             </button>
           </div>
           <ApiDocsView />
+        </main>
+      </div>
+    );
+  }
+
+  if (showPublicHelp && !isAuthenticated) {
+    return (
+      <div className="app-container">
+        <main className="main-content" style={{ padding: '60px 80px' }}>
+          <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-1px", marginBottom: 8 }}>Pusat Bantuan</h1>
+              <p style={{ color: "var(--text-muted)", fontSize: 15 }}>FAQ, Privasi, dan Ketentuan Layanan VisioBin.</p>
+            </div>
+            <button 
+              onClick={() => setShowPublicHelp(false)}
+              className="btn-secondary"
+              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}
+            >
+              Kembali ke Login
+            </button>
+          </div>
+          <HelpCenterView />
         </main>
       </div>
     );
@@ -298,6 +331,7 @@ function DashboardApp() {
         items: [
           { key: "team", label: "Anggota Tim", icon: Users },
           { key: "apidocs", label: "Dokumentasi API", icon: Code },
+          { key: "help", label: "Pusat Bantuan", icon: HelpCircle },
           { key: "config", label: "Konfigurasi", icon: Settings2 },
         ],
       },
@@ -676,6 +710,7 @@ function DashboardApp() {
             {activeView === "maint" && <LogPerawatanView />}
             {activeView === "data" && <DataManagementView />}
             {activeView === "apidocs" && <ApiDocsView />}
+            {activeView === "help" && <HelpCenterView />}
           </motion.div>
         </AnimatePresence>
       </main>
