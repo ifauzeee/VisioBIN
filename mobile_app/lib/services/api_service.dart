@@ -71,6 +71,36 @@ class ApiService {
     }
   }
 
+  /// Login as guest
+  Future<ApiResponse> guestLogin() async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/auth/guest'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        final token = data['data']['token'] as String;
+        setToken(token);
+        return ApiResponse(success: true, data: data['data']);
+      }
+
+      return ApiResponse(
+        success: false,
+        message: data['message'] ?? 'Login tamu gagal',
+        statusCode: res.statusCode,
+      );
+    } catch (e) {
+      debugPrint('[API] Guest Login error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
+      );
+    }
+  }
+
   /// Register user baru
   Future<ApiResponse> register({
     required String username,

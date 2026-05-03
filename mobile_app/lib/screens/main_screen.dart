@@ -16,23 +16,28 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const HistoryScreen(),
-    const MaintenanceScreen(),
-    const SettingsScreen(),
-  ];
+  List<Widget> _getScreens(bool isGuest) {
+    return [
+      const DashboardScreen(),
+      const HistoryScreen(),
+      const MaintenanceScreen(),
+      if (!isGuest) const SettingsScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
+    final isGuest = context.read<DashboardProvider>().currentUser?.role == 'guest';
+    final screens = _getScreens(isGuest);
+
     return Scaffold(
       extendBody: true, // Allows body to scroll behind the floating navbar
       body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+        index: _currentIndex >= screens.length ? 0 : _currentIndex,
+        children: screens,
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
@@ -70,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
                     _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
                     _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
                     _buildNavItem(LucideIcons.wrench, 'Perawatan', 2, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.settings, 'Config', 3, isDark, primaryColor),
+                    if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 3, isDark, primaryColor),
                   ],
                 ),
               ),

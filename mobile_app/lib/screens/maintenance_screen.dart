@@ -155,21 +155,25 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           );
         },
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 84),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showAddLogModal(context),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          icon: const Icon(LucideIcons.plus, size: 22),
-          label: const Text(
-            'Tambah Log',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
+        },
       ),
+      floatingActionButton: context.read<DashboardProvider>().currentUser?.role == 'guest' 
+        ? null 
+        : Padding(
+            padding: const EdgeInsets.only(bottom: 84),
+            child: FloatingActionButton.extended(
+              onPressed: () => _showAddLogModal(context),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              icon: const Icon(LucideIcons.plus, size: 22),
+              label: const Text(
+                'Tambah Log',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
     );
   }
 }

@@ -81,6 +81,31 @@ class DashboardProvider extends ChangeNotifier {
     return res.success;
   }
 
+  Future<bool> loginAsGuest() async {
+    _isLoggingIn = true;
+    _loginError = null;
+    notifyListeners();
+
+    final res = await _api.guestLogin();
+
+    if (res.success) {
+      final userData = res.data as Map<String, dynamic>;
+      _currentUser = AppUser.fromJson(userData['user']);
+      _isAuthenticated = true;
+      _loginError = null;
+
+      // Start loading dashboard data
+      fetchAllData();
+    } else {
+      _loginError = res.message ?? 'Login tamu gagal';
+      _isAuthenticated = false;
+    }
+
+    _isLoggingIn = false;
+    notifyListeners();
+    return res.success;
+  }
+
   void logout() {
     _api.clearToken();
     _isAuthenticated = false;
