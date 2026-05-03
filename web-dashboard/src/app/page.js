@@ -6,7 +6,7 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   ShieldCheck, Activity, Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText, Clock,
-  Sun, Moon, MapPin, Database
+  Sun, Moon, MapPin, Database, Code
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./hooks/useAuth";
