@@ -7,8 +7,8 @@ import 'package:http/http.dart' as http;
 class ApiService {
   // Base URL — sesuaikan dengan backend
   // Untuk emulator Android: 10.0.2.2
-  // Untuk device fisik: IP lokal backend
-  static const String _defaultBaseUrl = 'http://10.0.2.2:8080/api/v1';
+  // Untuk device fisik: Gunakan IP lokal komputer kamu (contoh: 192.168.1.76)
+  static const String _defaultBaseUrl = 'http://192.168.1.76:8080/api/v1';
 
   final String baseUrl;
   String? _token;

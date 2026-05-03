@@ -37,11 +37,23 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Log Perawatan'),
+        title: Text(
+          'Log Perawatan',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.refreshCcw),
+            icon: Icon(
+              LucideIcons.refreshCcw,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
             onPressed: () {
               context.read<MaintenanceProvider>().fetchLogs();
             },
@@ -59,12 +71,39 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.alertCircle, size: 48, color: Colors.red[400]),
-                  const SizedBox(height: 16),
-                  Text(provider.error!),
-                  ElevatedButton(
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(LucideIcons.alertCircle, size: 48, color: Colors.red[400]),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Terjadi Kesalahan',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      provider.error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
                     onPressed: () => provider.fetchLogs(),
-                    child: const Text('Coba Lagi'),
+                    icon: const Icon(LucideIcons.refreshCcw, size: 16),
+                    label: const Text('Coba Lagi'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
                   ),
                 ],
               ),
@@ -76,9 +115,27 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.clipboardList, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  const Text('Belum ada log perawatan.'),
+                  Icon(
+                    LucideIcons.clipboardList, 
+                    size: 80, 
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Belum Ada Log',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Catatan perawatan akan tampil di sini.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -87,7 +144,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           return RefreshIndicator(
             onRefresh: provider.fetchLogs,
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
               itemCount: provider.logs.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
@@ -99,11 +156,18 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: const EdgeInsets.only(bottom: 84),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddLogModal(context),
-          icon: const Icon(LucideIcons.plus),
-          label: const Text('Tambah Log'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          icon: const Icon(LucideIcons.plus, size: 22),
+          label: const Text(
+            'Tambah Log',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -267,14 +331,22 @@ class _AddLogModalState extends State<_AddLogModal> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Log perawatan berhasil disimpan!')),
+            const SnackBar(
+              content: Text('Log perawatan berhasil disimpan!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       } else {
         if (mounted) {
           final err = context.read<MaintenanceProvider>().error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(err ?? 'Gagal menyimpan')),
+            SnackBar(
+              content: Text(err ?? 'Gagal menyimpan'),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       }
@@ -285,15 +357,16 @@ class _AddLogModalState extends State<_AddLogModal> {
   Widget build(BuildContext context) {
     final provider = context.watch<MaintenanceProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+        top: 20,
         left: 24,
         right: 24,
       ),
@@ -316,29 +389,32 @@ class _AddLogModalState extends State<_AddLogModal> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Unit Bin',
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-              ),
+            const SizedBox(height: 24),
+            _buildDropdownField(
+              label: 'Unit Bin',
+              icon: LucideIcons.box,
               value: _selectedBinId,
+              hint: 'Pilih unit tempat sampah',
+              isDark: isDark,
               items: provider.bins.map((bin) {
                 return DropdownMenuItem(
                   value: bin.id,
-                  child: Text('${bin.name} — ${bin.location}'),
+                  child: Text(
+                    '${bin.name} — ${bin.location}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               onChanged: (val) => setState(() => _selectedBinId = val),
               validator: (val) => val == null ? 'Pilih unit bin' : null,
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Jenis Perawatan',
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-              ),
+            _buildDropdownField(
+              label: 'Jenis Perawatan',
+              icon: LucideIcons.wrench,
               value: _selectedAction,
+              hint: 'Pilih jenis aktivitas',
+              isDark: isDark,
               items: _actionTypes.entries.map((e) {
                 return DropdownMenuItem(
                   value: e.key,
@@ -351,29 +427,80 @@ class _AddLogModalState extends State<_AddLogModal> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Catatan',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-              ),
               maxLines: 3,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              decoration: InputDecoration(
+                labelText: 'Catatan',
+                hintText: 'Tulis detail tindakan...',
+                alignLabelWithHint: true,
+                prefixIcon: const Icon(LucideIcons.fileText, size: 20),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryColor, width: 2),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: provider.isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: provider.isLoading
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Simpan Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ? const SizedBox(
+                      width: 24, 
+                      height: 24, 
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    )
+                  : const Text(
+                      'Simpan Log', 
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildDropdownField({
+    required String label,
+    required IconData icon,
+    required String? value,
+    required String hint,
+    required bool isDark,
+    required List<DropdownMenuItem<String>> items,
+    required Function(String?) onChanged,
+    required String? Function(String?) validator,
+  }) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    
+    return DropdownButtonFormField<String>(
+      isExpanded: true,
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      dropdownColor: isDark ? const Color(0xFF1F2937) : Colors.white,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryColor, width: 2),
+        ),
+      ),
+    );
+  }
 }
+
