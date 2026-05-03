@@ -56,6 +56,19 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 		&summary.InorganicCountToday,
 	)
 
+	// Environmental Impact estimates based on sensor weights
+	const impactQuery = `
+		SELECT 
+			COALESCE(SUM(weight_organic_kg), 0) * 0.8 as compost,
+			COALESCE(SUM(weight_inorganic_kg), 0) * 0.5 as co2
+		FROM (
+			SELECT bin_id, weight_organic_kg, weight_inorganic_kg, recorded_at
+			FROM sensor_readings
+			WHERE recorded_at > NOW() - INTERVAL '30 days'
+		) recent
+	`
+	s.pool.QueryRow(ctx, impactQuery).Scan(&summary.TotalCompost, &summary.TotalCO2)
+
 	// Volume History (Last 24 Hours)
 	const volHistQuery = `
 		SELECT 

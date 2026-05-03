@@ -102,7 +102,6 @@ func (r *UserRepository) GetOperators(ctx context.Context) ([]models.User, error
 	query := `
 		SELECT id, username, email, password_hash, full_name, role, fcm_token, created_at, updated_at
 		FROM users 
-		WHERE role IN ('operator', 'admin') AND fcm_token IS NOT NULL
 	`
 
 	rows, err := r.pool.Query(ctx, query)
@@ -154,4 +153,12 @@ func (r *UserRepository) GetAllFCMTokens(ctx context.Context) ([]string, error) 
 	}
 
 	return tokens, nil
+}
+
+func (r *UserRepository) Delete(ctx context.Context, id string) error {
+	query := "DELETE FROM users WHERE id = $1"
+	if _, err := r.pool.Exec(ctx, query, id); err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	return nil
 }

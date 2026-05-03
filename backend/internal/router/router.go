@@ -50,6 +50,8 @@ func Setup(
 
 			r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
 			r.Put("/auth/profile", authHandler.UpdateProfile)
+			r.Get("/auth/users", authHandler.ListUsers)
+			r.Delete("/auth/users/{id}", authHandler.DeleteUser)
 
 			// Bins Access
 			r.Route("/bins", func(r chi.Router) {
@@ -74,6 +76,7 @@ func Setup(
 			r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)
 
 			r.Get("/dashboard/summary", binHandler.GetDashboardSummary)
+			r.Get("/telemetry", binHandler.ListAllTelemetry)
 
 			// Maintenance Logs
 			r.Get("/maintenance", maintHandler.ListLogs)

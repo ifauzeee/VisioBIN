@@ -209,6 +209,35 @@ func (h *BinHandler) GetSensorHistory(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: readings})
 }
 
+func (h *BinHandler) ListAllTelemetry(w http.ResponseWriter, r *http.Request) {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 50
+	}
+	offset := (page - 1) * limit
+
+	readings, total, err := h.telemetryRepo.GetGlobalHistory(r.Context(), limit, offset)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to fetch telemetry data",
+		})
+		return
+	}
+
+	if readings == nil {
+		readings = []models.SensorReading{}
+	}
+
+	writeJSON(w, http.StatusOK, models.PaginatedResponse{
+		Success: true, Data: readings, Page: page, Limit: limit, Total: total,
+	})
+}
+
 // --- Analytics & Predictions ---
 
 func (h *BinHandler) GetForecast(w http.ResponseWriter, r *http.Request) {

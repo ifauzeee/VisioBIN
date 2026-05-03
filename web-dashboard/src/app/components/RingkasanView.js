@@ -393,14 +393,17 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           className="card"
           style={{ minHeight: 320 }}
         >
-          <div className="card-title">🌿 Dampak Lingkungan</div>
+          <div className="card-title">🌿 Dampak Lingkungan (Real-time)</div>
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {dampakLingkungan.map(d => (
+            {[
+              { label: 'CO2 Dicegah', value: `${(summary.total_co2 || 0).toFixed(2)} kg`, desc: 'Setara emisi kendaraan yang dikurangi', tone: '#22d3ee', icon: '🌍' },
+              { label: 'Kompos Dihasilkan', value: `${(summary.total_compost || 0).toFixed(2)} kg`, desc: 'Estimasi dari sampah organik', tone: '#8B5CF6', icon: '🌱' },
+              { label: 'Efisiensi Pemilahan', value: `${computedAccuracy}%`, desc: 'Target operasional: 95%', tone: '#f59e0b', icon: '🎯' },
+              { label: 'Potensi Daur Ulang', value: '85%', desc: 'Rasio sampah yang dapat diolah', tone: '#10B981', icon: '♻️' },
+            ].map(d => (
               <div key={d.label} className="impact-card" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: `${d.tone}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 18 }}>
-                    {d.tone === '#10B981' ? '♻️' : d.tone === '#22d3ee' ? '🌍' : d.tone === '#8B5CF6' ? '🌱' : '🎯'}
-                  </span>
+                  <span style={{ fontSize: 18 }}>{d.icon}</span>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.label}</div>

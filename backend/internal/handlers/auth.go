@@ -8,6 +8,7 @@ import (
 	"github.com/ifauze/visiobin/internal/models"
 	"github.com/ifauze/visiobin/internal/repository"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/go-chi/chi/v5"
 )
 
 type AuthHandler struct {
@@ -208,5 +209,48 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Profile updated successfully",
 		Data:    user,
+	})
+}
+
+func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.userRepo.GetOperators(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to fetch team members",
+		})
+		return
+	}
+
+	if users == nil {
+		users = []models.User{}
+	}
+
+	writeJSON(w, http.StatusOK, models.PaginatedResponse{
+		Success: true, 
+		Data: users,
+		Page: 1,
+		Limit: len(users),
+		Total: len(users),
+	})
+}
+
+func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "User ID is required",
+		})
+		return
+	}
+
+	if err := h.userRepo.Delete(r.Context(), id); err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to delete user",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, models.APIResponse{
+		Success: true, Message: "User deleted successfully",
 	})
 }

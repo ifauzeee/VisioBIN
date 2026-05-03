@@ -50,6 +50,7 @@ type SensorReading struct {
 	VolumeOrganicPct    *float64  `json:"volume_organic_pct"`
 	VolumeInorganicPct  *float64  `json:"volume_inorganic_pct"`
 	RecordedAt          time.Time `json:"recorded_at"`
+	BinName             string    `json:"bin_name,omitempty"`
 }
 
 type TelemetryRequest struct {
@@ -173,6 +174,8 @@ type DashboardSummary struct {
 	TotalClassToday     int                      `json:"total_classifications_today"`
 	OrganicCountToday   int                      `json:"organic_count_today"`
 	InorganicCountToday int                      `json:"inorganic_count_today"`
+	TotalCO2            float64                  `json:"total_co2"`
+	TotalCompost        float64                  `json:"total_compost"`
 	RecentAlerts        []Alert                  `json:"recent_alerts"`
 	BinStatuses         []BinStatusSummary       `json:"bin_statuses"`
 	VolumeHistory       []VolumeHistoryPoint     `json:"volume_history"`

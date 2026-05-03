@@ -158,6 +158,41 @@ func (r *TelemetryRepository) GetForecastData(ctx context.Context, binID string,
 	return readings, nil
 }
 
+func (r *TelemetryRepository) GetGlobalHistory(ctx context.Context, limit, offset int) ([]models.SensorReading, int, error) {
+	var total int
+	r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM sensor_readings").Scan(&total)
+
+	rows, err := r.pool.Query(ctx, `
+		SELECT sr.id, sr.bin_id, sr.volume_organic_pct, sr.volume_inorganic_pct, 
+		       sr.weight_organic_kg, sr.weight_inorganic_kg, sr.gas_amonia_ppm, 
+		       sr.recorded_at, b.name
+		FROM sensor_readings sr
+		JOIN bins b ON sr.bin_id = b.id
+		ORDER BY sr.recorded_at DESC
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var readings []models.SensorReading
+	for rows.Next() {
+		var sr models.SensorReading
+		err := rows.Scan(
+			&sr.ID, &sr.BinID, &sr.VolumeOrganicPct, &sr.VolumeInorganicPct,
+			&sr.WeightOrganicKg, &sr.WeightInorganicKg, &sr.GasAmoniaPpm,
+			&sr.RecordedAt, &sr.BinName,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+		readings = append(readings, sr)
+	}
+
+	return readings, total, nil
+}
+
 func clamp(val, min, max float64) float64 {
 	if val < min {
 		return min

@@ -1,15 +1,11 @@
 "use client";
 
-import React from "react";
-import { Users, ShieldCheck, Mail, UserPlus } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Users, ShieldCheck, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { listUsers } from "../services/api";
+import { SkeletonCard } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
-
-const TEAM_MEMBERS = [
-  { name: "Muhammad Ibnu Fauzi", nim: "2307422004", role: "admin", email: "ibnu.fauzi@visiobin.local", avatar: "IF", status: "online" },
-  { name: "Dheo Rafi Ibrahimovic", nim: "2307422017", role: "operator", email: "dheo.rafi@visiobin.local", avatar: "DR", status: "online" },
-  { name: "Muhammad Adian Hendrawan", nim: "2307422020", role: "operator", email: "adian.h@visiobin.local", avatar: "AH", status: "offline" },
-];
 
 const ROLE_CONFIG = {
   admin: { label: "Administrator", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
@@ -17,80 +13,125 @@ const ROLE_CONFIG = {
 };
 
 export default function TeamView() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const { token } = useAuth();
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const res = await listUsers(token);
+      if (res.success) {
+        setMembers(res.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  if (loading && members.length === 0) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        {[1, 2, 3].map(i => <SkeletonCard key={i} lines={3} />)}
+      </div>
+    );
+  }
 
   return (
     <>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Users size={20} /> Manajemen Tim
+        </h2>
+        <button onClick={fetchMembers} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <RefreshCw size={14} /> Muat Ulang
+        </button>
+      </div>
+
       {/* KPI */}
       <div className="kpi-grid" style={{ marginBottom: 24 }}>
         <div className="card">
           <div className="card-title"><Users size={16} /> Total Anggota</div>
-          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{TEAM_MEMBERS.length}</div>
+          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{members.length}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>terdaftar di sistem</div>
         </div>
         <div className="card">
           <div className="card-title"><ShieldCheck size={16} color="#f59e0b" /> Admin</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#f59e0b" }}>
-            {TEAM_MEMBERS.filter(m => m.role === "admin").length}
+            {members.filter(m => m.role === "admin").length}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>full access</div>
         </div>
         <div className="card">
           <div className="card-title"><Users size={16} color="#22d3ee" /> Operator</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#22d3ee" }}>
-            {TEAM_MEMBERS.filter(m => m.role === "operator").length}
+            {members.filter(m => m.role === "operator").length}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>monitoring access</div>
         </div>
       </div>
 
       {/* Members Grid */}
-      <div className="card-title" style={{ marginBottom: 16, paddingLeft: 4 }}>👥 Daftar Anggota Tim</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
-        {TEAM_MEMBERS.map(member => {
-          const rc = ROLE_CONFIG[member.role] || ROLE_CONFIG.operator;
-          return (
-            <div key={member.nim} className="card" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 14,
-                background: member.role === "admin"
-                  ? "linear-gradient(135deg, #f59e0b, #ef4444)"
-                  : "linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontSize: 16, fontWeight: 700, flexShrink: 0,
-                position: "relative",
-              }}>
-                {member.avatar}
+      <div className="card-title" style={{ marginBottom: 16, paddingLeft: 4 }}>👥 Daftar Anggota Aktif</div>
+      {members.length === 0 ? (
+        <div className="card">
+          <EmptyState icon={Users} title="Tidak Ada Anggota" description="Belum ada anggota tim lain yang terdaftar." />
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+          {members.map(member => {
+            const rc = ROLE_CONFIG[member.role] || ROLE_CONFIG.operator;
+            const initials = (member.full_name || member.username || "?").substring(0, 2).toUpperCase();
+            return (
+              <div key={member.id} className="card" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
                 <div style={{
-                  position: "absolute", bottom: -2, right: -2,
-                  width: 12, height: 12, borderRadius: "50%",
-                  background: member.status === "online" ? "#10B981" : "#555",
-                  border: "2px solid var(--bg-card)",
-                }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", marginBottom: 2 }}>{member.name}</div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>{member.nim}</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                    color: rc.color, background: rc.bg,
-                  }}>{rc.label}</span>
-                  <span style={{
-                    fontSize: 11, padding: "3px 10px", borderRadius: 999,
-                    color: member.status === "online" ? "#10B981" : "var(--text-muted)",
-                    background: member.status === "online" ? "rgba(16,185,129,0.1)" : "var(--bg-hover)",
-                  }}>{member.status === "online" ? "● Online" : "○ Offline"}</span>
+                  width: 48, height: 48, borderRadius: 14,
+                  background: member.role === "admin"
+                    ? "linear-gradient(135deg, #f59e0b, #ef4444)"
+                    : "linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontSize: 16, fontWeight: 700, flexShrink: 0,
+                  position: "relative",
+                }}>
+                  {initials}
+                  <div style={{
+                    position: "absolute", bottom: -2, right: -2,
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: "#10B981", // Simplified online status for now
+                    border: "2px solid var(--bg-card)",
+                  }} />
                 </div>
-                <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)" }}>
-                  <Mail size={12} /> {member.email}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", marginBottom: 2 }}>{member.full_name}</div>
+                  <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>@{member.username}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
+                      color: rc.color, background: rc.bg,
+                    }}>{rc.label}</span>
+                    <span style={{
+                      fontSize: 11, padding: "3px 10px", borderRadius: 999,
+                      color: "#10B981",
+                      background: "rgba(16,185,129,0.1)",
+                    }}>● Aktif</span>
+                  </div>
+                  <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)" }}>
+                    <Mail size={12} /> {member.email}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Dosen */}
       <div className="card">

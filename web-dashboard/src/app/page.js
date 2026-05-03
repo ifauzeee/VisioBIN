@@ -6,7 +6,7 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   ShieldCheck, Activity, Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText, Clock,
-  Sun, Moon, MapPin
+  Sun, Moon, MapPin, Database
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -25,6 +25,7 @@ import TeamView from "./components/TeamView";
 import ConfigView from "./components/ConfigView";
 import ProfileView from "./components/ProfileView";
 import LogPerawatanView from "./components/LogPerawatanView";
+import DataManagementView from "./components/DataManagementView";
 import { ToastProvider } from "./components/shared/Toast";
 import AlertBell from "./components/shared/AlertBell";
 import DataFreshness from "./components/shared/DataFreshness";
@@ -150,6 +151,13 @@ function DashboardApp() {
       color: "#10b981",
       icon: History,
     },
+    data: {
+      title: "Eksplorasi Data",
+      subtitle: "Telusuri data mentah telemetri dan log sistem secara detail.",
+      badge: "Database Real-time",
+      color: "var(--brand-organic)",
+      icon: Database,
+    },
     config: {
       title: "Konfigurasi Sistem",
       subtitle: "Pengaturan threshold, polling, dan preferensi notifikasi.",
@@ -222,6 +230,7 @@ function DashboardApp() {
           badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
         },
         { key: "maint", label: "Log Perawatan", icon: History },
+        { key: "data", label: "Eksplorasi Data", icon: Database },
       ],
     },
     {
@@ -584,6 +593,7 @@ function DashboardApp() {
             {activeView === "config" && <ConfigView />}
             {activeView === "profile" && <ProfileView />}
             {activeView === "maint" && <LogPerawatanView />}
+            {activeView === "data" && <DataManagementView />}
           </motion.div>
         </AnimatePresence>
       </main>

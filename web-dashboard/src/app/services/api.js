@@ -49,6 +49,14 @@ export async function updateProfile(token, payload) {
   });
 }
 
+export async function listUsers(token) {
+  return apiFetch("/auth/users", token);
+}
+
+export async function deleteUser(token, userId) {
+  return apiFetch(`/auth/users/${userId}`, token, { method: "DELETE" });
+}
+
 // ── Dashboard ─────────────────────────────────────────
 
 export async function getDashboardSummary(token) {
@@ -57,8 +65,12 @@ export async function getDashboardSummary(token) {
 
 // ── Bins ──────────────────────────────────────────────
 
-export async function listBins(token) {
-  return apiFetch("/bins", token);
+export async function listBins(token, params = {}) {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  const query = qs.toString();
+  return apiFetch(`/bins${query ? `?${query}` : ""}`, token);
 }
 
 export async function getBin(token, binId) {
@@ -142,4 +154,12 @@ export async function createMaintenanceLog(token, payload) {
 
 export async function deleteMaintenanceLog(token, logId) {
   return apiFetch(`/maintenance/${logId}`, token, { method: "DELETE" });
+}
+
+export async function listAllTelemetry(token, params = {}) {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  const query = qs.toString();
+  return apiFetch(`/telemetry${query ? `?${query}` : ""}`, token);
 }

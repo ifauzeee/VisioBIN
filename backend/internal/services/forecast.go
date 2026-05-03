@@ -154,7 +154,7 @@ func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository
 
 	vol := *volPtr
 	if vol >= 95 {
-		msg := fmt.Sprintf("Kompartemen %s hampir penuh (>95%)!", label)
+		msg := fmt.Sprintf("Kompartemen %s hampir penuh (>95%%)!", label)
 		s.createAlert(ctx, alertRepo, binID, "volume_critical", msg, "critical")
 		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, "volume_critical", "critical", vol)
 	} else if vol >= 80 {
