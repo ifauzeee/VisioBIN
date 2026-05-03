@@ -67,7 +67,6 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
 
   return (
     <motion.div
-      key={summary.total_processed} // Use total as a simple trigger for data-level transitions
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

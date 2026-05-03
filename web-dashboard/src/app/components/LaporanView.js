@@ -86,7 +86,6 @@ export default function LaporanView() {
 
   return (
     <motion.div
-      key={totalItems}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
