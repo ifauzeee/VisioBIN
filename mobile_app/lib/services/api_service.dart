@@ -49,15 +49,24 @@ class ApiService {
         return ApiResponse(success: true, data: data['data']);
       }
 
+      if (res.statusCode == 401) {
+        return ApiResponse(
+          success: false,
+          message: 'Username atau password salah.',
+          statusCode: 401,
+        );
+      }
+
       return ApiResponse(
         success: false,
         message: data['message'] ?? 'Login gagal',
+        statusCode: res.statusCode,
       );
     } catch (e) {
       debugPrint('[API] Login error: $e');
       return ApiResponse(
         success: false,
-        message: 'Tidak dapat terhubung ke server',
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
       );
     }
   }
@@ -96,7 +105,7 @@ class ApiService {
     } catch (e) {
       return ApiResponse(
         success: false,
-        message: 'Tidak dapat terhubung ke server',
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
       );
     }
   }
@@ -242,7 +251,7 @@ class ApiService {
       debugPrint('[API] GET $endpoint error: $e');
       return ApiResponse(
         success: false,
-        message: 'Koneksi gagal: $e',
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
       );
     }
   }
@@ -260,7 +269,7 @@ class ApiService {
       debugPrint('[API] POST $endpoint error: $e');
       return ApiResponse(
         success: false,
-        message: 'Koneksi gagal: $e',
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
       );
     }
   }
@@ -278,7 +287,7 @@ class ApiService {
       debugPrint('[API] PUT $endpoint error: $e');
       return ApiResponse(
         success: false,
-        message: 'Koneksi gagal: $e',
+        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
       );
     }
   }
