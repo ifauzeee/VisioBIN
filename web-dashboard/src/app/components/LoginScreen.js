@@ -102,7 +102,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
                 type="password"
                 value={loginForm.password}
                 onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
-                style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none' }}
+                style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', fontSize: 14, outline: 'none' }}
                 placeholder="••••••••"
                 required
               />

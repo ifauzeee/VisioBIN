@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import '../providers/dashboard_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -70,7 +72,9 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 40),
           Center(
             child: TextButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                context.read<DashboardProvider>().logout();
+              },
               icon: const Icon(LucideIcons.logOut, color: Colors.red),
               label: const Text(
                 'Log Out',
@@ -91,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -117,16 +121,16 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'VisioBin Admin',
-                  style: TextStyle(
+                Text(
+                  context.watch<DashboardProvider>().currentUser?.fullName ?? 'VisioBin User',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'admin@visiobin.com',
+                  context.watch<DashboardProvider>().currentUser?.email ?? 'user@visiobin.local',
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? Colors.white54 : Colors.black54,
@@ -162,7 +166,7 @@ class SettingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),

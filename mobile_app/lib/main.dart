@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:provider/provider.dart';
+import 'services/api_service.dart';
+import 'providers/dashboard_provider.dart';
 import 'screens/main_screen.dart';
+import 'screens/login_screen.dart';
 
 // Menangkap notifikasi saat aplikasi berjalan di background/terminated
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await FirebaseCore.initializeApp();
+  await Firebase.initializeApp();
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
@@ -16,7 +20,7 @@ void main() async {
   
   // Inisialisasi Firebase
   try {
-    await FirebaseCore.initializeApp();
+    await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
     debugPrint("Firebase initialization error (might missing google-services.json): $e");
@@ -33,9 +37,14 @@ class VisioBinApp extends StatefulWidget {
 }
 
 class _VisioBinAppState extends State<VisioBinApp> {
+  late final ApiService _apiService;
+  late final DashboardProvider _dashboardProvider;
+
   @override
   void initState() {
     super.initState();
+    _apiService = ApiService();
+    _dashboardProvider = DashboardProvider(_apiService);
     _setupPushNotifications();
   }
 
@@ -60,6 +69,11 @@ class _VisioBinAppState extends State<VisioBinApp> {
         // (Opsional) Ambil token spesifik device jika backend perlu kirim private push
         String? token = await messaging.getToken();
         debugPrint('FCM Token: $token');
+
+        // Send FCM token to backend if authenticated
+        if (token != null && _apiService.isAuthenticated) {
+          await _apiService.updateFcmToken(token);
+        }
         
       } else {
         debugPrint('User declined or has not accepted permission');
@@ -80,35 +94,45 @@ class _VisioBinAppState extends State<VisioBinApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'VisioBin',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF10b981), // Emerald green
-          brightness: Brightness.light,
+    return ChangeNotifierProvider.value(
+      value: _dashboardProvider,
+      child: MaterialApp(
+        title: 'VisioBin',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF10b981), // Emerald green
+            brightness: Brightness.light,
+          ),
+          useMaterial3: true,
+          textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme).copyWith(
+            titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
+          scaffoldBackgroundColor: const Color(0xFFF3F4F6),
         ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme).copyWith(
-          titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF10b981),
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+          textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
+            titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
+          scaffoldBackgroundColor: const Color(0xFF111827),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
+        themeMode: ThemeMode.system,
+        home: Consumer<DashboardProvider>(
+          builder: (context, provider, _) {
+            if (provider.isAuthenticated) {
+              return const MainScreen();
+            }
+            return const LoginScreen();
+          },
+        ),
       ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF10b981),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
-          titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        scaffoldBackgroundColor: const Color(0xFF111827),
-      ),
-      themeMode: ThemeMode.system,
-      home: const MainScreen(),
     );
   }
 }

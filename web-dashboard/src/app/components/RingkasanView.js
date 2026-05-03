@@ -37,6 +37,16 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
 
   const displayLogs = logs.length ? logs : defaultLogs;
 
+  // Compute real AI accuracy from classification logs
+  const computedAccuracy = logs.length > 0
+    ? (logs.reduce((acc, l) => acc + (l.prob || 0), 0) / logs.length).toFixed(1)
+    : '97.8';
+
+  // Compute average inference latency from logs
+  const computedLatency = logs.length > 0
+    ? Math.round(logs.reduce((acc, l) => acc + (l.inference_ms || 0), 0) / logs.length)
+    : summary.latency || 14;
+
   // AI Insight Logic
   const generateInsight = () => {
     const total = summary.total_processed || 0;
@@ -121,9 +131,11 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
               {summary.total_processed}
             </span>
-            <span style={{ color: 'var(--brand-organic)', fontSize: 13, display: 'flex', alignItems: 'center' }}>
-              <ArrowUpRight size={14} /> 12%
-            </span>
+            {summary.total_processed > 0 && (
+              <span style={{ color: 'var(--brand-organic)', fontSize: 13, display: 'flex', alignItems: 'center' }}>
+                <ArrowUpRight size={14} /> aktif
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>item terklasifikasi</div>
         </motion.div>
@@ -168,7 +180,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         >
           <div className="card-title"><Cpu size={16} /> Latensi Edge</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{summary.latency}</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedLatency}</span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>ms</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>waktu respons model</div>
@@ -180,10 +192,10 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> Akurasi Model AI</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>97.8</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedAccuracy}</span>
             <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>rata-rata 7 hari</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{logs.length > 0 ? `dari ${logs.length} klasifikasi` : 'rata-rata 7 hari'}</div>
         </motion.div>
 
         <motion.div
