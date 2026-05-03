@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
-  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp 
+  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,7 +16,7 @@ import {
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
 
-export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs }) {
+export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast }) {
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
@@ -147,7 +147,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
       >
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px' }}
         >
           <div className="card-title">
             <LeafIcon size={16} color="var(--brand-organic)" /> Total Diproses Hari Ini
@@ -167,7 +168,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px' }}
         >
           <div className="card-title">
             <Trash2 size={16} color="#22d3ee" /> Level Tempat Sampah
@@ -191,7 +193,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px' }}
         >
           <div className="card-title"><Orbit size={16} /> CO2 Dikurangi</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
@@ -203,7 +206,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px' }}
         >
           <div className="card-title"><Cpu size={16} /> Latensi Edge</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
@@ -215,7 +219,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px' }}
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> Akurasi Model AI</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
@@ -227,7 +232,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="card"
+          className="glass-card"
+          style={{ padding: '20px 24px', border: '1px solid rgba(16, 185, 129, 0.2)' }}
         >
           <div className="card-title"><Clock size={16} color="var(--brand-organic)" /> Estimasi Penuh</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>

@@ -266,9 +266,15 @@ func main() {
 				telemetryReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
 			}
 
+			// Simulasi Network Instability (5% chance of failure)
+			if rand.Float64() < 0.05 {
+				fmt.Printf("   ⚠️  [NETWORK] Simulated connection drop for %s\n", sim.BinName)
+				continue
+			}
+
 			resp, err := client.Do(telemetryReq)
 			status := "✅"
-			if err != nil || resp.StatusCode != http.StatusCreated {
+			if err != nil || (resp != nil && resp.StatusCode != http.StatusCreated) {
 				status = "⚠️"
 				if resp != nil {
 					fmt.Printf("      Error: Status %d\n", resp.StatusCode)

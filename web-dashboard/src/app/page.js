@@ -80,6 +80,7 @@ function DashboardApp() {
     binLevelInorg,
     vision,
     bins,
+    forecast,
     loading: dashLoading,
     error: dashError,
     lastUpdated,
