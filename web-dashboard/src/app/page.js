@@ -25,6 +25,7 @@ import TeamView from "./components/TeamView";
 import ConfigView from "./components/ConfigView";
 import ProfileView from "./components/ProfileView";
 import LogPerawatanView from "./components/LogPerawatanView";
+import ApiDocsView from "./components/ApiDocsView";
 import DataManagementView from "./components/DataManagementView";
 import { ToastProvider } from "./components/shared/Toast";
 import AlertBell from "./components/shared/AlertBell";
@@ -184,6 +185,13 @@ function DashboardApp() {
       color: "var(--brand-organic)",
       icon: Users,
     },
+    apidocs: {
+      title: "Dokumentasi API",
+      subtitle: "Spesifikasi teknis untuk integrasi perangkat IoT dan aplikasi pihak ketiga.",
+      badge: "v1.1.0 (Stable)",
+      color: "#8B5CF6",
+      icon: Code,
+    },
   };
 
   const handleLogin = async (e) => {
@@ -262,6 +270,7 @@ function DashboardApp() {
         section: "Pengaturan",
         items: [
           { key: "team", label: "Anggota Tim", icon: Users },
+          { key: "apidocs", label: "Dokumentasi API", icon: Code },
           { key: "config", label: "Konfigurasi", icon: Settings2 },
         ],
       },
@@ -639,6 +648,7 @@ function DashboardApp() {
             {activeView === "profile" && <ProfileView />}
             {activeView === "maint" && <LogPerawatanView />}
             {activeView === "data" && <DataManagementView />}
+            {activeView === "apidocs" && <ApiDocsView />}
           </motion.div>
         </AnimatePresence>
       </main>
