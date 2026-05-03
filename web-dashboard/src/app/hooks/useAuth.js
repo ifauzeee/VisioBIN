@@ -43,6 +43,12 @@ export function AuthProvider({ children }) {
       }
       return { success: false, error: "Kredensial tidak valid." };
     } catch (err) {
+      if (err.status === 401) {
+        return { success: false, error: "Username atau password salah." };
+      }
+      if (err.status === 403) {
+        return { success: false, error: "Akun Anda tidak memiliki akses." };
+      }
       return {
         success: false,
         error: "Gagal menghubungkan ke server. Silakan periksa koneksi Anda.",
@@ -72,7 +78,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       return {
         success: false,
-        error: err.message || "Gagal menghubungkan ke server.",
+        error: err.message || "Gagal menghubungkan ke server. Silakan periksa koneksi Anda.",
       };
     }
   }, [token]);
