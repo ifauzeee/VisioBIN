@@ -94,32 +94,51 @@ export default function HelpCenterView() {
 
   return (
     <div className="view-transition">
-      <div className="dashboard-grid-2-1">
-        <div style={{ minWidth: 0 }}>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 32, borderBottom: "1px solid var(--border-color)", marginBottom: 32 }}>
-            {[
-              { id: "faq", label: "FAQ", icon: <HelpCircle size={16} /> },
-              { id: "privacy", label: "Privasi", icon: <ShieldCheck size={16} /> },
-              { id: "terms", label: "Ketentuan", icon: <FileText size={16} /> }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "12px 4px",
-                  background: "transparent", border: "none", cursor: "pointer",
-                  color: activeTab === tab.id ? "var(--brand-organic)" : "var(--text-muted)",
-                  borderBottom: activeTab === tab.id ? "2px solid var(--brand-organic)" : "2px solid transparent",
-                  fontSize: 14, fontWeight: 600, transition: "all 0.2s"
-                }}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 300px", gap: 40, alignItems: "start" }}>
+        
+        {/* Local Sidebar Navigation */}
+        <div style={{ position: "sticky", top: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12, marginLeft: 12 }}>
+            Pusat Bantuan
           </div>
+          {[
+            { id: "faq", label: "FAQ", icon: <HelpCircle size={16} /> },
+            { id: "privacy", label: "Kebijakan Privasi", icon: <ShieldCheck size={16} /> },
+            { id: "terms", label: "Ketentuan Layanan", icon: <FileText size={16} /> }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 16px",
+                background: activeTab === tab.id ? "rgba(16, 185, 129, 0.06)" : "transparent",
+                border: "none", cursor: "pointer", borderRadius: 8,
+                color: activeTab === tab.id ? "var(--brand-organic)" : "var(--text-muted)",
+                fontSize: 14, fontWeight: activeTab === tab.id ? 600 : 500,
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                position: "relative", textAlign: "left", width: "100%"
+              }}
+            >
+              {activeTab === tab.id && (
+                <motion.div 
+                  layoutId="activeTabIndicator"
+                  style={{ 
+                    position: "absolute", left: 0, top: 8, bottom: 8, width: 2, 
+                    background: "var(--brand-organic)", borderRadius: "0 4px 4px 0",
+                    boxShadow: "0 0 8px var(--brand-organic)"
+                  }} 
+                />
+              )}
+              <span style={{ display: "flex", alignItems: "center", color: activeTab === tab.id ? "var(--brand-organic)" : "inherit" }}>
+                {tab.icon}
+              </span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
+        {/* Content Area */}
+        <div style={{ minWidth: 0 }}>
           <AnimatePresence mode="wait">
             {activeTab === "faq" && (
               <motion.div key="faq" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
