@@ -63,6 +63,16 @@ Setelah di-download, taruh file model kamu (`best.pt`) ke dalam folder `ai-model
 
 1. Buka terminal (CMD / PowerShell).
 2. Pastikan sudah install dependensi: 
-   `pip install torch torchvision torchaudio opencv-python numpy`
-3. Hitupkan Webcam laptop dan tes:
-   `py test_inference_cls.py --weights best.pt`
+   `pip install torch torchvision torchaudio opencv-python numpy onnxruntime`
+3. Hidupkan Webcam laptop dan tes:
+   `py ai_bridge.py --weights best.pt`
+
+### ⚡ Versi High-Performance (Rekomendasi Raspberry Pi)
+Gunakan versi ONNX untuk kecepatan maksimal di perangkat Edge:
+1. Pastikan file `best.onnx` ada di folder ini.
+2. Jalankan (Mode Live Kamera):
+   `py ai_bridge_onnx.py --onnx best.onnx --capture`
+3. Jalankan (Mode Mock Gambar - Jika kamera jelek/tidak ada):
+   `py ai_bridge_onnx.py --onnx best.onnx --mock --mock-dir test_images`
+
+*Fitur `--capture` akan menyimpan foto setiap kali klasifikasi berhasil ke folder `captures/`.*
