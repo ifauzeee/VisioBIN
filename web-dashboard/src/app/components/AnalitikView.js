@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Activity, Zap, Database, RefreshCw } from "lucide-react";
+import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
@@ -87,21 +87,41 @@ export default function AnalitikView() {
 
   return (
     <>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, marginBottom:24 }}>
-        {kpi.map(item => (
-          <motion.div key={item.label} className="card analytics-kpi-card" whileHover={{ scale: 1.02 }}>
-            <div className="card-title">{item.label}</div>
-            <div style={{ marginTop:8, fontSize:34, fontWeight:600, letterSpacing:"-1px" }}>{item.value}</div>
-            <div style={{ marginTop:10, fontSize:12, color:item.tone, fontWeight:600 }}>{item.delta} vs kemarin</div>
-          </motion.div>
-        ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, flex: 1 }}>
+          {kpi.map(item => (
+            <motion.div key={item.label} className="card analytics-kpi-card" whileHover={{ scale: 1.02 }}>
+              <div className="card-title">{item.label}</div>
+              <div style={{ marginTop:8, fontSize:34, fontWeight:600, letterSpacing:"-1px" }}>{item.value}</div>
+              <div style={{ marginTop:10, fontSize:12, color:item.tone, fontWeight:600 }}>{item.delta} vs kemarin</div>
+            </motion.div>
+          ))}
+        </div>
+        <div className="desktop-only">
+          <button 
+            onClick={() => window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank")}
+            className="btn-primary" 
+            style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
+          >
+            <Download size={18} /> Export Analitik
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
         <motion.div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
-            {has && <button onClick={fetch_} style={{ background:"transparent", border:"none", cursor:"pointer", padding:4 }}><RefreshCw size={14} color="var(--text-muted)" /></button>}
+            <div style={{ display: "flex", gap: 8 }}>
+              {has && <button onClick={fetch_} className="btn-secondary" style={{ padding: 6 }}><RefreshCw size={14} /></button>}
+              <button 
+                onClick={() => window.print()}
+                className="btn-secondary" 
+                style={{ padding: "6px 12px", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <FileText size={13} /> PDF
+              </button>
+            </div>
           </div>
           {hourly.length > 0 ? (
             <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>

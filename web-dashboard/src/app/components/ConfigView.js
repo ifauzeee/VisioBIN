@@ -1,7 +1,7 @@
 "use client";
-
 import React, { useState } from "react";
-import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw } from "lucide-react";
+import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw, Loader2 } from "lucide-react";
+import { useToast } from "./shared/Toast";
 
 const DEFAULT_CONFIG = {
   apiUrl: "http://localhost:8080/api/v1",
@@ -18,6 +18,7 @@ const DEFAULT_CONFIG = {
 };
 
 export default function ConfigView() {
+  const { showToast } = useToast();
   const [config, setConfig] = useState(() => {
     try {
       const stored = localStorage.getItem("visiobin_config");
@@ -25,22 +26,35 @@ export default function ConfigView() {
     } catch { return DEFAULT_CONFIG; }
   });
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const update = (key, value) => {
     setConfig(prev => ({ ...prev, [key]: value }));
     setSaved(false);
   };
 
-  const save = () => {
-    localStorage.setItem("visiobin_config", JSON.stringify(config));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const save = async () => {
+    setIsSaving(true);
+    // Simulating API call/delay
+    await new Promise(r => setTimeout(r, 800));
+    
+    try {
+      localStorage.setItem("visiobin_config", JSON.stringify(config));
+      setSaved(true);
+      showToast("Konfigurasi berhasil disimpan!", "success");
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      showToast("Gagal menyimpan konfigurasi", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const reset = () => {
     setConfig(DEFAULT_CONFIG);
     localStorage.removeItem("visiobin_config");
     setSaved(false);
+    showToast("Konfigurasi direset ke default", "info");
   };
 
   const InputRow = ({ icon: Icon, label, desc, children }) => (
@@ -160,23 +174,31 @@ export default function ConfigView() {
 
       {/* Actions */}
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-        <button onClick={reset} style={{
+        <button onClick={reset} disabled={isSaving} style={{
           padding: "10px 20px", background: "transparent", border: "1px solid var(--border-color)",
-          borderRadius: 8, color: "var(--text-muted)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+          borderRadius: 8, color: "var(--text-muted)", fontSize: 13, fontWeight: 500, cursor: isSaving ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", gap: 6,
         }}>
           <RotateCcw size={14} /> Reset Default
         </button>
-        <button onClick={save} style={{
+        <button onClick={save} disabled={isSaving} style={{
           padding: "10px 24px", background: saved ? "var(--brand-organic)" : "var(--text-main)",
           border: "none", borderRadius: 8, color: saved ? "#fff" : "var(--bg-page)",
-          fontSize: 13, fontWeight: 600, cursor: "pointer",
+          fontSize: 13, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", gap: 6,
           transition: "all 0.2s",
+          minWidth: 160, justifyContent: "center"
         }}>
-          <Save size={14} /> {saved ? "✓ Tersimpan" : "Simpan Konfigurasi"}
+          {isSaving ? (
+            <><Loader2 size={14} className="animate-spin" /> Menyimpan...</>
+          ) : saved ? (
+            <><Save size={14} /> Tersimpan</>
+          ) : (
+            <><Save size={14} /> Simpan Konfigurasi</>
+          )}
         </button>
       </div>
     </>
   );
 }
+

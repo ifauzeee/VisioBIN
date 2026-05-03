@@ -111,25 +111,26 @@ export default function LaporanView() {
       </div>
 
       {/* Table with Export */}
-      <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.01 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div className="card-title">📋 Laporan Harian</div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={exportCSV} style={{
-              background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)",
-              borderRadius: 8, padding: "6px 14px", cursor: "pointer", display: "flex",
-              alignItems: "center", gap: 6, color: "var(--text-main)", fontSize: 12, fontWeight: 500,
+      <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.005 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div className="card-title" style={{ marginBottom: 0 }}>📋 Laporan Harian & Log Klasifikasi</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button onClick={exportCSV} className="btn-secondary" style={{
+              padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500,
             }}>
-              <Download size={13} /> Export Ringkasan
+              <Download size={13} /> Export CSV
+            </button>
+            <button onClick={() => window.print()} className="btn-secondary" style={{
+              padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500,
+            }}>
+              <FileText size={13} /> Cetak PDF
             </button>
             <button onClick={() => {
               window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank");
-            }} style={{
-              background: "var(--brand-organic)", border: "none",
-              borderRadius: 8, padding: "6px 14px", cursor: "pointer", display: "flex",
-              alignItems: "center", gap: 6, color: "white", fontSize: 12, fontWeight: 500,
+            }} className="btn-primary" style={{
+              padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600,
             }}>
-              <Download size={13} /> Export Detail (Excel/CSV)
+              <Download size={13} /> Export Excel (Full Data)
             </button>
           </div>
         </div>
