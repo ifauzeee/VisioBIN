@@ -17,7 +17,7 @@ import {
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
 
-export default function RingkasanView({ summary, binLevel, vision, logs }) {
+export default React.memo(function RingkasanView({ summary, binLevel, vision, logs }) {
   // Use real data from summary if available, fallback to sample data for visual consistency if empty
   const graphData = summary.volume_history?.length > 0 
     ? summary.volume_history.map(d => ({ jam: d.hour, volume: d.volume }))
@@ -314,7 +314,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
       >
         <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">📈 Riwayat Volume Per Jam</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <defs>
@@ -327,7 +327,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-                <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" />
+                <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={false} />
                 <Brush dataKey="jam" height={30} stroke="var(--brand-organic)" fill="var(--bg-card)" tickFormatter={() => ''} />
               </AreaChart>
             </ResponsiveContainer>
@@ -336,10 +336,10 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
 
         <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">🥧 Distribusi Jenis Sampah</div>
-          <div style={{ flex: 1, marginTop: 8, minWidth: 0 }}>
+          <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height={220}>
               <RPieChart style={{ background: 'transparent' }}>
-                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={false}>
                   {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
@@ -365,7 +365,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
       >
         <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
@@ -373,8 +373,8 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" />
-                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" />
+                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" isAnimationActive={false} />
+                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -408,4 +408,4 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
       </motion.div>
     </motion.div>
   );
-}
+});

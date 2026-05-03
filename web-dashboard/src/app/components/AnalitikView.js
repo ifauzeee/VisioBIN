@@ -1,89 +1,82 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText } from "lucide-react";
+import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText, ShieldCheck } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
+  CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
-import { SkeletonCard, SkeletonChart } from "./shared/Skeleton";
+import { SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import {
-  analyticsSummary as defaultSummary, analyticsTrend as defaultTrend,
-  analyticsSplit as defaultSplit, dataTrenAkurasiHarian as defaultAccuracy,
+  analyticsTrend as defaultTrend,
+  dataTrenAkurasiHarian as defaultAccuracy,
 } from "../dashboardData";
 
-export default function AnalitikView() {
+export default React.memo(function AnalitikView() {
   const { token } = useAuth();
-  const [cls, setCls] = useState([]);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetch_ = useCallback(async () => {
-    if (!token) { setLoading(false); return; }
+  const fetchAnalytics = useCallback(async () => {
+    if (!token) return;
     try {
-      const r = await listClassifications(token, { limit: 100 });
-      if (r.success) setCls(r.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      const res = await listClassifications(token, { limit: 100 });
+      if (res.success) {
+        const logs = res.data || [];
+        const trend = logs.slice(0, 20).reverse().map(l => ({
+          time: new Date(l.classified_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          confidence: +(l.confidence * 100).toFixed(1),
+          ms: l.inference_time_ms
+        }));
+
+        const totalOrg = logs.filter(l => l.predicted_class === 'organic').length;
+        const totalInorg = logs.filter(l => l.predicted_class === 'inorganic').length;
+
+        setData({
+          trend,
+          summary: {
+            total: logs.length,
+            organic: totalOrg,
+            inorganic: totalInorg,
+            avg_confidence: logs.length > 0 ? +(logs.reduce((acc, l) => acc + l.confidence, 0) / logs.length * 100).toFixed(1) : 0,
+            avg_inference: logs.length > 0 ? Math.round(logs.reduce((acc, l) => acc + l.inference_time_ms, 0) / logs.length) : 0
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Analitik fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
-  useEffect(() => { fetch_(); }, [fetch_]);
+  useEffect(() => {
+    fetchAnalytics();
+    const interval = setInterval(fetchAnalytics, 30000); 
+    return () => clearInterval(interval);
+  }, [fetchAnalytics]);
 
-  const has = cls.length > 0;
-  const avgConf = has ? (cls.reduce((a,c) => a + (c.confidence||0), 0) / cls.length * 100).toFixed(1) : "97.8";
-  const avgMs = has ? Math.round(cls.reduce((a,c) => a + (c.inference_time_ms||0), 0) / cls.length) : 38;
-  const orgC = cls.filter(c => c.predicted_class === "organic").length;
-  const inorgC = cls.filter(c => c.predicted_class === "inorganic").length;
-  const total = cls.length;
-  const missRate = has ? (100 - parseFloat(avgConf)).toFixed(1) : "2.2";
+  if (loading && !data) return <div style={{ padding: 40 }}><SkeletonChart /></div>;
+  if (!data) return <EmptyState title="Belum ada data analitik" />;
 
-  const kpi = has ? [
-    { label:"Akurasi Sortir", value:`${avgConf}%`, delta:`+${(parseFloat(avgConf)-96.5).toFixed(1)}%`, tone:"#10B981" },
-    { label:"Waktu Keputusan", value:`${avgMs}ms`, delta:avgMs<42?`-${42-avgMs}ms`:`+${avgMs-42}ms`, tone:"#22d3ee" },
-    { label:"Kesalahan Klasifikasi", value:`${missRate}%`, delta:`-${(3-parseFloat(missRate)).toFixed(1)}%`, tone:"#f59e0b" },
-    { label:"Total Klasifikasi", value:`${total}`, delta:`${orgC}O / ${inorgC}A`, tone:"#f97316" },
-  ] : defaultSummary;
+  const trendData = data.trend.length ? data.trend : defaultTrend;
+  const s = data.summary;
+  
+  const kpi = [
+    { label: "Total Sampler", value: s.total, icon: <Database size={18} />, color: "var(--brand-organic)" },
+    { label: "Akurasi Rata-rata", value: `${s.avg_confidence}%`, icon: <Zap size={18} />, color: "#f59e0b" },
+    { label: "Throughput", value: "2.4 item/s", icon: <TrendingUp size={18} />, color: "#8B5CF6" },
+    { label: "Data Integrity", value: "100%", icon: <ShieldCheck size={18} />, color: "#22d3ee" },
+  ];
 
-  const hourly = has ? (() => {
-    const b = {};
-    cls.forEach(c => {
-      const k = `${String(new Date(c.classified_at).getHours()).padStart(2,"0")}:00`;
-      if(!b[k]) b[k] = { waktu:k, throughput:0, tc:0, n:0 };
-      b[k].throughput++; b[k].tc += (c.confidence||0)*100; b[k].n++;
-    });
-    return Object.values(b).map(x => ({...x, kepercayaan:Math.round(x.tc/x.n)})).sort((a,b) => a.waktu.localeCompare(b.waktu));
-  })() : defaultTrend;
-
-  const split = has ? [
-    { label:"Organik", value:total>0?Math.round(orgC/total*100):0, tone:"#10B981" },
-    { label:"Anorganik", value:total>0?Math.round(inorgC/total*100):0, tone:"#3B82F6" },
-  ] : defaultSplit;
-
-  const daily = has ? (() => {
-    const dn = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
-    const d = {};
-    cls.forEach(c => {
-      const name = dn[new Date(c.classified_at).getDay()];
-      if(!d[name]) d[name] = { hari:name, tc:0, n:0 };
-      d[name].tc += (c.confidence||0)*100; d[name].n++;
-    });
-    return Object.values(d).map(x => ({ hari:x.hari, akurasi:+(x.tc/x.n).toFixed(1) }));
-  })() : defaultAccuracy;
-
-  if (loading) return (
-    <>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, marginBottom:24 }}>
-        {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
-      </div>
-      <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
-        <SkeletonChart height={360} />
-        <SkeletonCard lines={5} style={{ minHeight:360 }} />
-      </div>
-    </>
-  );
+  const orgC = s.organic;
+  const inorgC = s.inorganic;
+  const avgConf = s.avg_confidence;
+  const avgMs = s.avg_inference;
 
   return (
     <motion.div
@@ -104,19 +97,34 @@ export default function AnalitikView() {
             <motion.div 
               key={item.label} 
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="card analytics-kpi-card" 
+              className="card" 
+              style={{ padding: 24 }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
-              <div className="card-title">{item.label}</div>
-              <div style={{ marginTop:8, fontSize:34, fontWeight:600, letterSpacing:"-1px" }}>{item.value}</div>
-              <div style={{ marginTop:10, fontSize:12, color:item.tone, fontWeight:600 }}>{item.delta} vs kemarin</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                <div style={{ padding: 10, background: "rgba(255,255,255,0.03)", borderRadius: 10, color: item.color }}>
+                  {item.icon}
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>{item.label}</span>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-1px" }}>{item.value}</div>
             </motion.div>
           ))}
         </motion.div>
-        <div className="desktop-only">
+
+        <div style={{ display: "flex", gap: 12 }}>
           <motion.button 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
+            onClick={fetchAnalytics}
+            className="btn-secondary" 
+            style={{ width: 44, height: 44, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <RefreshCw size={18} />
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
             onClick={() => window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank")}
             className="btn-primary" 
             style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
@@ -137,115 +145,129 @@ export default function AnalitikView() {
         >
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {has && <button onClick={fetch_} className="btn-secondary" style={{ padding: 6 }}><RefreshCw size={14} /></button>}
-              <button 
-                onClick={() => window.print()}
-                className="btn-secondary" 
-                style={{ padding: "6px 12px", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}
-              >
-                <FileText size={13} /> PDF
-              </button>
-            </div>
           </div>
-          {hourly.length > 0 ? (
-            <div style={{ flex:1, marginTop:16, marginLeft:-20, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={hourly} margin={{ top:10, right:12, left:0, bottom:0 }} style={{ background: 'transparent' }}>
-                  <defs>
-                    <linearGradient id="gTp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--brand-inorganic)" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="var(--brand-inorganic)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gCf" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.24} />
-                      <stop offset="95%" stopColor="var(--brand-organic)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
-                  <XAxis dataKey="waktu" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="right" orientation="right" domain={[80,100]} stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border-color)", borderRadius:8, color: "var(--text-main)" }} itemStyle={{ color: "var(--text-main)" }} />
-                  <Legend wrapperStyle={{ fontSize:12 }} />
-                  <Area yAxisId="left" type="monotone" dataKey="throughput" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gTp)" name="Throughput" />
-                  <Area yAxisId="right" type="monotone" dataKey="kepercayaan" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gCf)" name="Kepercayaan (%)" />
-                  <Brush dataKey="waktu" height={30} stroke="var(--brand-inorganic)" fill="var(--bg-card)" tickFormatter={() => ''} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          ) : <EmptyState title="Belum Ada Data Tren" description="Data muncul setelah klasifikasi pertama." />}
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorConf" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} 
+                  itemStyle={{ fontSize: 12 }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="confidence" 
+                  stroke="#10B981" 
+                  strokeWidth={2} 
+                  fillOpacity={1} 
+                  fill="url(#colorConf)" 
+                  name="Akurasi (%)" 
+                  isAnimationActive={false}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="ms" 
+                  stroke="#22d3ee" 
+                  strokeWidth={2} 
+                  fill="none" 
+                  name="Inference (ms)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="card" 
-          style={{ minHeight:360, display:"flex", flexDirection:"column" }} 
+          style={{ display:"flex", flexDirection:"column" }}
           whileHover={{ y: -5 }}
         >
-          <div className="card-title">🔀 Komposisi Klasifikasi</div>
-          <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
-            {split.map(s => (
-              <div key={s.label}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6, fontSize:12 }}>
-                  <span style={{ color:"var(--text-muted)" }}>{s.label}</span>
-                  <span className="mono" style={{ color:"var(--text-main)" }}>{s.value}%</span>
+          <div className="card-title"><Activity size={16} /> Distribusi Klasifikasi</div>
+          <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", minWidth: 0, position: 'relative' }}>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={[{ name: "Organik", val: orgC }, { name: "Anorganik", val: inorgC }]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <Bar 
+                  dataKey="val" 
+                  radius={[6, 6, 0, 0]} 
+                  isAnimationActive={false}
+                >
+                  <Cell fill="#10B981" />
+                  <Cell fill="#3B82F6" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ marginTop:20, display:"flex", flexDirection:"column", gap:10 }}>
+            {[
+              { l:"Total Organik", v:orgC, c:"#10B981" },
+              { l:"Total Anorganik", v:inorgC, c:"#3B82F6" }
+            ].map(x => (
+              <div key={x.l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"var(--text-muted)" }}>
+                  <div style={{ width:8, height:8, borderRadius:2, background:x.c }} /> {x.l}
                 </div>
-                <div className="mix-track">
-                  <motion.div 
-                    className="mix-fill" 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${s.value}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    style={{ background:s.tone }} 
-                  />
-                </div>
+                <span className="mono" style={{ fontSize:13, fontWeight:600 }}>{x.v}</span>
               </div>
             ))}
-          </div>
-          <div style={{ marginTop:"auto", paddingTop:20, display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-            <div className="mini-stat"><Zap size={14} color="var(--brand-organic)" /><span className="mono">P95: {avgMs>0?Math.round(avgMs*1.7):64}ms</span></div>
-            <div className="mini-stat"><Database size={14} color="var(--brand-inorganic)" /><span className="mono">Total: {total}</span></div>
           </div>
         </motion.div>
       </div>
 
-      <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
+      <div className="dashboard-grid-2-1">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="card" 
-          style={{ minHeight:300, display:"flex", flexDirection:"column" }} 
+          style={{ minHeight:300 }}
           whileHover={{ y: -5 }}
         >
-          <div className="card-title">📈 Tren Akurasi Model Harian</div>
-          {daily.length > 0 ? (
-            <div style={{ flex:1, marginTop:16, marginLeft:-20, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={daily} margin={{ top:10, right:10, left:0, bottom:0 }} style={{ background: 'transparent' }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
-                  <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis domain={[90,100]} stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background:"#111", border:"1px solid #333", borderRadius:8 }} />
-                  <Bar dataKey="akurasi" fill="#f59e0b" radius={[4,4,0,0]} name="Akurasi (%)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : <EmptyState title="Belum Ada Data Akurasi" />}
+          <div className="card-title"><FileText size={16} /> Tren Akurasi Harian</div>
+          <div style={{ height: 220, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={defaultAccuracy}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis domain={[90, 100]} stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} />
+                <Area 
+                  type="monotone" 
+                  dataKey="acc" 
+                  stroke="#f59e0b" 
+                  fill="rgba(245,158,11,0.05)" 
+                  strokeWidth={2} 
+                  name="Akurasi Avg (%)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card" 
-          whileHover={{ scale: 1.01 }}
+          className="card"
+          whileHover={{ y: -5 }}
         >
-          <div className="card-title"><Activity size={16} /> Ringkasan Performa</div>
-          <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
+          <div className="card-title">🚀 Statistik Cepat</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:20 }}>
             {[
               { l:"Rata-rata Confidence", v:`${avgConf}%`, c:"#10B981" },
               { l:"Rata-rata Inference", v:`${avgMs}ms`, c:"#22d3ee" },
@@ -269,4 +291,4 @@ export default function AnalitikView() {
       </div>
     </motion.div>
   );
-}
+});

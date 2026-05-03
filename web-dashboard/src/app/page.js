@@ -32,6 +32,20 @@ import DataFreshness from "./components/shared/DataFreshness";
 import { formatFullDateTime } from "./utils/formatters";
 import { motion, AnimatePresence } from "framer-motion";
 
+const LiveClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className="time-badge desktop-only">
+      <Clock size={12} style={{ marginRight: 6, verticalAlign: -1 }} />
+      {formatFullDateTime(time)} WIB
+    </div>
+  );
+};
+
 function DashboardApp() {
   const { mounted, isAuthenticated, isCheckingAuth, token, user, login, logout } =
     useAuth();
@@ -42,7 +56,6 @@ function DashboardApp() {
     error: "",
     loading: false,
   });
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState("dark");
 
@@ -76,11 +89,6 @@ function DashboardApp() {
     markAsRead,
     markAllRead,
   } = useAlerts(isAuthenticated ? token : null);
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Close mobile sidebar on view change
   useEffect(() => {
@@ -533,13 +541,7 @@ function DashboardApp() {
           </div>
 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div className="time-badge desktop-only">
-              <Clock
-                size={12}
-                style={{ marginRight: 6, verticalAlign: -1 }}
-              />
-              {formatFullDateTime(currentTime)} WIB
-            </div>
+            <LiveClock />
 
             <div
               className="card"
