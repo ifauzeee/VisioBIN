@@ -56,14 +56,27 @@ export default function PerangkatView() {
       }));
 
   return (
-    <>
+    <motion.div
+      key={totalDevices}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* KPI Cards */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
+      <motion.div 
+        className="kpi-grid" 
+        style={{ marginBottom: 24 }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+      >
         {loading ? (
           [1, 2, 3].map((i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            <motion.div className="card" whileHover={{ scale: 1.02 }}>
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <Cpu size={16} /> Total Perangkat
               </div>
@@ -75,7 +88,7 @@ export default function PerangkatView() {
               </div>
             </motion.div>
 
-            <motion.div className="card" whileHover={{ scale: 1.02 }}>
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <Wifi size={16} color="var(--brand-organic)" /> Aktif
               </div>
@@ -94,7 +107,7 @@ export default function PerangkatView() {
               </div>
             </motion.div>
 
-            <motion.div className="card" whileHover={{ scale: 1.02 }}>
+            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
                 <AlertTriangle size={16} color="#f59e0b" /> Peringatan
               </div>
@@ -114,7 +127,7 @@ export default function PerangkatView() {
             </motion.div>
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* Device Table */}
       {loading ? (
@@ -128,7 +141,14 @@ export default function PerangkatView() {
           />
         </div>
       ) : (
-        <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.01 }}>
+        <motion.div 
+          className="card" 
+          style={{ marginBottom: 24 }} 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.002 }}
+        >
           <div className="card-title">📡 Status Perangkat IoT</div>
           <div style={{ marginTop: 16, overflowX: "auto" }}>
             <table className="report-table">
@@ -143,8 +163,13 @@ export default function PerangkatView() {
                 </tr>
               </thead>
               <tbody>
-                {sensorData.map((s) => (
-                  <tr key={s.id}>
+                {sensorData.map((s, i) => (
+                  <motion.tr 
+                    key={s.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + (i * 0.03) }}
+                  >
                     <td>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{s.name}</div>
                       <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
@@ -173,10 +198,11 @@ export default function PerangkatView() {
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div className="progress-bar" style={{ width: 60 }}>
-                          <div
+                          <motion.div
                             className="progress-fill"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${s.volOrganik}%` }}
                             style={{
-                              width: `${s.volOrganik}%`,
                               background: getBinLevelColor(s.volOrganik),
                             }}
                           />
@@ -189,10 +215,11 @@ export default function PerangkatView() {
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div className="progress-bar" style={{ width: 60 }}>
-                          <div
+                          <motion.div
                             className="progress-fill"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${s.volAnorganik}%` }}
                             style={{
-                              width: `${s.volAnorganik}%`,
                               background: getBinLevelColor(s.volAnorganik),
                             }}
                           />
@@ -205,7 +232,7 @@ export default function PerangkatView() {
                     <td className="mono" style={{ fontSize: 13 }}>
                       {s.gas?.toFixed(1) ?? "—"}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -214,20 +241,36 @@ export default function PerangkatView() {
       )}
 
       {/* Device Cards */}
-      <div className="card-title" style={{ marginBottom: 16, paddingLeft: 4 }}>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="card-title" 
+        style={{ marginBottom: 16, paddingLeft: 4 }}
+      >
         🔧 Detail Perangkat
-      </div>
-      <div
+      </motion.div>
+      <motion.div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           gap: 16,
         }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05, delayChildren: 0.5 } }
+        }}
       >
         {sensorData.map((s) => {
           const totalWeight = (s.weightOrg || 0) + (s.weightInorg || 0);
           return (
-            <div key={s.id} className="sensor-card">
+            <motion.div 
+              key={s.id} 
+              variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}
+              className="sensor-card"
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -338,10 +381,10 @@ export default function PerangkatView() {
                   : "—"}{" "}
                 WIB
               </div>
-            </div>
+            </motion.div>
           );
         })}
-      </div>
-    </>
+      </motion.div>
+    </motion.div>
   );
 }

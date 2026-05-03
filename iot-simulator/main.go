@@ -171,29 +171,8 @@ func main() {
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			if resp.StatusCode == http.StatusConflict {
-				fmt.Println("   ❌ Error: User exists but login failed (wrong password?). Please check credentials.")
-				return
-			}
-			fmt.Println("   User not found, registering...")
-			resp.Body.Close()
-			regBody := map[string]string{
-				"username":  *userPtr,
-				"email":     *userPtr + "@visiobin.local",
-				"password":  *passPtr,
-				"full_name": "IoT Simulator (" + *userPtr + ")",
-			}
-			regJSON, _ := json.Marshal(regBody)
-			resp, err = client.Post(baseURL+"/auth/register", "application/json", bytes.NewBuffer(regJSON))
-			if err != nil {
-				fmt.Printf("   ❌ Registration failed: %v. Retrying...\n", err)
-				time.Sleep(3 * time.Second)
-				continue
-			}
-			if resp.StatusCode == http.StatusConflict {
-				fmt.Println("   ❌ Error: Username already exists. Please use the correct password.")
-				return
-			}
+			fmt.Printf("   ❌ Login failed (Status: %d). If you deleted the user, the simulator will stop.\n", resp.StatusCode)
+			return
 		}
 
 		var result map[string]interface{}

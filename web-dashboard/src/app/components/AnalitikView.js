@@ -86,30 +86,56 @@ export default function AnalitikView() {
   );
 
   return (
-    <>
+    <motion.div
+      key={total}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16 }}>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, flex: 1 }}>
+        <motion.div 
+          style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, flex: 1 }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.05 } }
+          }}
+        >
           {kpi.map(item => (
-            <motion.div key={item.label} className="card analytics-kpi-card" whileHover={{ scale: 1.02 }}>
+            <motion.div 
+              key={item.label} 
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              className="card analytics-kpi-card" 
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
               <div className="card-title">{item.label}</div>
               <div style={{ marginTop:8, fontSize:34, fontWeight:600, letterSpacing:"-1px" }}>{item.value}</div>
               <div style={{ marginTop:10, fontSize:12, color:item.tone, fontWeight:600 }}>{item.delta} vs kemarin</div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
         <div className="desktop-only">
-          <button 
+          <motion.button 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             onClick={() => window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank")}
             className="btn-primary" 
             style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
           >
             <Download size={18} /> Export Analitik
-          </button>
+          </motion.button>
         </div>
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
-        <motion.div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card" 
+          style={{ minHeight:360, display:"flex", flexDirection:"column" }} 
+          whileHover={{ y: -5 }}
+        >
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -124,7 +150,7 @@ export default function AnalitikView() {
             </div>
           </div>
           {hourly.length > 0 ? (
-            <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>
+            <div style={{ flex:1, marginTop:16, marginLeft:-20, minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={hourly} margin={{ top:10, right:12, left:0, bottom:0 }} style={{ background: 'transparent' }}>
                   <defs>
@@ -152,7 +178,14 @@ export default function AnalitikView() {
           ) : <EmptyState title="Belum Ada Data Tren" description="Data muncul setelah klasifikasi pertama." />}
         </motion.div>
 
-        <motion.div className="card" style={{ minHeight:360, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="card" 
+          style={{ minHeight:360, display:"flex", flexDirection:"column" }} 
+          whileHover={{ y: -5 }}
+        >
           <div className="card-title">🔀 Komposisi Klasifikasi</div>
           <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
             {split.map(s => (
@@ -161,7 +194,15 @@ export default function AnalitikView() {
                   <span style={{ color:"var(--text-muted)" }}>{s.label}</span>
                   <span className="mono" style={{ color:"var(--text-main)" }}>{s.value}%</span>
                 </div>
-                <div className="mix-track"><div className="mix-fill" style={{ width:`${s.value}%`, background:s.tone }} /></div>
+                <div className="mix-track">
+                  <motion.div 
+                    className="mix-fill" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${s.value}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    style={{ background:s.tone }} 
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -173,10 +214,17 @@ export default function AnalitikView() {
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
-        <motion.div className="card" style={{ minHeight:300, display:"flex", flexDirection:"column" }} whileHover={{ y: -5 }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card" 
+          style={{ minHeight:300, display:"flex", flexDirection:"column" }} 
+          whileHover={{ y: -5 }}
+        >
           <div className="card-title">📈 Tren Akurasi Model Harian</div>
           {daily.length > 0 ? (
-            <div style={{ flex:1, marginTop:16, marginLeft:-20 }}>
+            <div style={{ flex:1, marginTop:16, marginLeft:-20, minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={daily} margin={{ top:10, right:10, left:0, bottom:0 }} style={{ background: 'transparent' }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
@@ -190,7 +238,13 @@ export default function AnalitikView() {
           ) : <EmptyState title="Belum Ada Data Akurasi" />}
         </motion.div>
 
-        <motion.div className="card" whileHover={{ scale: 1.01 }}>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="card" 
+          whileHover={{ scale: 1.01 }}
+        >
           <div className="card-title"><Activity size={16} /> Ringkasan Performa</div>
           <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:12 }}>
             {[
@@ -199,15 +253,21 @@ export default function AnalitikView() {
               { l:"Total Organik", v:String(orgC), c:"#10B981" },
               { l:"Total Anorganik", v:String(inorgC), c:"#3B82F6" },
               { l:"Rasio O/A", v:inorgC>0?`${(orgC/inorgC).toFixed(2)}:1`:"—", c:"#8B5CF6" },
-            ].map(s => (
-              <div key={s.l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", background:"rgba(255,255,255,0.02)", borderRadius:8, border:"1px solid var(--border-color)" }}>
+            ].map((s, i) => (
+              <motion.div 
+                key={s.l} 
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + (i * 0.05) }}
+                style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", background:"rgba(255,255,255,0.02)", borderRadius:8, border:"1px solid var(--border-color)" }}
+              >
                 <span style={{ fontSize:12, color:"var(--text-muted)" }}>{s.l}</span>
                 <span className="mono" style={{ fontSize:14, fontWeight:600, color:s.c }}>{s.v}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
-    </>
+    </motion.div>
   );
 }

@@ -48,8 +48,20 @@ export default function ProfileView() {
   };
 
   return (
-    <div className="profile-container" style={{ maxWidth: 800, margin: "0 auto" }}>
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: { transition: { staggerChildren: 0.1 } }
+      }}
+      className="profile-container" 
+      style={{ maxWidth: 800, margin: "0 auto" }}
+    >
+      <motion.div 
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="card" 
+        style={{ padding: 0, overflow: "hidden" }}
+      >
         {/* Header Background */}
         <div 
           style={{ 
@@ -61,7 +73,12 @@ export default function ProfileView() {
         
         <div style={{ padding: "0 40px 40px", marginTop: -60 }}>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 24, marginBottom: 40 }}>
-            <div style={{ position: "relative" }}>
+            <motion.div 
+              style={{ position: "relative" }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            >
               <div 
                 style={{ 
                   width: 120, 
@@ -100,9 +117,14 @@ export default function ProfileView() {
               >
                 <Camera size={16} />
               </button>
-            </div>
+            </motion.div>
             
-            <div style={{ paddingBottom: 10 }}>
+            <motion.div 
+              style={{ paddingBottom: 10 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>{formData.full_name || "User Name"}</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)", fontSize: 14 }}>
                 <CheckCircle2 size={14} color="var(--brand-organic)" />
@@ -110,12 +132,12 @@ export default function ProfileView() {
                 <span style={{ margin: "0 8px" }}>•</span>
                 <span style={{ textTransform: "capitalize" }}>{user?.role || "User"}</span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              <div className="form-group">
+              <motion.div variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }} className="form-group">
                 <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
                   Nama Lengkap
                 </label>
@@ -138,9 +160,9 @@ export default function ProfileView() {
                     }}
                   />
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="form-group">
+              <motion.div variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }} className="form-group">
                 <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
                   Email Address
                 </label>
@@ -163,9 +185,9 @@ export default function ProfileView() {
                     }}
                   />
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
+              <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="form-group" style={{ gridColumn: "span 2" }}>
                 <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
                   Ganti Kata Sandi (Kosongkan jika tidak ingin mengubah)
                 </label>
@@ -188,7 +210,7 @@ export default function ProfileView() {
                     }}
                   />
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
@@ -223,9 +245,13 @@ export default function ProfileView() {
             </div>
           </form>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="card" style={{ marginTop: 24, border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+      <motion.div 
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="card" 
+        style={{ marginTop: 24, border: "1px solid rgba(239, 68, 68, 0.2)" }}
+      >
         <h3 style={{ fontSize: 18, fontWeight: 600, color: "#ef4444", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
           <AlertCircle size={20} />
           Zona Bahaya
@@ -247,7 +273,7 @@ export default function ProfileView() {
         >
           Hapus Akun Saya
         </button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

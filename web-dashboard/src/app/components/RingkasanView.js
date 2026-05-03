@@ -11,7 +11,7 @@ import {
   ResponsiveContainer, Legend, Brush
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, Info, Leaf as LeafIcon } from 'lucide-react';
 import {
   dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
@@ -37,21 +37,18 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
 
   const displayLogs = logs.length ? logs : defaultLogs;
 
-  // Compute real AI accuracy from classification logs
   const computedAccuracy = logs.length > 0
     ? (logs.reduce((acc, l) => acc + (l.prob || 0), 0) / logs.length).toFixed(1)
     : '97.8';
 
-  // Compute average inference latency from logs
   const computedLatency = logs.length > 0
     ? Math.round(logs.reduce((acc, l) => acc + (l.inference_ms || 0), 0) / logs.length)
     : summary.latency || 14;
 
-  // AI Insight Logic
   const generateInsight = () => {
     const total = summary.total_processed || 0;
     const co2 = summary.co2 || 0;
-    const trend = 12; // Sample trend
+    const trend = 12;
     
     if (total > 500) {
       return {
@@ -69,11 +66,18 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
   const insight = generateInsight();
 
   return (
-    <>
+    <motion.div
+      key={summary.total_processed} // Use total as a simple trigger for data-level transitions
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* AI Insight Narrative */}
       <motion.div 
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className="card"
         style={{ 
           marginBottom: 24, 
@@ -119,13 +123,22 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           Detail Analisis
         </button>
       </motion.div>
-      <div className="kpi-grid">
+
+      <motion.div 
+        className="kpi-grid"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+      >
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title">
-            <Leaf size={16} color="var(--brand-organic)" /> Total Diproses Hari Ini
+            <LeafIcon size={16} color="var(--brand-organic)" /> Total Diproses Hari Ini
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
@@ -141,6 +154,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
 
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
@@ -152,10 +166,12 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
             <span style={{ color: binLevel > 80 ? '#ef4444' : '#22d3ee', fontSize: 13 }}>%</span>
           </div>
           <div className="progress-bar" style={{ marginTop: 8 }}>
-            <div
+            <motion.div
               className="progress-fill"
+              initial={{ width: 0 }}
+              animate={{ width: `${binLevel}%` }}
+              transition={{ type: "spring", stiffness: 50, damping: 20 }}
               style={{
-                width: `${binLevel}%`,
                 background: binLevel > 80 ? '#ef4444' : binLevel > 60 ? '#f59e0b' : 'var(--brand-organic)'
               }}
             />
@@ -163,6 +179,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
 
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
@@ -175,6 +192,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
 
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
@@ -187,6 +205,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
 
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
@@ -199,6 +218,7 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
 
         <motion.div
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
@@ -209,10 +229,13 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>30 hari terakhir</div>
         </motion.div>
-      </div>
+      </motion.div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
         <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
           whileHover={{ y: -5 }}
           className="card"
           style={{ padding: 0, display: 'flex', flexDirection: 'column' }}
@@ -223,25 +246,35 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
           </div>
           <div className="scanner-container" style={{ height: 320 }}>
             {vision.state === 'scanning' && <div className="scan-laser" />}
-            <div
-              className="bounding-box"
-              style={{
-                opacity: vision.state === 'locked' ? 1 : 0,
-                borderColor: 'var(--brand-organic)',
-                top: `${vision.box.top}%`,
-                left: `${vision.box.left}%`,
-                width: `${vision.box.w}%`,
-                height: `${vision.box.h}%`
-              }}
-            >
-              <div className="mono" style={{ position: 'absolute', top: -25, left: -1, background: 'var(--brand-organic)', color: 'var(--bg-card)', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
-                {(vision.label || 'TERDETEKSI').toUpperCase()} {(vision.prob).toFixed(1)}%
-              </div>
-            </div>
+            <AnimatePresence>
+              {vision.state === 'locked' && (
+                <motion.div
+                  key="bounding-box"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="bounding-box"
+                  style={{
+                    borderColor: 'var(--brand-organic)',
+                    top: `${vision.box.top}%`,
+                    left: `${vision.box.left}%`,
+                    width: `${vision.box.w}%`,
+                    height: `${vision.box.h}%`
+                  }}
+                >
+                  <div className="mono" style={{ position: 'absolute', top: -25, left: -1, background: 'var(--brand-organic)', color: 'var(--bg-card)', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
+                    {(vision.label || 'TERDETEKSI').toUpperCase()} {(vision.prob).toFixed(1)}%
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
 
         <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
           whileHover={{ y: -5 }}
           className="card"
           style={{ display: 'flex', flexDirection: 'column' }}
@@ -252,11 +285,14 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               <path d="M10,20 L90,20 L80,110 L20,110 Z" fill="none" stroke="var(--border-hover)" strokeWidth="2" strokeLinejoin="round" />
               <path d="M0,20 L100,20" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round" />
               <path d="M50,20 L50,110" stroke="var(--border-color)" strokeWidth="2" strokeDasharray="4,4" />
-              <rect
+              <motion.rect
                 x="28" width="44" rx="2" fill="var(--brand-organic)" opacity="0.9"
-                height={(binLevel / 100) * 85}
-                y={110 - ((binLevel / 100) * 85)}
-                style={{ transition: 'all 1s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                initial={{ height: 0, y: 110 }}
+                animate={{ 
+                  height: (binLevel / 100) * 85,
+                  y: 110 - ((binLevel / 100) * 85)
+                }}
+                transition={{ type: "spring", stiffness: 40 }}
               />
             </svg>
           </div>
@@ -270,14 +306,16 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
         </motion.div>
       </div>
 
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
-        >
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="dashboard-grid-2-1" 
+        style={{ marginBottom: 24 }}
+      >
+        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">📈 Riwayat Volume Per Jam</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <defs>
@@ -295,15 +333,11 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
-        >
+        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">🥧 Distribusi Jenis Sampah</div>
-          <div style={{ flex: 1, marginTop: 8 }}>
+          <div style={{ flex: 1, marginTop: 8, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height={220}>
               <RPieChart style={{ background: 'transparent' }}>
                 <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
@@ -320,17 +354,19 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </div>
             ))}
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
-        >
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="dashboard-grid-2-1" 
+        style={{ marginBottom: 24 }}
+      >
+        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
@@ -343,78 +379,34 @@ export default function RingkasanView({ summary, binLevel, vision, logs }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
-        >
+        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title"><Activity size={16} /> Log Aktivitas Terbaru</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {displayLogs.map(log => (
-              <div key={log.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
-                  <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>tempat-sampah</div>
-                  <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
-                </div>
-              </div>
-            ))}
+            <AnimatePresence initial={false}>
+              {displayLogs.map((log, i) => (
+                <motion.div 
+                  key={log.id} 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border-color)' }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>tempat-sampah</div>
+                    <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        </motion.div>
-      </div>
-
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}
-        >
-          <div className="card-title">⏱️ Jumlah Item Diproses Per Jam</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={processingData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
-                <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: 8 }} />
-                <Bar dataKey="items" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Item Diproses" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="card"
-          style={{ minHeight: 320 }}
-        >
-          <div className="card-title">🌿 Dampak Lingkungan (Real-time)</div>
-          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              { label: 'CO2 Dicegah', value: `${(summary.total_co2 || 0).toFixed(2)} kg`, desc: 'Setara emisi kendaraan yang dikurangi', tone: '#22d3ee', icon: '🌍' },
-              { label: 'Kompos Dihasilkan', value: `${(summary.total_compost || 0).toFixed(2)} kg`, desc: 'Estimasi dari sampah organik', tone: '#8B5CF6', icon: '🌱' },
-              { label: 'Efisiensi Pemilahan', value: `${computedAccuracy}%`, desc: 'Target operasional: 95%', tone: '#f59e0b', icon: '🎯' },
-              { label: 'Potensi Daur Ulang', value: '85%', desc: 'Rasio sampah yang dapat diolah', tone: '#10B981', icon: '♻️' },
-            ].map(d => (
-              <div key={d.label} className="impact-card" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: `${d.tone}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 18 }}>{d.icon}</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: d.tone }}>{d.value}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

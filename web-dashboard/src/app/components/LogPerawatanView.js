@@ -118,17 +118,25 @@ export default function LogPerawatanView() {
   }
 
   return (
-    <>
+    <motion.div
+      key={total}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
           <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 8 }}>
             <ClipboardList size={20} /> Log Perawatan
           </h2>
           <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
             Riwayat perawatan dan inspeksi unit VisioBin
           </p>
-        </div>
+        </motion.div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={fetchLogs} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <RefreshCw size={14} /> Muat Ulang
@@ -202,7 +210,13 @@ export default function LogPerawatanView() {
       </AnimatePresence>
 
       {/* Filter */}
-      <div className="card" style={{ padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card" 
+        style={{ padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}
+      >
         <ChevronDown size={14} color="var(--text-muted)" />
         <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Filter:</span>
         <select
@@ -217,7 +231,7 @@ export default function LogPerawatanView() {
         <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: "auto" }}>
           {total} total log
         </span>
-      </div>
+      </motion.div>
 
       {/* Log List */}
       {logs.length === 0 ? (
@@ -229,15 +243,23 @@ export default function LogPerawatanView() {
           />
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <motion.div 
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } }
+          }}
+        >
           {logs.map((log) => {
             const action = getActionLabel(log.action_type);
             return (
               <motion.div
                 key={log.id}
+                variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
                 className="card"
                 style={{ padding: 16, display: "flex", gap: 14, alignItems: "flex-start" }}
-                whileHover={{ scale: 1.005 }}
+                whileHover={{ scale: 1.005, background: "var(--bg-hover)" }}
                 layout
               >
                 <div style={{
@@ -291,12 +313,17 @@ export default function LogPerawatanView() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}
+        >
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page <= 1}
@@ -316,8 +343,8 @@ export default function LogPerawatanView() {
           >
             Selanjutnya →
           </button>
-        </div>
+        </motion.div>
       )}
-    </>
+    </motion.div>
   );
 }

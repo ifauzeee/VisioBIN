@@ -7,6 +7,8 @@ import { listUsers } from "../services/api";
 import { SkeletonCard } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 
+import { motion } from "framer-motion";
+
 const ROLE_CONFIG = {
   admin: { label: "Administrator", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
   operator: { label: "Operator", color: "#22d3ee", bg: "rgba(34,211,238,0.12)" },
@@ -45,7 +47,12 @@ export default function TeamView() {
   }
 
   return (
-    <>
+    <motion.div
+      key={members.length}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -57,41 +64,70 @@ export default function TeamView() {
       </div>
 
       {/* KPI */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="card">
+      <motion.div 
+        className="kpi-grid" 
+        style={{ marginBottom: 24 }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+      >
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ y: -5 }}>
           <div className="card-title"><Users size={16} /> Total Anggota</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{members.length}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>terdaftar di sistem</div>
-        </div>
-        <div className="card">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ y: -5 }}>
           <div className="card-title"><ShieldCheck size={16} color="#f59e0b" /> Admin</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#f59e0b" }}>
             {members.filter(m => m.role === "admin").length}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>full access</div>
-        </div>
-        <div className="card">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ y: -5 }}>
           <div className="card-title"><Users size={16} color="#22d3ee" /> Operator</div>
           <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#22d3ee" }}>
             {members.filter(m => m.role === "operator").length}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>monitoring access</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Members Grid */}
-      <div className="card-title" style={{ marginBottom: 16, paddingLeft: 4 }}>👥 Daftar Anggota Aktif</div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="card-title" 
+        style={{ marginBottom: 16, paddingLeft: 4 }}
+      >
+        👥 Daftar Anggota Aktif
+      </motion.div>
       {members.length === 0 ? (
         <div className="card">
           <EmptyState icon={Users} title="Tidak Ada Anggota" description="Belum ada anggota tim lain yang terdaftar." />
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <motion.div 
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.05, delayChildren: 0.4 } }
+          }}
+        >
           {members.map(member => {
             const rc = ROLE_CONFIG[member.role] || ROLE_CONFIG.operator;
             const initials = (member.full_name || member.username || "?").substring(0, 2).toUpperCase();
             return (
-              <div key={member.id} className="card" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+              <motion.div 
+                key={member.id} 
+                variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}
+                className="card" 
+                style={{ display: "flex", gap: 16, alignItems: "flex-start" }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
                 <div style={{
                   width: 48, height: 48, borderRadius: 14,
                   background: member.role === "admin"
@@ -127,14 +163,20 @@ export default function TeamView() {
                     <Mail size={12} /> {member.email}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Dosen */}
-      <div className="card">
+      <motion.div 
+        className="card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        whileHover={{ scale: 1.01 }}
+      >
         <div className="card-title">🎓 Dosen Pembimbing</div>
         <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{
@@ -150,7 +192,7 @@ export default function TeamView() {
             </div>
           </div>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -6,7 +6,7 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
 import { Download, FileText } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
 import { SkeletonCard, SkeletonChart, SkeletonTable } from "./shared/Skeleton";
@@ -85,33 +85,50 @@ export default function LaporanView() {
   );
 
   return (
-    <>
+    <motion.div
+      key={totalItems}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* KPI */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <motion.div className="card" whileHover={{ scale: 1.02 }}>
-          <div className="card-title">📦 Total Item</div>
-          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{totalItems}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>dari {dailyData.length} hari data</div>
-        </motion.div>
-        <motion.div className="card" whileHover={{ scale: 1.02 }}>
-          <div className="card-title">🎯 Rata-rata Akurasi</div>
-          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12 }}>{avgAcc}%</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>confidence model AI</div>
-        </motion.div>
-        <motion.div className="card" whileHover={{ scale: 1.02 }}>
-          <div className="card-title">♻️ Tingkat Daur Ulang</div>
-          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "var(--brand-organic)" }}>{Math.min(recycleRate, 99)}%</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>target: 85%</div>
-        </motion.div>
-        <motion.div className="card" whileHover={{ scale: 1.02 }}>
-          <div className="card-title">🌍 CO2 Dicegah</div>
-          <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: "#22d3ee" }}>{co2} kg</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>estimasi kumulatif</div>
-        </motion.div>
-      </div>
+      <motion.div 
+        className="kpi-grid" 
+        style={{ marginBottom: 24 }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+      >
+        {[
+          { title: "📦 Total Item", val: totalItems, note: `dari ${dailyData.length} hari data`, color: "var(--text-main)" },
+          { title: "🎯 Rata-rata Akurasi", val: `${avgAcc}%`, note: "confidence model AI", color: "var(--text-main)" },
+          { title: "♻️ Tingkat Daur Ulang", val: `${Math.min(recycleRate, 99)}%`, note: "target: 85%", color: "var(--brand-organic)" },
+          { title: "🌍 CO2 Dicegah", val: `${co2} kg`, note: "estimasi kumulatif", color: "#22d3ee" }
+        ].map((k, i) => (
+          <motion.div 
+            key={i} 
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            className="card" 
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          >
+            <div className="card-title">{k.title}</div>
+            <div style={{ fontSize: 36, fontWeight: 600, marginTop: 12, color: k.color }}>{k.val}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{k.note}</div>
+          </motion.div>
+        ))}
+      </motion.div>
 
       {/* Table with Export */}
-      <motion.div className="card" style={{ marginBottom: 24 }} whileHover={{ scale: 1.005 }}>
+      <motion.div 
+        className="card" 
+        style={{ marginBottom: 24 }} 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        whileHover={{ scale: 1.002 }}
+      >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div className="card-title" style={{ marginBottom: 0 }}>📋 Laporan Harian & Log Klasifikasi</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -140,16 +157,23 @@ export default function LaporanView() {
               <tr><th>Tanggal</th><th>Total Item</th><th>Organik</th><th>Anorganik</th><th>Akurasi</th><th>Level Akhir</th></tr>
             </thead>
             <tbody>
-              {dailyData.map(d => (
-                <tr key={d.tanggal}>
-                  <td style={{ fontWeight: 500 }}>{d.tanggal}</td>
-                  <td className="mono">{d.totalItem}</td>
-                  <td><span style={{ color: "var(--brand-organic)" }} className="mono">{d.organik}</span></td>
-                  <td><span style={{ color: "var(--brand-inorganic)" }} className="mono">{d.anorganik}</span></td>
-                  <td><span style={{ color: d.akurasi >= 97 ? "var(--brand-organic)" : "#f59e0b" }} className="mono">{d.akurasi}%</span></td>
-                  <td className="mono">{d.levelAkhir}%</td>
-                </tr>
-              ))}
+              <AnimatePresence initial={false}>
+                {dailyData.map((d, i) => (
+                  <motion.tr 
+                    key={d.tanggal}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + (i * 0.03) }}
+                  >
+                    <td style={{ fontWeight: 500 }}>{d.tanggal}</td>
+                    <td className="mono">{d.totalItem}</td>
+                    <td><span style={{ color: "var(--brand-organic)" }} className="mono">{d.organik}</span></td>
+                    <td><span style={{ color: "var(--brand-inorganic)" }} className="mono">{d.anorganik}</span></td>
+                    <td><span style={{ color: d.akurasi >= 97 ? "var(--brand-organic)" : "#f59e0b" }} className="mono">{d.akurasi}%</span></td>
+                    <td className="mono">{d.levelAkhir}%</td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
@@ -157,9 +181,16 @@ export default function LaporanView() {
 
       {/* Charts */}
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <motion.div className="card" style={{ minHeight: 320, display: "flex", flexDirection: "column" }} whileHover={{ y: -5 }}>
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card" 
+          style={{ minHeight: 320, display: "flex", flexDirection: "column" }} 
+          whileHover={{ y: -5 }}
+        >
           <div className="card-title">📊 Perbandingan Organik vs Anorganik</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20 }}>
+          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyData.slice(0, 7)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
@@ -175,7 +206,14 @@ export default function LaporanView() {
           </div>
         </motion.div>
 
-        <motion.div className="card" style={{ minHeight: 320 }} whileHover={{ y: -5 }}>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="card" 
+          style={{ minHeight: 320 }} 
+          whileHover={{ y: -5 }}
+        >
           <div className="card-title">🌿 Dampak Lingkungan</div>
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
             {[
@@ -183,8 +221,15 @@ export default function LaporanView() {
               { label: "CO2 Dicegah", value: `${co2} kg`, desc: "Estimasi dari klasifikasi", tone: "#22d3ee", emoji: "🌍" },
               { label: "Kompos Dihasilkan", value: `${(totalOrg * 0.08).toFixed(1)} kg`, desc: "Dari sampah organik", tone: "#8B5CF6", emoji: "🌱" },
               { label: "Efisiensi Pemilahan", value: `${avgAcc}%`, desc: "Target: 95%", tone: "#f59e0b", emoji: "🎯" },
-            ].map(d => (
-              <div key={d.label} className="impact-card" style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "center" }}>
+            ].map((d, i) => (
+              <motion.div 
+                key={d.label} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 + (i * 0.05) }}
+                className="impact-card" 
+                style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "center" }}
+              >
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: `${d.tone}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: 18 }}>{d.emoji}</span>
                 </div>
@@ -193,11 +238,11 @@ export default function LaporanView() {
                   <div style={{ fontSize: 20, fontWeight: 600, color: d.tone }}>{d.value}</div>
                   <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{d.desc}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
-    </>
+    </motion.div>
   );
 }

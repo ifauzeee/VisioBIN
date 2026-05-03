@@ -287,28 +287,35 @@ export default function DataManagementView() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((row, i) => (
-                        <tr key={i}>
-                          <td className="row-num">{(page - 1) * limit + i + 1}</td>
-                          {columns.map(col => (
-                            <td key={col} className={col === 'id' || col.includes('_id') ? 'mono' : ''}>
-                              {col.includes('at') || col === 'recorded_at' || col === 'timestamp' ? (
-                                <span className="time-val">{formatFullDateTime(row[col])}</span>
-                              ) : row[col] === null ? (
-                                <span className="null-val">NULL</span>
-                              ) : (
-                                <span>{String(row[col])}</span>
-                              )}
+                      <AnimatePresence initial={false}>
+                        {sortedData.map((row, i) => (
+                          <motion.tr 
+                            key={row.id || i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.02 }}
+                          >
+                            <td className="row-num">{(page - 1) * limit + i + 1}</td>
+                            {columns.map(col => (
+                              <td key={col} className={col === 'id' || col.includes('_id') ? 'mono' : ''}>
+                                {col.includes('at') || col === 'recorded_at' || col === 'timestamp' ? (
+                                  <span className="time-val">{formatFullDateTime(row[col])}</span>
+                                ) : row[col] === null ? (
+                                  <span className="null-val">NULL</span>
+                                ) : (
+                                  <span>{String(row[col])}</span>
+                                )}
+                              </td>
+                            ))}
+                            <td className="actions-cell">
+                               <div className="action-btns">
+                                  <button className="a-btn edit" onClick={() => handleOpenModal(row)}><Edit3 size={12} /></button>
+                                  <button className="a-btn delete" onClick={() => handleDelete(row.id)}><Trash2 size={12} /></button>
+                               </div>
                             </td>
-                          ))}
-                          <td className="actions-cell">
-                             <div className="action-btns">
-                                <button className="a-btn edit" onClick={() => handleOpenModal(row)}><Edit3 size={12} /></button>
-                                <button className="a-btn delete" onClick={() => handleDelete(row.id)}><Trash2 size={12} /></button>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
                     </tbody>
                   </table>
                 )}
@@ -353,14 +360,21 @@ export default function DataManagementView() {
                     <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
                   </thead>
                   <tbody>
-                    {activeTable.structure.map((col, i) => (
-                      <tr key={i}>
-                        <td className="bold">{col.name}</td>
-                        <td className="type-col">{col.type}</td>
-                        <td className="extra-col">{col.extra}</td>
-                        <td className="comment-col">{col.comment || '—'}</td>
-                      </tr>
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {activeTable.structure.map((col, i) => (
+                        <motion.tr 
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.03 }}
+                        >
+                          <td className="bold">{col.name}</td>
+                          <td className="type-col">{col.type}</td>
+                          <td className="extra-col">{col.extra}</td>
+                          <td className="comment-col">{col.comment || '—'}</td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
                   </tbody>
                 </table>
               </div>

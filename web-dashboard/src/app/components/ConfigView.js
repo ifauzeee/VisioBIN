@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw, Loader2 } from "lucide-react";
 import { useToast } from "./shared/Toast";
 
@@ -103,9 +104,15 @@ export default function ConfigView() {
   );
 
   return (
-    <>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: { transition: { staggerChildren: 0.05 } }
+      }}
+    >
       {/* Connection */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }} className="card" style={{ marginBottom: 24 }}>
         <div className="card-title"><Wifi size={16} /> Koneksi API</div>
         <div style={{ marginTop: 8 }}>
           <InputRow icon={Database} label="API Base URL" desc="Endpoint backend VisioBin">
@@ -119,10 +126,10 @@ export default function ConfigView() {
             />
           </InputRow>
         </div>
-      </div>
+      </motion.div>
 
       {/* Polling */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }} className="card" style={{ marginBottom: 24 }}>
         <div className="card-title"><Clock size={16} /> Interval Polling</div>
         <div style={{ marginTop: 8 }}>
           <InputRow icon={Clock} label="Dashboard" desc="Ringkasan & klasifikasi">
@@ -138,10 +145,10 @@ export default function ConfigView() {
             <Toggle value={config.autoRefresh} onChange={v => update("autoRefresh", v)} />
           </InputRow>
         </div>
-      </div>
+      </motion.div>
 
       {/* Thresholds */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }} className="card" style={{ marginBottom: 24 }}>
         <div className="card-title">⚠️ Threshold Peringatan</div>
         <div style={{ marginTop: 8 }}>
           <InputRow icon={Settings2} label="Volume Peringatan" desc="Warna kuning saat melebihi">
@@ -157,10 +164,10 @@ export default function ConfigView() {
             <NumInput value={config.gasCriticalPpm} onChange={v => update("gasCriticalPpm", v)} unit="ppm" max={500} />
           </InputRow>
         </div>
-      </div>
+      </motion.div>
 
       {/* Notifications */}
-      <div className="card" style={{ marginBottom: 24 }}>
+      <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }} className="card" style={{ marginBottom: 24 }}>
         <div className="card-title"><Bell size={16} /> Notifikasi</div>
         <div style={{ marginTop: 8 }}>
           <InputRow icon={Bell} label="Notifikasi Browser" desc="Push notification saat alert kritis">
@@ -170,10 +177,10 @@ export default function ConfigView() {
             <Toggle value={config.enableSoundAlert} onChange={v => update("enableSoundAlert", v)} />
           </InputRow>
         </div>
-      </div>
+      </motion.div>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+      <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }} style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
         <button onClick={reset} disabled={isSaving} style={{
           padding: "10px 20px", background: "transparent", border: "1px solid var(--border-color)",
           borderRadius: 8, color: "var(--text-muted)", fontSize: 13, fontWeight: 500, cursor: isSaving ? "not-allowed" : "pointer",
@@ -197,8 +204,8 @@ export default function ConfigView() {
             <><Save size={14} /> Simpan Konfigurasi</>
           )}
         </button>
-      </div>
-    </>
+      </motion.div>
+    </motion.div>
   );
 }
 
