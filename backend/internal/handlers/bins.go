@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -164,8 +165,8 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Async threshold check
-	go h.forecastSvc.CheckThresholds(r.Context(), reading, h.alertRepo)
+	// Async threshold check (Gunakan context.Background agar tidak terputus saat request selesai)
+	go h.forecastSvc.CheckThresholds(context.Background(), reading, h.alertRepo)
 
 	// Broadcast via WebSocket
 	h.broadcaster.Broadcast(map[string]interface{}{

@@ -622,6 +622,7 @@ function DashboardApp() {
                 binLevelInorg={binLevelInorg}
                 vision={vision}
                 logs={logs}
+                forecast={forecast}
               />
             )}
             {activeView === "pemantauan" && <PemantauanView />}

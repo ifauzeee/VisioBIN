@@ -229,12 +229,18 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           className="card"
         >
-          <div className="card-title"><ShieldCheck size={16} color="var(--brand-organic)" /> Uptime Sistem</div>
+          <div className="card-title"><Clock size={16} color="var(--brand-organic)" /> Estimasi Penuh</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>99.94</span>
-            <span style={{ color: 'var(--brand-organic)', fontSize: 13 }}>%</span>
+            <span style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-1px' }}>
+              {forecast?.hours_until_full_organic ? Math.round(forecast.hours_until_full_organic) : '—'}
+            </span>
+            <span style={{ color: 'var(--brand-organic)', fontSize: 13 }}>jam</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>30 hari terakhir</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+            {forecast?.estimated_full_organic 
+              ? `Diprediksi penuh pada ${new Date(forecast.estimated_full_organic).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
+              : 'Data belum cukup untuk prediksi'}
+          </div>
         </motion.div>
       </motion.div>
 

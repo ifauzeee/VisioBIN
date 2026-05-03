@@ -38,6 +38,7 @@ export function useDashboard(token) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [forecast, setForecast] = useState(null);
   const visionTimeoutRef = useRef(null);
 
   const fetchData = useCallback(async () => {
@@ -80,6 +81,17 @@ export function useDashboard(token) {
           setBinLevel(Math.round(lvl));
           setBinLevelOrg(Math.round(orgLvl));
           setBinLevelInorg(Math.round(inorgLvl));
+
+          // Fetch forecast for this bin
+          try {
+            const { getForecast } = await import("../services/api");
+            const forecastRes = await getForecast(token, b.id);
+            if (forecastRes.success) {
+              setForecast(forecastRes.data);
+            }
+          } catch (fErr) {
+            console.warn("Forecast fetch error:", fErr);
+          }
         }
       }
 
@@ -211,6 +223,7 @@ export function useDashboard(token) {
     binLevelOrg,
     binLevelInorg,
     vision,
+    forecast,
     bins: summary.bin_statuses,
     loading,
     error,

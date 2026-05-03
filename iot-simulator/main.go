@@ -135,6 +135,7 @@ func main() {
 	urlPtr := flag.String("url", defaultBaseURL, "Backend API base URL")
 	userPtr := flag.String("user", "", "Username for authentication (required)")
 	passPtr := flag.String("pass", "", "Password for authentication (required)")
+	scenarioPtr := flag.String("scenario", "default", "Scenario: default, full-bin, gas-spike")
 	flag.Parse()
 
 	if *userPtr == "" || *passPtr == "" {
@@ -152,12 +153,14 @@ func main() {
 	fmt.Println("============================================================")
 	fmt.Println("🗑️  VisioBin IoT Simulator")
 	fmt.Println("============================================================")
-	fmt.Printf("   API URL  : %s\n", baseURL)
-	fmt.Printf("   Interval : %ds\n\n", interval)
+	fmt.Printf("   API URL   : %s\n", baseURL)
+	fmt.Printf("   Interval  : %ds\n", interval)
+	fmt.Printf("   Scenario  : %s\n\n", *scenarioPtr)
 
 	client := &http.Client{Timeout: 5 * time.Second}
 
 	var token string
+	// ... login logic ...
 	for {
 		fmt.Println("🔑 Logging in...")
 		loginBody := map[string]string{"username": *userPtr, "password": *passPtr}
@@ -238,8 +241,20 @@ func main() {
 		cycle++
 		fmt.Printf("\n⏱️  Cycle #%d [%s]\n", cycle, time.Now().Format("15:04:05"))
 
-		for _, sim := range simulators {
-			sim.Update()
+		for i, sim := range simulators {
+			// Terapkan logika skenario
+			if *scenarioPtr == "full-bin" && i == 0 {
+				// Paksa bin pertama menjadi penuh (jarak sensor kecil)
+				sim.DistanceOrganic = 2.5 + rand.Float64()*1.0
+				sim.DistanceInorganic = 3.0 + rand.Float64()*1.5
+				fmt.Printf("   🔥 [SCENARIO] Forcing %s to be FULL!\n", sim.BinName)
+			} else if *scenarioPtr == "gas-spike" && i == 0 {
+				sim.GasAmonia = 60.0 + rand.Float64()*20.0
+				fmt.Printf("   🔥 [SCENARIO] Forcing GAS SPIKE in %s!\n", sim.BinName)
+			} else {
+				sim.Update()
+			}
+
 			payload := sim.GetTelemetry()
 			volO, volI := sim.GetVolumePcts()
 
@@ -255,6 +270,9 @@ func main() {
 			status := "✅"
 			if err != nil || resp.StatusCode != http.StatusCreated {
 				status = "⚠️"
+				if resp != nil {
+					fmt.Printf("      Error: Status %d\n", resp.StatusCode)
+				}
 			}
 			if resp != nil {
 				resp.Body.Close()
@@ -263,6 +281,7 @@ func main() {
 			fmt.Printf("   %s %-30.30s | Vol: %5.1f%%/%5.1f%% | W: %.1f/%.1fkg | Gas: %.1fppm\n",
 				status, sim.BinName, volO, volI, payload.WeightOrganicKg, payload.WeightInorganicKg, payload.GasAmoniaPpm)
 
+			// Simulasi Klasifikasi AI (acak)
 			if rand.Float64() < 0.3 {
 				classType := "organic"
 				if rand.Float64() < 0.5 {
