@@ -301,7 +301,24 @@ function DashboardApp() {
               justifyContent: "center",
             }}
           >
-            <img src="/logo.png" alt="Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+            <div 
+              style={{ 
+                width: 32, 
+                height: 32, 
+                backgroundColor: 'var(--text-main)', // Warna logo mengikuti teks
+                WebkitMaskImage: 'url(/logo.png)',
+                maskImage: 'url(/logo.png)',
+                WebkitMaskMode: 'luminance',
+                maskMode: 'luminance',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                opacity: 0.9
+              }} 
+            />
           </div>
           <span
             style={{
