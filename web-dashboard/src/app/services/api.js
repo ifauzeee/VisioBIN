@@ -114,3 +114,25 @@ export async function listAlerts(token, params = {}) {
 export async function markAlertRead(token, alertId) {
   return apiFetch(`/alerts/${alertId}/read`, token, { method: "PUT" });
 }
+
+// ── Maintenance Logs ─────────────────────────────────
+
+export async function listMaintenanceLogs(token, params = {}) {
+  const qs = new URLSearchParams();
+  if (params.bin_id) qs.set("bin_id", params.bin_id);
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  const query = qs.toString();
+  return apiFetch(`/maintenance${query ? `?${query}` : ""}`, token);
+}
+
+export async function createMaintenanceLog(token, payload) {
+  return apiFetch("/maintenance", token, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMaintenanceLog(token, logId) {
+  return apiFetch(`/maintenance/${logId}`, token, { method: "DELETE" });
+}

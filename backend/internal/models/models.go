@@ -184,6 +184,25 @@ type BinStatusSummary struct {
 	GasAmoniaPpm       *float64 `json:"gas_amonia_ppm"`
 }
 
+// --- Maintenance Log Models ---
+
+type MaintenanceLog struct {
+	ID           int64     `json:"id"`
+	BinID        string    `json:"bin_id"`
+	ActionType   string    `json:"action_type"`
+	Notes        string    `json:"notes"`
+	PerformedBy  *string   `json:"performed_by,omitempty"`
+	PerformedAt  time.Time `json:"performed_at"`
+	BinName      string    `json:"bin_name,omitempty"`
+	PerformerName string   `json:"performer_name,omitempty"`
+}
+
+type CreateMaintenanceLogRequest struct {
+	BinID      string `json:"bin_id"`
+	ActionType string `json:"action_type"`
+	Notes      string `json:"notes"`
+}
+
 // --- Response Helpers ---
 
 type APIResponse struct {

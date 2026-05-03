@@ -15,6 +15,7 @@ type Config struct {
 	JWTSecret      string
 	JWTExpiryHours int
 	FCMServerKey   string
+	APIKey         string
 }
 
 func Load() (*Config, error) {
@@ -50,6 +51,7 @@ func Load() (*Config, error) {
 		JWTSecret:      getEnv("JWT_SECRET", "visiobin-dev-secret-key"),
 		JWTExpiryHours: jwtExpiry,
 		FCMServerKey:   getEnv("FCM_SERVER_KEY", ""),
+		APIKey:         getEnv("API_KEY", "visiobin-iot-secret-key"),
 	}
 
 	return conf, nil

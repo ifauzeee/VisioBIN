@@ -266,7 +266,10 @@ func main() {
 			payloadJSON, _ := json.Marshal(payload)
 			telemetryReq, _ := http.NewRequest("POST", baseURL+"/telemetry", bytes.NewBuffer(payloadJSON))
 			telemetryReq.Header.Add("Content-Type", "application/json")
-			telemetryReq.Header.Add("Authorization", "Bearer "+token)
+			telemetryReq.Header.Add("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+			if telemetryReq.Header.Get("X-API-Key") == "" {
+				telemetryReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
+			}
 
 			resp, err := client.Do(telemetryReq)
 			status := "✅"
@@ -295,7 +298,10 @@ func main() {
 				clsJSON, _ := json.Marshal(clsPayload)
 				clsReq, _ := http.NewRequest("POST", baseURL+"/classifications", bytes.NewBuffer(clsJSON))
 				clsReq.Header.Add("Content-Type", "application/json")
-				clsReq.Header.Add("Authorization", "Bearer "+token)
+				clsReq.Header.Add("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+				if clsReq.Header.Get("X-API-Key") == "" {
+					clsReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
+				}
 
 				client.Do(clsReq)
 				emoji := "🍃"

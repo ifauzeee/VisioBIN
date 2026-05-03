@@ -36,6 +36,7 @@ func main() {
 	telemetryRepo := repository.NewTelemetryRepository(db.Pool)
 	alertRepo := repository.NewAlertRepository(db.Pool)
 	userRepo := repository.NewUserRepository(db.Pool)
+	maintRepo := repository.NewMaintenanceRepository(db.Pool)
 
 	// Service Layer
 	notifSvc    := services.NewNotificationService()
@@ -47,8 +48,9 @@ func main() {
 	// Handler Layer
 	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
 	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
+	maintHandler := handlers.NewMaintenanceHandler(maintRepo)
 
-	r := router.Setup(authHandler, binHandler, cfg.JWTSecret, broadcaster)
+	r := router.Setup(authHandler, binHandler, maintHandler, cfg.JWTSecret, cfg.APIKey, broadcaster)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
@@ -92,6 +94,8 @@ func printRoutes() {
 		"POST   /bins (Admin)",
 		"GET    /alerts",
 		"GET    /dashboard/summary",
+		"GET    /maintenance",
+		"POST   /maintenance",
 	}
 
 	log.Println("Available Endpoints:")

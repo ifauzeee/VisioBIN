@@ -142,8 +142,12 @@ class AIBridge:
             "confidence":       round(float(conf), 4),
             "inference_time_ms": int(inf_ms),
         }
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Key": os.environ.get("VISIOBIN_API_KEY", "visiobin-iot-secret-key")
+        }
         try:
-            resp = requests.post(self.url, json=payload, timeout=2)
+            resp = requests.post(self.url, json=payload, headers=headers, timeout=2)
             if resp.status_code == 201:
                 print(f"[BACKEND] ✓ Terkirim: {label} ({conf*100:.1f}%) | {inf_ms:.0f}ms")
             else:

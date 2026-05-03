@@ -11,7 +11,9 @@ import (
 func Setup(
 	authHandler *handlers.AuthHandler,
 	binHandler *handlers.BinHandler,
+	maintHandler *handlers.MaintenanceHandler,
 	jwtSecret string,
+	apiKey string,
 	broadcaster *services.Broadcaster,
 ) *chi.Mux {
 	r := chi.NewRouter()
@@ -35,9 +37,12 @@ func Setup(
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/register", authHandler.Register)
 
-		// Telemetry (Open for IoT devices)
-		r.Post("/telemetry", binHandler.IngestTelemetry)
-		r.Post("/classifications", binHandler.LogClassification)
+		// Telemetry (Protected for IoT devices via API Key)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.APIKeyAuth(apiKey))
+			r.Post("/telemetry", binHandler.IngestTelemetry)
+			r.Post("/classifications", binHandler.LogClassification)
+		})
 
 		// Protected Routes
 		r.Group(func(r chi.Router) {
@@ -68,6 +73,11 @@ func Setup(
 			r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)
 
 			r.Get("/dashboard/summary", binHandler.GetDashboardSummary)
+
+			// Maintenance Logs
+			r.Get("/maintenance", maintHandler.ListLogs)
+			r.Post("/maintenance", maintHandler.CreateLog)
+			r.Delete("/maintenance/{id}", maintHandler.DeleteLog)
 		})
 	})
 

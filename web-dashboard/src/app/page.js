@@ -23,6 +23,8 @@ import PerangkatView from "./components/PerangkatView";
 import StasiunBinView from "./components/StasiunBinView";
 import TeamView from "./components/TeamView";
 import ConfigView from "./components/ConfigView";
+import LogPerawatanView from "./components/LogPerawatanView";
+import { ToastProvider } from "./components/shared/Toast";
 import AlertBell from "./components/shared/AlertBell";
 import DataFreshness from "./components/shared/DataFreshness";
 import { formatFullDateTime } from "./utils/formatters";
@@ -139,6 +141,13 @@ function DashboardApp() {
       badge: "Manajemen Akses",
       color: "#8B5CF6",
       icon: Users,
+    },
+    _maint: {
+      title: "Log Perawatan",
+      subtitle: "Catat dan kelola riwayat pemeliharaan fisik unit VisioBin.",
+      badge: "Riwayat Maintenance",
+      color: "#10b981",
+      icon: History,
     },
     config: {
       title: "Konfigurasi Sistem",
@@ -564,6 +573,7 @@ function DashboardApp() {
             {activeView === "stasiun" && <StasiunBinView />}
             {activeView === "team" && <TeamView />}
             {activeView === "config" && <ConfigView />}
+            {activeView === "_maint" && <LogPerawatanView />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -573,8 +583,10 @@ function DashboardApp() {
 
 export default function VisioBinDashboard() {
   return (
-    <AuthProvider>
-      <DashboardApp />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <DashboardApp />
+      </AuthProvider>
+    </ToastProvider>
   );
 }
