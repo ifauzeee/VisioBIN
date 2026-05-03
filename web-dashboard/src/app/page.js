@@ -76,6 +76,8 @@ function DashboardApp() {
     summary,
     logs,
     binLevel,
+    binLevelOrg,
+    binLevelInorg,
     vision,
     bins,
     loading: dashLoading,
@@ -106,7 +108,7 @@ function DashboardApp() {
     pemantauan: {
       title: "Pemantauan Langsung",
       subtitle: "Monitoring stream kamera untuk validasi UI.",
-      badge: "8 Stream Aktif",
+      badge: "1 Stream Aktif",
       color: "#22d3ee",
       icon: Video,
     },
@@ -489,7 +491,7 @@ function DashboardApp() {
         </div>
       </aside>
 
-      <main className="main-content">
+      <main className={`main-content ${activeView === 'map' ? 'no-scroll' : ''}`}>
         {/* Mobile Header Bar */}
         <div className="mobile-header">
           <button
@@ -581,6 +583,8 @@ function DashboardApp() {
               <RingkasanView
                 summary={summary}
                 binLevel={binLevel}
+                binLevelOrg={binLevelOrg}
+                binLevelInorg={binLevelInorg}
                 vision={vision}
                 logs={logs}
               />

@@ -27,6 +27,8 @@ export function useDashboard(token) {
   });
   const [logs, setLogs] = useState([]);
   const [binLevel, setBinLevel] = useState(0);
+  const [binLevelOrg, setBinLevelOrg] = useState(0);
+  const [binLevelInorg, setBinLevelInorg] = useState(0);
   const [vision, setVision] = useState({
     state: "scanning",
     label: "terdeteksi",
@@ -68,11 +70,16 @@ export function useDashboard(token) {
         // Calculate bin level from first bin
         if (s.bin_statuses?.length > 0) {
           const b = s.bin_statuses[0];
+          const orgLvl = b.volume_organic_pct || 0;
+          const inorgLvl = b.volume_inorganic_pct || 0;
           const lvl =
             b.volume_pct ??
             b.volume_total_pct ??
-            ((b.volume_organic_pct || 0) + (b.volume_inorganic_pct || 0)) / 2;
+            (orgLvl + inorgLvl) / 2;
+          
           setBinLevel(Math.round(lvl));
+          setBinLevelOrg(Math.round(orgLvl));
+          setBinLevelInorg(Math.round(inorgLvl));
         }
       }
 
@@ -201,7 +208,10 @@ export function useDashboard(token) {
     summary,
     logs,
     binLevel,
+    binLevelOrg,
+    binLevelInorg,
     vision,
+    bins: summary.bin_statuses,
     loading,
     error,
     lastUpdated,

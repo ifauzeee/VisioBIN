@@ -211,8 +211,8 @@ export default function StasiunBinView() {
               }}
             >
               {[
-                { icon: Activity, label: "Vol. Organik", val: volOrg, unit: "%", color: getBinLevelColor(volOrg) },
-                { icon: Activity, label: "Vol. Anorganik", val: volInorg, unit: "%", color: getBinLevelColor(volInorg) },
+                { icon: Activity, label: "Vol. Organik", val: Math.round(volOrg), unit: "%", color: getBinLevelColor(volOrg) },
+                { icon: Activity, label: "Vol. Anorganik", val: Math.round(volInorg), unit: "%", color: getBinLevelColor(volInorg) },
                 { icon: Wind, label: "Gas Amonia", val: latestReading?.gas_amonia_ppm?.toFixed(1) ?? "—", unit: " ppm", color: "var(--text-main)" },
                 { icon: Weight, label: "Berat Total", val: ((latestReading?.weight_organic_kg ?? 0) + (latestReading?.weight_inorganic_kg ?? 0)).toFixed(1), unit: " kg", color: "var(--text-main)" }
               ].map((s, i) => (
@@ -290,7 +290,7 @@ export default function StasiunBinView() {
                         {formatHoursRemaining(forecast.hours_until_full_organic)}
                       </div>
                       <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
-                        Laju: {forecast.fill_rate_organic_per_hr?.toFixed(2) ?? "—"}%/jam
+                        Laju: {forecast.fill_rate_organic_per_hr?.toFixed(1) ?? "—"}%/jam
                       </div>
                       <div className="progress-bar" style={{ marginTop: 8 }}>
                         <motion.div 
@@ -309,7 +309,7 @@ export default function StasiunBinView() {
                         {formatHoursRemaining(forecast.hours_until_full_inorganic)}
                       </div>
                       <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
-                        Laju: {forecast.fill_rate_inorganic_per_hr?.toFixed(2) ?? "—"}%/jam
+                        Laju: {forecast.fill_rate_inorganic_per_hr?.toFixed(1) ?? "—"}%/jam
                       </div>
                       <div className="progress-bar" style={{ marginTop: 8 }}>
                         <motion.div 

@@ -75,6 +75,10 @@ h3 {
   overflow-y: auto;
 }
 
+.main-content.no-scroll {
+  overflow-y: hidden;
+}
+
 .dashboard-grid-2-1 {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -165,15 +169,16 @@ h3 {
 .live-feed-grid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .live-feed-tile {
   border: 1px solid var(--border-color);
-  background: var(--bg-page);
-  border-radius: 10px;
+  background: #000;
+  border-radius: 12px;
   overflow: hidden;
+  position: relative;
 }
 
 .live-feed-preview {

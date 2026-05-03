@@ -16,7 +16,7 @@ import {
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
 
-export default React.memo(function RingkasanView({ summary, binLevel, vision, logs }) {
+export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs }) {
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
@@ -287,15 +287,28 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
           <div className="card-title"><Activity size={16} /> Reservoir Tempat Sampah</div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
             <svg width="200" height="220" viewBox="0 0 100 120">
-              <path d="M10,20 L90,20 L80,110 L20,110 Z" fill="none" stroke="var(--border-hover)" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M10,20 L90,20 L80,110 L20,110 Z" fill="rgba(255,255,255,0.03)" stroke="var(--border-hover)" strokeWidth="2" strokeLinejoin="round" />
               <path d="M0,20 L100,20" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round" />
               <path d="M50,20 L50,110" stroke="var(--border-color)" strokeWidth="2" strokeDasharray="4,4" />
+              
+              {/* Organic Fill (Left) */}
               <motion.rect
-                x="28" width="44" rx="2" fill="var(--brand-organic)" opacity="0.9"
+                x="20" width="28" rx="1" fill="var(--brand-organic)" opacity="0.8"
                 initial={{ height: 0, y: 110 }}
                 animate={{ 
-                  height: (binLevel / 100) * 85,
-                  y: 110 - ((binLevel / 100) * 85)
+                  height: (binLevelOrg / 100) * 85,
+                  y: 110 - ((binLevelOrg / 100) * 85)
+                }}
+                transition={{ type: "spring", stiffness: 40 }}
+              />
+              
+              {/* Inorganic Fill (Right) */}
+              <motion.rect
+                x="52" width="28" rx="1" fill="#3B82F6" opacity="0.8"
+                initial={{ height: 0, y: 110 }}
+                animate={{ 
+                  height: (binLevelInorg / 100) * 85,
+                  y: 110 - ((binLevelInorg / 100) * 85)
                 }}
                 transition={{ type: "spring", stiffness: 40 }}
               />
@@ -394,12 +407,20 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
               </RPieChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-            {distributionData.map(d => (
-              <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />{d.name}
-              </div>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, padding: '0 4px' }}>
+            {(() => {
+              const total = distributionData.reduce((acc, d) => acc + d.value, 0);
+              return distributionData.map(d => {
+                const percent = total > 0 ? Math.round((d.value / total) * 100) : 0;
+                return (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, background: 'rgba(255,255,255,0.03)', padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border-color)' }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color }} />
+                    <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{d.name}</span>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600, marginLeft: 4 }}>{percent}%</span>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </motion.div>
       </div>

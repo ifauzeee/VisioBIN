@@ -21,12 +21,8 @@ export const dataKlasifikasiHarian = [
 ];
 
 export const dataDistribusiSampah = [
-  { name: 'Botol Plastik', value: 28, color: '#3B82F6' },
-  { name: 'Sisa Makanan', value: 22, color: '#10B981' },
-  { name: 'Kertas/Kardus', value: 18, color: '#F59E0B' },
-  { name: 'Kaleng', value: 12, color: '#8B5CF6' },
-  { name: 'Daun/Ranting', value: 11, color: '#06B6D4' },
-  { name: 'Lainnya', value: 9, color: '#EF4444' },
+  { name: 'Organik', value: 55, color: '#10B981' },
+  { name: 'Anorganik', value: 45, color: '#3B82F6' },
 ];
 
 export const dataRingkasanMingguan = [
@@ -86,22 +82,19 @@ export const dataPemrosesanPerJam = [
 ];
 
 export const liveFeedSummary = [
-  { label: 'Stream Aktif', value: '08', tone: '#10B981', note: '2 cadangan siap pakai' },
+  { label: 'Stream Aktif', value: '01', tone: '#10B981', note: 'Kamera Pi Aktif' },
   { label: 'Uptime Jaringan', value: '99.94%', tone: '#22d3ee', note: '7 hari terakhir' },
-  { label: 'Peringatan Kritis', value: '03', tone: '#f59e0b', note: 'butuh validasi operator' },
+  { label: 'Peringatan Kritis', value: '00', tone: '#f59e0b', note: 'Semua sistem aman' },
 ];
 
 export const liveFeedStreams = [
-  { id: 'CAM-01', zone: 'Gerbang Utara', fps: 29, latency: '22ms', status: 'online', tint: 'rgba(16,185,129,0.24)' },
-  { id: 'CAM-02', zone: 'Jalur Sortir A', fps: 31, latency: '19ms', status: 'online', tint: 'rgba(59,130,246,0.24)' },
-  { id: 'CAM-03', zone: 'Jalur Sortir B', fps: 27, latency: '34ms', status: 'degraded', tint: 'rgba(245,158,11,0.25)' },
-  { id: 'CAM-04', zone: 'Dock Pembuangan', fps: 30, latency: '24ms', status: 'online', tint: 'rgba(34,211,238,0.22)' },
+  { id: 'CAM-01', zone: 'Area Utama Bin', fps: 30, latency: '12ms', status: 'online', tint: 'rgba(16,185,129,0.2)' },
 ];
 
 export const liveEventQueue = [
-  { id: 1, type: 'Lonjakan Frame Drop', source: 'CAM-03', severity: 'Sedang', age: '00:42' },
+  { id: 1, type: 'Lonjakan Frame Drop', source: 'CAM-01', severity: 'Sedang', age: '00:42' },
   { id: 2, type: 'Dugaan Kemacetan Objek', source: 'Sensor Belt', severity: 'Tinggi', age: '01:12' },
-  { id: 3, type: 'Peringatan Suhu GPU', source: 'GPU Edge-02', severity: 'Sedang', age: '02:05' },
+  { id: 3, type: 'Peringatan Suhu GPU', source: 'GPU Edge-01', severity: 'Sedang', age: '02:05' },
   { id: 4, type: 'Gerakan Tidak Dikenal', source: 'CAM-01', severity: 'Rendah', age: '04:11' },
 ];
 
