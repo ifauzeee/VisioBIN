@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Trash2, ShieldCheck } from 'lucide-react';
+import { Trash2, ShieldCheck, Eye } from 'lucide-react';
 
 export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin }) {
   return (
@@ -18,20 +18,8 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
         backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16,185,129,0.05) 0%, transparent 60%)'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 44,
-            height: 44,
-            background: 'var(--text-main)',
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-card)'
-          }}>
-            <Trash2 size={24} color="var(--bg-card)" strokeWidth={2.5} />
-          </div>
           <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
-            VisioBin Core
+            VisioBIN Core
           </span>
         </div>
 
@@ -44,22 +32,46 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
           zIndex: 1,
           marginTop: 40
         }}>
-          <svg width="180" height="240" viewBox="0 0 100 120" style={{ margin: '0 0 40px 0', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="loginGlass" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.1)' }} />
-                <stop offset="100%" style={{ stopColor: 'rgba(255,255,255,0.02)' }} />
-              </linearGradient>
-            </defs>
-            <path d="M15,20 L85,20 L75,115 L25,115 Z" fill="url(#loginGlass)" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M5,20 L95,20" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round" />
-            <path d="M50,20 L50,115" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="4,4" />
-            <rect
-              x="34" width="32" rx="2" fill="var(--brand-organic)" opacity="0.9"
-              height="72" y="38"
-              style={{ filter: 'drop-shadow(0 0 15px rgba(16,185,129,0.4))' }}
-            />
-          </svg>
+        <div style={{ 
+          marginBottom: 60,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 240,
+          height: 240,
+          position: 'relative'
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
+            borderRadius: '50%',
+            filter: 'blur(20px)'
+          }} />
+          <Trash2 
+            size={160} 
+            strokeWidth={1.5} 
+            color="var(--text-main)"
+            style={{ position: 'relative', zIndex: 2, opacity: 0.9 }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: '55%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 3,
+            background: 'var(--bg-card)',
+            padding: 6,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(0,0,0,0.5)'
+          }}>
+            <Eye size={40} color="var(--brand-organic)" strokeWidth={2.5} />
+          </div>
+        </div>
           <h2 style={{ fontSize: 40, fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-1.5px', marginBottom: 16, lineHeight: 1.1 }}>
             Terminal Sortir AI<br />Pintar & Otomatis.
           </h2>
