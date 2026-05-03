@@ -1,17 +1,16 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import {
-  Leaf, Trash2, Orbit, Cpu, ArrowUpRight,
-  Focus, Activity, ShieldCheck, Award
-} from 'lucide-react';
-import {
-  AreaChart, Area, BarChart, Bar, PieChart as RPieChart,
-  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, Brush
-} from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, TrendingUp, TrendingDown, Info, Leaf as LeafIcon } from 'lucide-react';
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush,
+  PieChart as RPieChart, Pie, Cell
+} from "recharts";
+import { 
+  Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
+  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp 
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
@@ -133,7 +132,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
       >
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title">
@@ -154,7 +152,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title">
@@ -179,7 +176,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title"><Orbit size={16} /> CO2 Dikurangi</div>
@@ -192,7 +188,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title"><Cpu size={16} /> Latensi Edge</div>
@@ -205,7 +200,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> Akurasi Model AI</div>
@@ -218,7 +212,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -5, transition: { duration: 0.2 } }}
           className="card"
         >
           <div className="card-title"><ShieldCheck size={16} color="var(--brand-organic)" /> Uptime Sistem</div>
@@ -235,7 +228,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          whileHover={{ y: -5 }}
           className="card"
           style={{ padding: 0, display: 'flex', flexDirection: 'column' }}
         >
@@ -274,7 +266,6 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          whileHover={{ y: -5 }}
           className="card"
           style={{ display: 'flex', flexDirection: 'column' }}
         >
@@ -305,14 +296,14 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
         </motion.div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="dashboard-grid-2-1" 
-        style={{ marginBottom: 24 }}
-      >
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card" 
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">📈 Riwayat Volume Per Jam</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -332,9 +323,15 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card" 
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">🥧 Distribusi Jenis Sampah</div>
           <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height={220}>
@@ -353,17 +350,17 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
               </div>
             ))}
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="dashboard-grid-2-1" 
-        style={{ marginBottom: 24 }}
-      >
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="card" 
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -378,9 +375,15 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card" style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="card" 
+          style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
+        >
           <div className="card-title"><Activity size={16} /> Log Aktivitas Terbaru</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <AnimatePresence initial={false}>
@@ -404,8 +407,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
               ))}
             </AnimatePresence>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 });

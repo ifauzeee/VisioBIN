@@ -99,7 +99,6 @@ export default React.memo(function AnalitikView() {
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
               className="card" 
               style={{ padding: 24 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                 <div style={{ padding: 10, background: "rgba(255,255,255,0.03)", borderRadius: 10, color: item.color }}>
@@ -141,7 +140,6 @@ export default React.memo(function AnalitikView() {
           transition={{ delay: 0.2 }}
           className="card" 
           style={{ minHeight:360, display:"flex", flexDirection:"column" }} 
-          whileHover={{ y: -5 }}
         >
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
@@ -192,7 +190,6 @@ export default React.memo(function AnalitikView() {
           transition={{ delay: 0.3 }}
           className="card" 
           style={{ display:"flex", flexDirection:"column" }}
-          whileHover={{ y: -5 }}
         >
           <div className="card-title"><Activity size={16} /> Distribusi Klasifikasi</div>
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", minWidth: 0, position: 'relative' }}>
@@ -235,7 +232,6 @@ export default React.memo(function AnalitikView() {
           transition={{ delay: 0.4 }}
           className="card" 
           style={{ minHeight:300 }}
-          whileHover={{ y: -5 }}
         >
           <div className="card-title"><FileText size={16} /> Tren Akurasi Harian</div>
           <div style={{ height: 220, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
@@ -264,7 +260,6 @@ export default React.memo(function AnalitikView() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="card"
-          whileHover={{ y: -5 }}
         >
           <div className="card-title">🚀 Statistik Cepat</div>
           <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:20 }}>
