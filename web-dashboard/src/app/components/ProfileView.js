@@ -9,6 +9,17 @@ import { useToast } from "./shared/Toast";
 export default function ProfileView() {
   const { user, updateProfile } = useAuth();
   const { addToast } = useToast();
+  const isGuest = user?.role === "guest";
+  
+  if (isGuest) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+        <AlertCircle size={48} color="#ef4444" style={{ marginBottom: "16px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}>Akses Terbatas</h2>
+        <p style={{ color: "var(--text-muted)" }}>Akun tamu tidak diizinkan untuk mengubah profil atau pengaturan keamanan.</p>
+      </div>
+    );
+  }
   
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",

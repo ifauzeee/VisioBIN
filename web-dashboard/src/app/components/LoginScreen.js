@@ -3,7 +3,7 @@
 import React from 'react';
 import { Trash2, ShieldCheck } from 'lucide-react';
 
-export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
+export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
       <div style={{
@@ -140,6 +140,33 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin }) {
               }}
             >
               {loginForm.loading ? 'Mengautentikasi...' : 'Masuk ke Sistem'}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>atau</span>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              disabled={loginForm.loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'transparent',
+                color: 'var(--text-main)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                opacity: loginForm.loading ? 0.7 : 1,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Masuk sebagai Tamu
             </button>
           </form>
 

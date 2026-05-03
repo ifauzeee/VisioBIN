@@ -129,6 +129,33 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
+	// Create a mock user for guest
+	guestUser := &models.User{
+		ID:       "guest-id-0000",
+		Username: "guest",
+		Email:    "guest@visiobin.local",
+		FullName: "Guest User",
+		Role:     "guest",
+	}
+
+	token, err := middleware.GenerateToken(guestUser, h.jwtSecret, h.jwtExpiry)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to generate guest token",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, models.APIResponse{
+		Success: true,
+		Data: models.AuthResponse{
+			Token: token,
+			User:  *guestUser,
+		},
+	})
+}
+
 func (h *AuthHandler) UpdateFCMToken(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetUserClaims(r)
 	if claims == nil {

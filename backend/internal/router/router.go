@@ -36,6 +36,7 @@ func Setup(
 		// Auth
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/register", authHandler.Register)
+		r.Post("/auth/guest", authHandler.GuestLogin)
 
 		// Telemetry (Protected for IoT devices via API Key)
 		r.Group(func(r chi.Router) {
@@ -48,10 +49,17 @@ func Setup(
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.JWTAuth(jwtSecret))
 
-			r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
-			r.Put("/auth/profile", authHandler.UpdateProfile)
-			r.Get("/auth/users", authHandler.ListUsers)
-			r.Delete("/auth/users/{id}", authHandler.DeleteUser)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
+				r.Put("/auth/profile", authHandler.UpdateProfile)
+			})
+
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireRole("admin"))
+				r.Get("/auth/users", authHandler.ListUsers)
+				r.Delete("/auth/users/{id}", authHandler.DeleteUser)
+			})
 
 			// Bins Access
 			r.Route("/bins", func(r chi.Router) {
@@ -73,15 +81,21 @@ func Setup(
 			r.Get("/classifications/export", binHandler.ExportClassifications)
 
 			r.Get("/alerts", binHandler.ListAlerts)
-			r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)
+			})
 
 			r.Get("/dashboard/summary", binHandler.GetDashboardSummary)
 			r.Get("/telemetry", binHandler.ListAllTelemetry)
 
 			// Maintenance Logs
 			r.Get("/maintenance", maintHandler.ListLogs)
-			r.Post("/maintenance", maintHandler.CreateLog)
-			r.Delete("/maintenance/{id}", maintHandler.DeleteLog)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Post("/maintenance", maintHandler.CreateLog)
+				r.Delete("/maintenance/{id}", maintHandler.DeleteLog)
+			})
 		})
 	})
 

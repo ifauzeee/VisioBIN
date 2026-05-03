@@ -47,7 +47,7 @@ const LiveClock = () => {
 };
 
 function DashboardApp() {
-  const { mounted, isAuthenticated, isCheckingAuth, token, user, login, logout } =
+  const { mounted, isAuthenticated, isCheckingAuth, token, user, login, guestLogin, logout } =
     useAuth();
   const [activeView, setActiveView] = useState("ringkasan");
   const [loginForm, setLoginForm] = useState({
@@ -200,6 +200,15 @@ function DashboardApp() {
     setLoginForm((p) => ({ ...p, loading: false }));
   };
 
+  const handleGuestLogin = async () => {
+    setLoginForm((p) => ({ ...p, loading: true, error: "" }));
+    const result = await guestLogin();
+    if (!result.success) {
+      setLoginForm((p) => ({ ...p, error: result.error }));
+    }
+    setLoginForm((p) => ({ ...p, loading: false }));
+  };
+
   if (!mounted || isCheckingAuth) return null;
   if (!isAuthenticated)
     return (
@@ -207,11 +216,14 @@ function DashboardApp() {
         loginForm={loginForm}
         setLoginForm={setLoginForm}
         handleLogin={handleLogin}
+        handleGuestLogin={handleGuestLogin}
       />
     );
 
   const meta = viewMeta[activeView] || viewMeta.ringkasan;
   const MetaIcon = meta.icon;
+
+  const isGuest = user?.role === "guest";
 
   const navItems = [
     {
@@ -230,26 +242,35 @@ function DashboardApp() {
         { key: "perangkat", label: "Perangkat IoT", icon: Cpu },
       ],
     },
-    {
-      section: "Manajemen",
-      items: [
-        {
-          key: "stasiun",
-          label: "Stasiun Bin",
-          icon: Box,
-          badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
-        },
-        { key: "maint", label: "Log Perawatan", icon: History },
-        { key: "data", label: "Eksplorasi Data", icon: Database },
-      ],
-    },
-    {
-      section: "Pengaturan",
-      items: [
-        { key: "team", label: "Anggota Tim", icon: Users },
-        { key: "config", label: "Konfigurasi", icon: Settings2 },
-      ],
-    },
+    ...(!isGuest ? [
+      {
+        section: "Manajemen",
+        items: [
+          {
+            key: "stasiun",
+            label: "Stasiun Bin",
+            icon: Box,
+            badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
+          },
+          { key: "maint", label: "Log Perawatan", icon: History },
+          { key: "data", label: "Eksplorasi Data", icon: Database },
+        ],
+      },
+      {
+        section: "Pengaturan",
+        items: [
+          { key: "team", label: "Anggota Tim", icon: Users },
+          { key: "config", label: "Konfigurasi", icon: Settings2 },
+        ],
+      },
+    ] : [
+      {
+        section: "Manajemen",
+        items: [
+          { key: "maint", label: "Log Perawatan", icon: History },
+        ],
+      },
+    ]),
   ];
 
   return (
@@ -425,9 +446,9 @@ function DashboardApp() {
             </div>
           </div>
           <div
-            className={`nav-item ${activeView === "profile" ? "active" : ""}`}
-            style={{ marginLeft: -12, marginRight: -12, cursor: "pointer" }}
-            onClick={() => setActiveView("profile")}
+            className={`nav-item ${activeView === "profile" ? "active" : ""} ${isGuest ? "nav-disabled" : ""}`}
+            style={{ marginLeft: -12, marginRight: -12, cursor: isGuest ? "default" : "pointer" }}
+            onClick={() => !isGuest && setActiveView("profile")}
           >
             <div
               style={{
@@ -435,7 +456,7 @@ function DashboardApp() {
                 height: 28,
                 borderRadius: "50%",
                 background:
-                  "linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))",
+                  isGuest ? "#4b5563" : "linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -455,7 +476,7 @@ function DashboardApp() {
               <div
                 style={{
                   fontSize: 11,
-                  color: "var(--brand-organic)",
+                  color: isGuest ? "var(--text-muted)" : "var(--brand-organic)",
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
@@ -465,11 +486,11 @@ function DashboardApp() {
                   style={{
                     width: 6,
                     height: 6,
-                    background: "var(--brand-organic)",
+                    background: isGuest ? "var(--text-muted)" : "var(--brand-organic)",
                     borderRadius: "50%",
                   }}
                 ></div>
-                Online
+                {isGuest ? "Guest Access" : "Online"}
               </div>
             </div>
           </div>

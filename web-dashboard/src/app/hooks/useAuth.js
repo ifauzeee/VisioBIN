@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { login as apiLogin, updateProfile as apiUpdateProfile } from "../services/api";
+import { login as apiLogin, loginGuest as apiLoginGuest, updateProfile as apiUpdateProfile } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -56,6 +56,28 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const guestLogin = useCallback(async () => {
+    try {
+      const res = await apiLoginGuest();
+      if (res.success) {
+        const { token: t, user: u } = res.data;
+        localStorage.setItem("visiobin_auth", "true");
+        localStorage.setItem("visiobin_token", t);
+        localStorage.setItem("visiobin_user", JSON.stringify(u));
+        setToken(t);
+        setUser(u);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      return { success: false, error: "Gagal masuk sebagai tamu." };
+    } catch (err) {
+      return {
+        success: false,
+        error: "Gagal menghubungkan ke server. Silakan periksa koneksi Anda.",
+      };
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem("visiobin_auth");
     localStorage.removeItem("visiobin_token");
@@ -92,6 +114,7 @@ export function AuthProvider({ children }) {
         token,
         user,
         login,
+        guestLogin,
         logout,
         updateProfile,
       }}
