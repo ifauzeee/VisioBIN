@@ -14,8 +14,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
         padding: 60,
         position: 'relative',
         overflow: 'hidden',
-        background: 'var(--bg-card)',
-        backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(16,185,129,0.05) 0%, transparent 60%)'
+        background: '#000000'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
@@ -41,14 +40,6 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
           height: 240,
           position: 'relative'
         }}>
-          <div style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
-            borderRadius: '50%',
-            filter: 'blur(20px)'
-          }} />
           <Trash2 
             size={160} 
             strokeWidth={1.5} 
