@@ -802,6 +802,19 @@ h3 {
   border: 1px solid var(--border-color);
 }
 
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.profile-container .form-group {
+  margin-bottom: 20px;
+}
+
 .btn-secondary:hover {
   background: var(--border-color);
   color: #fff;

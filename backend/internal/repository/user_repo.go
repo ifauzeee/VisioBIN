@@ -81,6 +81,23 @@ func (r *UserRepository) UpdateFCMToken(ctx context.Context, userID, token strin
 	return nil
 }
 
+func (r *UserRepository) UpdateProfile(ctx context.Context, userID, fullName, email, passwordHash string) error {
+	var query string
+	var err error
+	if passwordHash != "" {
+		query = "UPDATE users SET full_name = $1, email = $2, password_hash = $3, updated_at = NOW() WHERE id = $4"
+		_, err = r.pool.Exec(ctx, query, fullName, email, passwordHash, userID)
+	} else {
+		query = "UPDATE users SET full_name = $1, email = $2, updated_at = NOW() WHERE id = $3"
+		_, err = r.pool.Exec(ctx, query, fullName, email, userID)
+	}
+
+	if err != nil {
+		return fmt.Errorf("update profile: %w", err)
+	}
+	return nil
+}
+
 func (r *UserRepository) GetOperators(ctx context.Context) ([]models.User, error) {
 	query := `
 		SELECT id, username, email, password_hash, full_name, role, fcm_token, created_at, updated_at

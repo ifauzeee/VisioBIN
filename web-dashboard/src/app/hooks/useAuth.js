@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { login as apiLogin } from "../services/api";
+import { login as apiLogin, updateProfile as apiUpdateProfile } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -59,6 +59,24 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (payload) => {
+    try {
+      const res = await apiUpdateProfile(token, payload);
+      if (res.success) {
+        const u = res.data;
+        localStorage.setItem("visiobin_user", JSON.stringify(u));
+        setUser(u);
+        return { success: true };
+      }
+      return { success: false, error: res.message || "Gagal memperbarui profil." };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.message || "Gagal menghubungkan ke server.",
+      };
+    }
+  }, [token]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -69,6 +87,7 @@ export function AuthProvider({ children }) {
         user,
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}

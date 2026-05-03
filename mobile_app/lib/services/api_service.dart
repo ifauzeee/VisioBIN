@@ -106,6 +106,20 @@ class ApiService {
     return _put('/auth/fcm-token', body: {'fcm_token': fcmToken});
   }
 
+  /// Update profil user
+  Future<ApiResponse> updateProfile({
+    required String fullName,
+    required String email,
+    String? password,
+  }) async {
+    final body = {
+      'full_name': fullName,
+      'email': email,
+      if (password != null && password.isNotEmpty) 'password': password,
+    };
+    return _put('/auth/profile', body: body);
+  }
+
   // ── Dashboard ─────────────────────────────────────────
 
   /// Ambil summary dashboard (KPIs, charts, alerts)

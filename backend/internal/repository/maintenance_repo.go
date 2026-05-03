@@ -23,9 +23,9 @@ func (r *MaintenanceRepository) Create(ctx context.Context, req *models.CreateMa
 		RETURNING id, bin_id, action_type, notes, performed_by, performed_at
 	`
 
-	var pBy interface{} = userID
-	if userID == "" {
-		pBy = nil
+	var pBy *string
+	if userID != "" {
+		pBy = &userID
 	}
 
 	var log models.MaintenanceLog

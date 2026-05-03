@@ -118,6 +118,12 @@ type RegisterRequest struct {
 	FullName string `json:"full_name"`
 }
 
+type UpdateProfileRequest struct {
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Password string `json:"password,omitempty"`
+}
+
 type AuthResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`

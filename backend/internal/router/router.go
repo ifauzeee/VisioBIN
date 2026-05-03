@@ -49,6 +49,7 @@ func Setup(
 			r.Use(middleware.JWTAuth(jwtSecret))
 
 			r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
+			r.Put("/auth/profile", authHandler.UpdateProfile)
 
 			// Bins Access
 			r.Route("/bins", func(r chi.Router) {

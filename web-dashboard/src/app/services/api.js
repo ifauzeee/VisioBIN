@@ -42,6 +42,13 @@ export async function login(username, password) {
   });
 }
 
+export async function updateProfile(token, payload) {
+  return apiFetch("/auth/profile", token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
 // ── Dashboard ─────────────────────────────────────────
 
 export async function getDashboardSummary(token) {

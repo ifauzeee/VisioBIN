@@ -159,3 +159,54 @@ func (h *AuthHandler) UpdateFCMToken(w http.ResponseWriter, r *http.Request) {
 		Success: true, Message: "FCM token updated",
 	})
 }
+
+func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetUserClaims(r)
+	if claims == nil {
+		writeJSON(w, http.StatusUnauthorized, models.APIResponse{
+			Success: false, Message: "Unauthorized",
+		})
+		return
+	}
+
+	var req models.UpdateProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "Invalid request body",
+		})
+		return
+	}
+
+	var passwordHash string
+	if req.Password != "" {
+		if len(req.Password) < 6 {
+			writeJSON(w, http.StatusBadRequest, models.APIResponse{
+				Success: false, Message: "Password must be at least 6 characters",
+			})
+			return
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+				Success: false, Message: "Failed to hash password",
+			})
+			return
+		}
+		passwordHash = string(hash)
+	}
+
+	if err := h.userRepo.UpdateProfile(r.Context(), claims.UserID, req.FullName, req.Email, passwordHash); err != nil {
+		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
+			Success: false, Message: "Failed to update profile",
+		})
+		return
+	}
+
+	user, _ := h.userRepo.GetByID(r.Context(), claims.UserID)
+
+	writeJSON(w, http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Profile updated successfully",
+		Data:    user,
+	})
+}

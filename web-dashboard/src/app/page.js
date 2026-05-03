@@ -23,6 +23,7 @@ import PerangkatView from "./components/PerangkatView";
 import StasiunBinView from "./components/StasiunBinView";
 import TeamView from "./components/TeamView";
 import ConfigView from "./components/ConfigView";
+import ProfileView from "./components/ProfileView";
 import LogPerawatanView from "./components/LogPerawatanView";
 import { ToastProvider } from "./components/shared/Toast";
 import AlertBell from "./components/shared/AlertBell";
@@ -31,7 +32,7 @@ import { formatFullDateTime } from "./utils/formatters";
 import { motion, AnimatePresence } from "framer-motion";
 
 function DashboardApp() {
-  const { mounted, isAuthenticated, isCheckingAuth, token, login, logout } =
+  const { mounted, isAuthenticated, isCheckingAuth, token, user, login, logout } =
     useAuth();
   const [activeView, setActiveView] = useState("ringkasan");
   const [loginForm, setLoginForm] = useState({
@@ -155,6 +156,13 @@ function DashboardApp() {
       badge: "Pengaturan",
       color: "#64748b",
       icon: Settings2,
+    },
+    profile: {
+      title: "Profil Saya",
+      subtitle: "Kelola informasi pribadi dan pengaturan keamanan akun.",
+      badge: "Akun Terverifikasi",
+      color: "var(--brand-organic)",
+      icon: Users,
     },
   };
 
@@ -398,8 +406,9 @@ function DashboardApp() {
             </div>
           </div>
           <div
-            className="nav-item"
-            style={{ marginLeft: -12, marginRight: -12 }}
+            className={`nav-item ${activeView === "profile" ? "active" : ""}`}
+            style={{ marginLeft: -12, marginRight: -12, cursor: "pointer" }}
+            onClick={() => setActiveView("profile")}
           >
             <div
               style={{
@@ -416,13 +425,13 @@ function DashboardApp() {
                 fontWeight: 700,
               }}
             >
-              IF
+              {(user?.full_name || "U").charAt(0).toUpperCase()}
             </div>
             <div style={{ flex: 1 }}>
               <div
                 style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}
               >
-                Ifauze
+                {user?.full_name || "User"}
               </div>
               <div
                 style={{
@@ -573,6 +582,7 @@ function DashboardApp() {
             {activeView === "stasiun" && <StasiunBinView />}
             {activeView === "team" && <TeamView />}
             {activeView === "config" && <ConfigView />}
+            {activeView === "profile" && <ProfileView />}
             {activeView === "maint" && <LogPerawatanView />}
           </motion.div>
         </AnimatePresence>

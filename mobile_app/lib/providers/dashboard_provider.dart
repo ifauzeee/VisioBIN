@@ -93,6 +93,25 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<ApiResponse> updateProfile({
+    required String fullName,
+    required String email,
+    String? password,
+  }) async {
+    final res = await _api.updateProfile(
+      fullName: fullName,
+      email: email,
+      password: password,
+    );
+
+    if (res.success && res.data != null) {
+      _currentUser = AppUser.fromJson(res.data);
+      notifyListeners();
+    }
+
+    return res;
+  }
+
   // ── Data Fetching ───────────────────────────────────────
 
   /// Fetch all dashboard data at once
