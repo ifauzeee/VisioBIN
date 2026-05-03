@@ -294,14 +294,14 @@ function DashboardApp() {
         >
           <div
             style={{
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <img src="/logo.png" alt="Logo" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
           </div>
           <span
             style={{
