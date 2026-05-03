@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { Trash2, ShieldCheck, Eye, Code, HelpCircle } from 'lucide-react';
 
 export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin, onShowDocs, onShowHelp }) {
@@ -173,9 +174,8 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
               Masuk sebagai Tamu
             </button>
 
-            <button
-              type="button"
-              onClick={onShowDocs}
+            <Link 
+              href="/apidocs"
               style={{
                 width: '100%',
                 padding: '14px',
@@ -190,12 +190,13 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                textDecoration: 'none'
               }}
             >
               <Code size={18} />
               Lihat Dokumentasi API
-            </button>
+            </Link>
           </form>
 
           <div style={{
@@ -219,12 +220,12 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
             justifyContent: 'center',
             gap: 20
           }}>
-            <button 
-              onClick={onShowHelp}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            <Link 
+              href="/help"
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
             >
               <HelpCircle size={14} /> Pusat Bantuan
-            </button>
+            </Link>
             <div style={{ width: 1, height: 12, background: 'var(--border-color)' }} />
             <a href="#" style={{ color: 'var(--text-muted)', fontSize: 12, textDecoration: 'none' }}>
               Kontak Kami

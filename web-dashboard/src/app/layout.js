@@ -1,5 +1,7 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./hooks/useAuth";
+import { ToastProvider } from "./components/shared/Toast";
 
 const outfit = Outfit({
   subsets: ["latin"]
@@ -17,7 +19,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body className={outfit.className}>
-        {children}
+        <ToastProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );
