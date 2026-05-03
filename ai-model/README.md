@@ -84,4 +84,11 @@ Script ONNX sekarang bisa mengirim perintah ke ESP32 via kabel USB (Serial).
 
 *Setiap kali AI mendeteksi sampah, ia akan mengirim teks `CLASSIFY:ORGANIK\n` atau `CLASSIFY:ANORGANIK\n` ke ESP32.*
 
+### 📸 Tips Pi Camera (CSI Module)
+Jika Anda menggunakan modul Pi Camera:
+1. **Resolusi Otomatis:** Script sudah dioptimalkan untuk menangkap gambar di 640x480 agar beban CPU Pi tetap ringan.
+2. **Kamera Tidak Terdeteksi?** Jika menggunakan Raspberry Pi OS terbaru (Bullseye/Bookworm), pastikan driver V4L2 aktif. Jika tetap gagal, coba jalankan dengan:
+   `LIBCAMERA_LOG_LEVEL=0 python ai_bridge_onnx.py --onnx best.onnx`
+3. **Rotasi Gambar:** Jika kamera Anda terpasang terbalik, Anda bisa menambahkan `frame = cv2.flip(frame, -1)` di dalam fungsi `run_live` pada script.
+
 *Fitur `--capture` akan menyimpan foto setiap kali klasifikasi berhasil ke folder `captures/`.*

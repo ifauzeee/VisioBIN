@@ -170,6 +170,10 @@ class AIBridgeONNX:
         if not self.cap.isOpened():
             print(f"❌ Error: Could not open video source {self.source}")
             return
+            
+        # Optimasi Resolusi untuk Raspberry Pi (640x480 cukup untuk AI 224x224)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
         print("📺 Live Stream Started. Press 'q' to quit.")
         
