@@ -301,7 +301,7 @@ function DashboardApp() {
               justifyContent: "center",
             }}
           >
-            <img src="/favicon.png" alt="Logo" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Logo" style={{ width: 24, height: 24, objectFit: 'contain' }} />
           </div>
           <span
             style={{

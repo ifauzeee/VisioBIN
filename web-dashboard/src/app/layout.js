@@ -9,7 +9,7 @@ export const metadata = {
   title: "VisioBIN Dashboard",
   description: "Smart Waste Management System Dashboard",
   icons: {
-    icon: "/favicon.png",
+    icon: "/logo.png",
   },
 };
 
