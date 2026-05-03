@@ -23,8 +23,13 @@ func (r *MaintenanceRepository) Create(ctx context.Context, req *models.CreateMa
 		RETURNING id, bin_id, action_type, notes, performed_by, performed_at
 	`
 
+	var pBy interface{} = userID
+	if userID == "" {
+		pBy = nil
+	}
+
 	var log models.MaintenanceLog
-	err := r.pool.QueryRow(ctx, query, req.BinID, req.ActionType, req.Notes, userID).Scan(
+	err := r.pool.QueryRow(ctx, query, req.BinID, req.ActionType, req.Notes, pBy).Scan(
 		&log.ID, &log.BinID, &log.ActionType, &log.Notes, &log.PerformedBy, &log.PerformedAt,
 	)
 	if err != nil {

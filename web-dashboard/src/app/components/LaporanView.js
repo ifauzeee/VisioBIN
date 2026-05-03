@@ -5,7 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
