@@ -142,7 +142,7 @@ function DashboardApp() {
       color: "#8B5CF6",
       icon: Users,
     },
-    _maint: {
+    maint: {
       title: "Log Perawatan",
       subtitle: "Catat dan kelola riwayat pemeliharaan fisik unit VisioBin.",
       badge: "Riwayat Maintenance",
@@ -213,7 +213,7 @@ function DashboardApp() {
           icon: Box,
           badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
         },
-        { key: "_maint", label: "Log Perawatan", icon: History },
+        { key: "maint", label: "Log Perawatan", icon: History },
       ],
     },
     {
@@ -573,7 +573,7 @@ function DashboardApp() {
             {activeView === "stasiun" && <StasiunBinView />}
             {activeView === "team" && <TeamView />}
             {activeView === "config" && <ConfigView />}
-            {activeView === "_maint" && <LogPerawatanView />}
+            {activeView === "maint" && <LogPerawatanView />}
           </motion.div>
         </AnimatePresence>
       </main>
