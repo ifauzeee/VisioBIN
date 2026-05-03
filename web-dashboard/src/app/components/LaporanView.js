@@ -21,6 +21,11 @@ export default React.memo(function LaporanView() {
   const { token } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [brushRange, setBrushRange] = useState({ start: 0, end: undefined });
+
+  const handleBrushChange = useCallback((range) => {
+    setBrushRange({ start: range.startIndex, end: range.endIndex });
+  }, []);
 
   const fetchReports = useCallback(async () => {
     if (!token) return;
@@ -108,7 +113,16 @@ export default React.memo(function LaporanView() {
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" isAnimationActive={false} />
                 <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" isAnimationActive={false} />
-                <Brush dataKey="tgl" height={30} stroke="var(--border-color)" fill="var(--bg-card)" tickFormatter={() => ''} />
+                <Brush 
+                  dataKey="tgl" 
+                  height={30} 
+                  stroke="var(--border-color)" 
+                  fill="var(--bg-card)" 
+                  tickFormatter={() => ''} 
+                  startIndex={brushRange.start}
+                  endIndex={brushRange.end}
+                  onChange={handleBrushChange}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

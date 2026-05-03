@@ -17,6 +17,12 @@ import {
 } from '../dashboardData';
 
 export default React.memo(function RingkasanView({ summary, binLevel, vision, logs }) {
+  const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
+
+  const handleBrushChange = React.useCallback((range) => {
+    setBrushRange({ start: range.startIndex, end: range.endIndex });
+  }, []);
+
   // Use real data from summary if available, fallback to sample data for visual consistency if empty
   const graphData = summary.volume_history?.length > 0 
     ? summary.volume_history.map(d => ({ jam: d.hour, volume: d.volume }))
@@ -319,7 +325,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, vision, lo
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={false} />
-                <Brush dataKey="jam" height={30} stroke="var(--brand-organic)" fill="var(--bg-card)" tickFormatter={() => ''} />
+                <Brush 
+                  dataKey="jam" 
+                  height={30} 
+                  stroke="var(--brand-organic)" 
+                  fill="var(--bg-card)" 
+                  tickFormatter={() => ''} 
+                  startIndex={brushRange.start}
+                  endIndex={brushRange.end}
+                  onChange={handleBrushChange}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
