@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/ifauze/visiobin/internal/handlers"
 	"github.com/ifauze/visiobin/internal/middleware"
+	"github.com/ifauze/visiobin/internal/repository"
 	"github.com/ifauze/visiobin/internal/services"
 )
 
@@ -12,8 +13,8 @@ func Setup(
 	authHandler *handlers.AuthHandler,
 	binHandler *handlers.BinHandler,
 	maintHandler *handlers.MaintenanceHandler,
+	binRepo *repository.BinRepository,
 	jwtSecret string,
-	apiKey string,
 	broadcaster *services.Broadcaster,
 ) *chi.Mux {
 	r := chi.NewRouter()
@@ -40,7 +41,7 @@ func Setup(
 
 		// Telemetry (Protected for IoT devices via API Key)
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.APIKeyAuth(apiKey))
+			r.Use(middleware.APIKeyAuth(binRepo))
 			r.Post("/telemetry", binHandler.IngestTelemetry)
 			r.Post("/classifications", binHandler.LogClassification)
 		})

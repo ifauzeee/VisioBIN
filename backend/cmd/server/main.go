@@ -50,7 +50,31 @@ func main() {
 	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
 	maintHandler := handlers.NewMaintenanceHandler(maintRepo)
 
-	r := router.Setup(authHandler, binHandler, maintHandler, cfg.JWTSecret, cfg.APIKey, broadcaster)
+	r := router.Setup(authHandler, binHandler, maintHandler, binRepo, cfg.JWTSecret, broadcaster)
+
+	// Background Worker: Heartbeat & Data Retention
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		log.Println("Background worker started (Heartbeat & Retention)")
+		for range ticker.C {
+			ctx := context.Background()
+			
+			// 1. Mark bins offline if > 5 minutes inactive
+			affected, err := binRepo.UpdateOfflineStatuses(ctx, 5)
+			if err == nil && affected > 0 {
+				log.Printf("Worker: Marked %d bins as offline", affected)
+			}
+
+			// 2. Data Retention: Cleanup readings > 30 days
+			// Run this less frequently, e.g., once an hour or day, but once a minute is fine for small DBs
+			if time.Now().Minute() == 0 { // Once an hour
+				cleaned, err := telemetryRepo.CleanupOldReadings(ctx, 30)
+				if err == nil && cleaned > 0 {
+					log.Printf("Worker: Cleaned up %d old sensor readings", cleaned)
+				}
+			}
+		}
+	}()
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

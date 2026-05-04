@@ -19,7 +19,7 @@ func NewBinRepository(pool *pgxpool.Pool) *BinRepository {
 
 func (r *BinRepository) GetAll(ctx context.Context) ([]models.Bin, error) {
 	query := `
-		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, created_at, updated_at
+		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
 		FROM bins 
 		ORDER BY created_at DESC
 	`
@@ -35,7 +35,7 @@ func (r *BinRepository) GetAll(ctx context.Context) ([]models.Bin, error) {
 		var b models.Bin
 		err := rows.Scan(
 			&b.ID, &b.Name, &b.Location, &b.Latitude, &b.Longitude,
-			&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.CreatedAt, &b.UpdatedAt,
+			&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan bin: %w", err)
@@ -48,7 +48,7 @@ func (r *BinRepository) GetAll(ctx context.Context) ([]models.Bin, error) {
 
 func (r *BinRepository) GetByID(ctx context.Context, id string) (*models.Bin, error) {
 	query := `
-		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, created_at, updated_at
+		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
 		FROM bins 
 		WHERE id = $1
 	`
@@ -56,7 +56,7 @@ func (r *BinRepository) GetByID(ctx context.Context, id string) (*models.Bin, er
 	var b models.Bin
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&b.ID, &b.Name, &b.Location, &b.Latitude, &b.Longitude,
-		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.CreatedAt, &b.UpdatedAt,
+		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("get bin %s: %w", id, err)
@@ -71,18 +71,23 @@ func (r *BinRepository) GetByID(ctx context.Context, id string) (*models.Bin, er
 }
 
 func (r *BinRepository) Create(ctx context.Context, req *models.CreateBinRequest) (*models.Bin, error) {
+	apiKey := fmt.Sprintf("vbin-%d%g", time.Now().UnixNano(), req.MaxVolumeCm) // Simple unique key
+	if len(apiKey) > 32 {
+		apiKey = apiKey[:32]
+	}
+
 	query := `
-		INSERT INTO bins (name, location, latitude, longitude, max_volume_cm, max_weight_kg)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, created_at, updated_at
+		INSERT INTO bins (name, location, latitude, longitude, max_volume_cm, max_weight_kg, api_key)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
 	`
 
 	var b models.Bin
 	err := r.pool.QueryRow(ctx, query,
-		req.Name, req.Location, req.Latitude, req.Longitude, req.MaxVolumeCm, req.MaxWeightKg,
+		req.Name, req.Location, req.Latitude, req.Longitude, req.MaxVolumeCm, req.MaxWeightKg, apiKey,
 	).Scan(
 		&b.ID, &b.Name, &b.Location, &b.Latitude, &b.Longitude,
-		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.CreatedAt, &b.UpdatedAt,
+		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
 	)
 
 	if err != nil {
@@ -104,7 +109,7 @@ func (r *BinRepository) Update(ctx context.Context, id string, req *models.Updat
 			status = COALESCE($8, status),
 			updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, created_at, updated_at
+		RETURNING id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
 	`
 
 	var b models.Bin
@@ -113,7 +118,7 @@ func (r *BinRepository) Update(ctx context.Context, id string, req *models.Updat
 		req.MaxVolumeCm, req.MaxWeightKg, req.Status,
 	).Scan(
 		&b.ID, &b.Name, &b.Location, &b.Latitude, &b.Longitude,
-		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.CreatedAt, &b.UpdatedAt,
+		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
 	)
 
 	if err != nil {
@@ -189,4 +194,43 @@ func (r *BinRepository) GetSensorHistory(ctx context.Context, binID string, from
 	}
 
 	return readings, nil
+}
+
+func (r *BinRepository) GetByApiKey(ctx context.Context, apiKey string) (*models.Bin, error) {
+	query := `
+		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
+		FROM bins 
+		WHERE api_key = $1
+	`
+
+	var b models.Bin
+	err := r.pool.QueryRow(ctx, query, apiKey).Scan(
+		&b.ID, &b.Name, &b.Location, &b.Latitude, &b.Longitude,
+		&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &b, nil
+}
+
+func (r *BinRepository) UpdateLastSeen(ctx context.Context, binID string) error {
+	query := `UPDATE bins SET last_seen = NOW(), status = 'active' WHERE id = $1`
+	_, err := r.pool.Exec(ctx, query, binID)
+	return err
+}
+
+func (r *BinRepository) UpdateOfflineStatuses(ctx context.Context, timeoutMinutes int) (int64, error) {
+	query := `
+		UPDATE bins 
+		SET status = 'inactive' 
+		WHERE last_seen < NOW() - ($1 || ' minutes')::interval 
+		AND status = 'active'
+	`
+	tag, err := r.pool.Exec(ctx, query, timeoutMinutes)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
 }

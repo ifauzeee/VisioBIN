@@ -193,6 +193,15 @@ func (r *TelemetryRepository) GetGlobalHistory(ctx context.Context, limit, offse
 	return readings, total, nil
 }
 
+func (r *TelemetryRepository) CleanupOldReadings(ctx context.Context, days int) (int64, error) {
+	query := `DELETE FROM sensor_readings WHERE recorded_at < NOW() - ($1 || ' days')::INTERVAL`
+	tag, err := r.pool.Exec(ctx, query, days)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 func clamp(val, min, max float64) float64 {
 	if val < min {
 		return min

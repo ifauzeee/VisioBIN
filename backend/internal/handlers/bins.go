@@ -165,6 +165,9 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Refresh online status
+	h.binRepo.UpdateLastSeen(r.Context(), reading.BinID)
+
 	// Async threshold check (Gunakan context.Background agar tidak terputus saat request selesai)
 	go h.forecastSvc.CheckThresholds(context.Background(), reading, h.alertRepo)
 

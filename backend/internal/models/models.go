@@ -13,6 +13,8 @@ type Bin struct {
 	MaxVolumeCm   float64        `json:"max_volume_cm"`
 	MaxWeightKg   float64        `json:"max_weight_kg"`
 	Status        string         `json:"status"`
+	ApiKey        string         `json:"api_key,omitempty"`
+	LastSeen      *time.Time     `json:"last_seen,omitempty"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	LatestReading *SensorReading `json:"latest_reading,omitempty"`
