@@ -45,45 +45,29 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          margin: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
+          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
+            color: isDark ? const Color(0xFF1F2937) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: isDark ? Colors.black38 : primaryColor.withValues(alpha: 0.15),
-                blurRadius: 24,
-                spreadRadius: 2,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0),
-                decoration: BoxDecoration(
-                  color: isDark 
-                      ? const Color(0xFF1F2937).withValues(alpha: 0.75) 
-                      : Colors.white.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: isDark ? Colors.white12 : Colors.white,
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.wrench, 'Repair', 2, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.messageSquare, 'Chat', 3, isDark, primaryColor),
-                    if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 4, isDark, primaryColor),
-                  ],
-                ),
-              ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
+                _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
+                _buildNavItem(LucideIcons.wrench, 'Repair', 2, isDark, primaryColor),
+                _buildNavItem(LucideIcons.messageSquare, 'Chat', 3, isDark, primaryColor),
+                if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 4, isDark, primaryColor),
+              ],
             ),
           ),
         ),
@@ -102,17 +86,20 @@ class _MainScreenState extends State<MainScreen> {
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutQuint,
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutQuart,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 18.0 : 12.0, 
+          vertical: 10.0
+        ),
         decoration: BoxDecoration(
           color: isSelected ? primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: primaryColor.withValues(alpha: 0.4),
+              color: primaryColor.withValues(alpha: 0.3),
               blurRadius: 12,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 6),
             )
           ] : [],
         ),
@@ -124,11 +111,11 @@ class _MainScreenState extends State<MainScreen> {
               color: isSelected 
                   ? Colors.white 
                   : (isDark ? Colors.white60 : Colors.black54),
-              size: 22,
+              size: 20,
             ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutQuint,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutQuart,
               child: isSelected
                   ? Padding(
                       padding: const EdgeInsets.only(left: 8.0),
@@ -136,8 +123,8 @@ class _MainScreenState extends State<MainScreen> {
                         label,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
                         ),
                       ),
                     )
