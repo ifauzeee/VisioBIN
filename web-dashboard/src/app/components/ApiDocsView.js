@@ -27,11 +27,57 @@ const API_GROUPS = [
       },
       {
         method: "POST",
+        path: "/auth/register",
+        desc: "Daftarkan akun baru ke sistem (Hanya dapat dilakukan oleh Admin/Manager).",
+        auth: "JWT (Admin)",
+        req: { username: "operator_01", password: "securepassword", role: "operator", full_name: "John Doe" },
+        res: { success: true, message: "User registered successfully" }
+      },
+      {
+        method: "POST",
         path: "/auth/guest",
         desc: "Akses tamu untuk monitoring publik dengan hak akses terbatas (view-only).",
         auth: "None",
         req: {},
         res: { token: "guest_token_..." }
+      }
+    ]
+  },
+  {
+    title: "User Management",
+    icon: <Key size={18} />,
+    color: "#A855F7",
+    gradient: "linear-gradient(135deg, #A855F7 0%, #9333EA 100%)",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/auth/users",
+        desc: "Ambil daftar semua pengguna terdaftar beserta role-nya.",
+        auth: "JWT (All Staff)",
+        res: { success: true, data: [{ id: 1, username: "admin", role: "admin" }] }
+      },
+      {
+        method: "PUT",
+        path: "/auth/profile",
+        desc: "Perbarui informasi profil pengguna yang sedang login.",
+        auth: "JWT (All Staff)",
+        req: { full_name: "Jane Doe", password: "newpassword" },
+        res: { success: true, message: "Profile updated" }
+      },
+      {
+        method: "PUT",
+        path: "/auth/fcm-token",
+        desc: "Update token Firebase Cloud Messaging untuk menerima notifikasi push di perangkat mobile.",
+        auth: "JWT (All Staff)",
+        req: { fcm_token: "fcm_token_string_here" },
+        res: { success: true, message: "Token updated" }
+      },
+      {
+        method: "DELETE",
+        path: "/auth/users/{id}",
+        desc: "Hapus akun pengguna dari sistem (Hanya Admin).",
+        auth: "JWT (Admin)",
+        res: { success: true, message: "User deleted" }
       }
     ]
   },
@@ -84,10 +130,17 @@ const API_GROUPS = [
         res: [{ id: "VBIN-01", name: "Stasiun PNJ", status: "online", volume_pct: 65 }]
       },
       {
+        method: "GET",
+        path: "/bins/{id}",
+        desc: "Ambil detail lengkap satu unit stasiun berdasarkan ID.",
+        auth: "JWT",
+        res: { success: true, data: { id: "VBIN-01", name: "Stasiun PNJ", location: "Gedung Q" } }
+      },
+      {
         method: "POST",
         path: "/bins",
-        desc: "Daftarkan unit stasiun baru ke sistem (Hanya Admin).",
-        auth: "JWT (Admin)",
+        desc: "Daftarkan unit stasiun baru ke sistem.",
+        auth: "JWT (Admin/Tech)",
         req: { name: "Stasiun Depok", location: "UI Depok", max_volume_cm: 60, max_weight_kg: 15 },
         res: { success: true, data: { id: "VBIN-02", name: "Stasiun Depok" } }
       },
@@ -95,14 +148,14 @@ const API_GROUPS = [
         method: "PUT",
         path: "/bins/{id}",
         desc: "Perbarui konfigurasi fisik dan threshold unit stasiun.",
-        auth: "JWT (Admin)",
+        auth: "JWT (Admin/Tech)",
         req: { name: "Nama Baru", location: "Lokasi Baru" },
         res: { success: true, message: "Bin updated" }
       },
       {
         method: "DELETE",
         path: "/bins/{id}",
-        desc: "Hapus unit stasiun dari sistem secara permanen.",
+        desc: "Hapus unit stasiun dari sistem secara permanen (Hanya Admin).",
         auth: "JWT (Admin)",
         res: { success: true, message: "Bin deleted" }
       }
@@ -131,8 +184,8 @@ const API_GROUPS = [
       {
         method: "PUT",
         path: "/alerts/{id}/read",
-        desc: "Tandai peringatan sebagai sudah dibaca untuk menghentikan push notification.",
-        auth: "JWT",
+        desc: "Tandai peringatan sebagai sudah dibaca (Admin/Op/Tech).",
+        auth: "JWT (Staff)",
         res: { success: true, message: "Marked as read" }
       }
     ]
@@ -145,6 +198,13 @@ const API_GROUPS = [
     endpoints: [
       {
         method: "GET",
+        path: "/telemetry",
+        desc: "Ambil seluruh riwayat pembacaan sensor mentah dengan pagination.",
+        auth: "JWT",
+        res: { success: true, data: [{ bin_id: "VBIN-01", volume_organic_pct: 45 }] }
+      },
+      {
+        method: "GET",
         path: "/bins/{id}/forecast",
         desc: "Prediksi sisa waktu hingga bin penuh berdasarkan tren pengisian 24 jam terakhir.",
         auth: "JWT",
@@ -153,9 +213,16 @@ const API_GROUPS = [
       {
         method: "GET",
         path: "/bins/{id}/history",
-        desc: "Ambil data historis sensor mentah untuk keperluan pembuatan grafik.",
+        desc: "Ambil data historis sensor spesifik untuk unit tertentu.",
         auth: "JWT",
         res: [{ timestamp: "2026-05-04T20:00:00Z", volume_organic_pct: 45 }]
+      },
+      {
+        method: "GET",
+        path: "/classifications",
+        desc: "List riwayat klasifikasi sampah terbaru.",
+        auth: "JWT",
+        res: { success: true, data: [{ bin_id: "VBIN-01", predicted_class: "organic" }] }
       },
       {
         method: "GET",
@@ -174,8 +241,8 @@ const API_GROUPS = [
     endpoints: [
       {
         method: "POST",
-        path: "/chat/send",
-        desc: "Kirim pesan teks ke kanal diskusi tim atau individu melalui broker pesan.",
+        path: "/chat",
+        desc: "Kirim pesan teks ke kanal diskusi tim atau individu.",
         auth: "JWT",
         req: { content: "Lapor: Unit VBIN-01 sudah dikosongkan.", recipient_id: null },
         res: { success: true, data: { id: 101, content: "Lapor...", created_at: "2026-05-04T21:00:00Z" } }
@@ -200,21 +267,28 @@ const API_GROUPS = [
     endpoints: [
       {
         method: "POST",
-        path: "/maintenance/logs",
-        desc: "Buat catatan aktivitas pemeliharaan fisik pada unit stasiun untuk kepatuhan operasional.",
-        auth: "JWT",
+        path: "/maintenance",
+        desc: "Buat catatan aktivitas pemeliharaan fisik pada unit stasiun (Admin/Op/Tech).",
+        auth: "JWT (Staff)",
         req: { bin_id: "VBIN-01", action_type: "REPAIR", notes: "Penggantian modul HX711" },
         res: { success: true, message: "Maintenance log created" }
       },
       {
         method: "GET",
-        path: "/maintenance/logs",
+        path: "/maintenance",
         desc: "Dapatkan riwayat log perawatan yang terperinci.",
         auth: "JWT",
         res: { 
           success: true, 
           data: [{ id: 50, action_type: "CLEANING", bin_id: "VBIN-01", creator_name: "Teknisi" }] 
         }
+      },
+      {
+        method: "DELETE",
+        path: "/maintenance/{id}",
+        desc: "Hapus log perawatan (Admin/Op/Tech).",
+        auth: "JWT (Staff)",
+        res: { success: true, message: "Log deleted" }
       }
     ]
   }
