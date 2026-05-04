@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -14,6 +14,9 @@ class ChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
   AppUser? _selectedRecipient;
   String? _currentUserId;
+  String? _wsUrl;
+  Timer? _reconnectTimer;
+  bool _isDisposed = false;
 
   ChatProvider(this.apiService);
 
@@ -30,7 +33,7 @@ class ChatProvider extends ChangeNotifier {
   void setSelectedRecipient(AppUser? user) {
     if (_selectedRecipient?.id == user?.id) return;
     _selectedRecipient = user;
-    _messages = []; // Clear current view for smooth transition
+    _messages = []; 
     fetchHistory();
     notifyListeners();
   }
@@ -52,7 +55,7 @@ class ChatProvider extends ChangeNotifier {
     } finally {
       _fetchingHistory = false;
       _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) notifyListeners();
     }
   }
 
@@ -62,7 +65,7 @@ class ChatProvider extends ChangeNotifier {
       if (res.success) {
         final List<dynamic> data = res.data;
         _members = data.map((m) => AppUser.fromJson(m)).toList();
-        notifyListeners();
+        if (!_isDisposed) notifyListeners();
       }
     } catch (e) {
       debugPrint('[ChatProvider] Fetch members error: $e');
@@ -70,44 +73,64 @@ class ChatProvider extends ChangeNotifier {
   }
 
   void connectWebSocket(String wsUrl) {
+    _wsUrl = wsUrl;
+    _reconnectTimer?.cancel();
     _channel?.sink.close();
+    
+    debugPrint('[ChatProvider] Connecting to WS: $wsUrl');
+    
     try {
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
       _channel!.stream.listen(
         (message) {
+          debugPrint('[ChatProvider] WS Message Received: $message');
           final data = jsonDecode(message);
           if (data['event'] == 'chat_message') {
             final msg = ChatMessage.fromJson(data['data']);
             
-            // Logic for live filtering
             final isGeneral = msg.recipientId == null;
             if (_selectedRecipient == null) {
               if (isGeneral) {
                 _messages.add(msg);
-                notifyListeners();
+                if (!_isDisposed) notifyListeners();
               }
             } else {
-              // Private chat: filter by current recipient
               final isFromSelected = msg.senderId == _selectedRecipient!.id;
               final isToSelected = msg.recipientId == _selectedRecipient!.id;
-              
-              // Also check if it's for me
               final isForMe = msg.recipientId == _currentUserId;
               final isByMe = msg.senderId == _currentUserId;
 
               if ((isByMe && isToSelected) || (isFromSelected && isForMe)) {
                 _messages.add(msg);
-                notifyListeners();
+                if (!_isDisposed) notifyListeners();
               }
             }
           }
         },
-        onError: (err) => debugPrint('[ChatProvider] WS Error: $err'),
-        onDone: () => debugPrint('[ChatProvider] WS Closed'),
+        onError: (err) {
+          debugPrint('[ChatProvider] WS Error: $err');
+          _scheduleReconnect();
+        },
+        onDone: () {
+          debugPrint('[ChatProvider] WS Connection Closed');
+          _scheduleReconnect();
+        },
       );
     } catch (e) {
-      debugPrint('[ChatProvider] WS Connect Error: $e');
+      debugPrint('[ChatProvider] WS Connect Exception: $e');
+      _scheduleReconnect();
     }
+  }
+
+  void _scheduleReconnect() {
+    if (_isDisposed) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 3), () {
+      if (_wsUrl != null && !_isDisposed) {
+        debugPrint('[ChatProvider] Reconnecting...');
+        connectWebSocket(_wsUrl!);
+      }
+    });
   }
 
   Future<bool> sendMessage(String content) async {
@@ -120,6 +143,8 @@ class ChatProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
+    _reconnectTimer?.cancel();
     _channel?.sink.close();
     super.dispose();
   }
