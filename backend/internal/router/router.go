@@ -13,6 +13,7 @@ func Setup(
 	authHandler *handlers.AuthHandler,
 	binHandler *handlers.BinHandler,
 	maintHandler *handlers.MaintenanceHandler,
+	chatHandler *handlers.ChatHandler,
 	binRepo *repository.BinRepository,
 	jwtSecret string,
 	broadcaster *services.Broadcaster,
@@ -34,42 +35,48 @@ func Setup(
 	r.Get("/ws", broadcaster.ServeWS)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Auth
+		// Auth Public
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/guest", authHandler.GuestLogin)
 
-		// Telemetry (Protected for IoT devices via API Key)
+		// Telemetry Ingest (IoT Key)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.APIKeyAuth(binRepo))
 			r.Post("/telemetry", binHandler.IngestTelemetry)
 			r.Post("/classifications", binHandler.LogClassification)
 		})
 
-		// Protected Routes
+		// Dashboard Protected (JWT)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.JWTAuth(jwtSecret))
 
+			// User & Profile
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireRole("admin", "operator", "manager", "technician"))
 				r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
 				r.Put("/auth/profile", authHandler.UpdateProfile)
+				r.Get("/auth/users", authHandler.ListUsers)
 			})
 
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireRole("admin"))
-				r.Get("/auth/users", authHandler.ListUsers)
 				r.Delete("/auth/users/{id}", authHandler.DeleteUser)
 			})
 
-			// Bins Access
+			// Chat System (All authenticated roles)
+			r.Route("/chat", func(r chi.Router) {
+				r.Post("/", chatHandler.SendMessage)
+				r.Get("/history", chatHandler.GetHistory)
+			})
+
+			// Bins & Analytics
 			r.Route("/bins", func(r chi.Router) {
 				r.Get("/", binHandler.ListBins)
 				r.Get("/{id}", binHandler.GetBin)
 				r.Get("/{id}/history", binHandler.GetSensorHistory)
 				r.Get("/{id}/forecast", binHandler.GetForecast)
 
-				// Admin-only Management
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequireRole("admin", "technician"))
 					r.Post("/", binHandler.CreateBin)
@@ -80,8 +87,8 @@ func Setup(
 
 			r.Get("/classifications", binHandler.ListClassifications)
 			r.Get("/classifications/export", binHandler.ExportClassifications)
-
 			r.Get("/alerts", binHandler.ListAlerts)
+			
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireRole("admin", "operator", "technician"))
 				r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)

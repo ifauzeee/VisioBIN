@@ -5,8 +5,9 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText,
-  Sun, Moon, MapPin, Database, Activity
+  Sun, Moon, MapPin, Database, Activity, MessageSquare
 } from "lucide-react";
+
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,7 +30,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         { key: "ringkasan", label: "Ringkasan", icon: SquareTerminal, href: "/ringkasan" },
         { key: "pemantauan", label: "Pemantauan Langsung", icon: Activity, href: "/pemantauan" },
         { key: "map", label: "Peta Lokasi", icon: MapPin, href: "/map" },
+        !isGuest && { key: "chat", label: "Diskusi Tim", icon: MessageSquare, href: "/chat" },
         (isAdmin || isManager) && { key: "analitik", label: "Analitik", icon: BarChart, href: "/analitik" },
+
       ].filter(Boolean),
     },
     {

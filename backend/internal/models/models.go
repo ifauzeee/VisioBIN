@@ -215,6 +215,18 @@ type CreateMaintenanceLogRequest struct {
 	Notes      string `json:"notes"`
 }
 
+// --- Chat Models ---
+
+type ChatMessage struct {
+	ID          string    `json:"id"`
+	SenderID    string    `json:"sender_id"`
+	RecipientID *string   `json:"recipient_id,omitempty"` // NULL if general chat
+	SenderName  string    `json:"sender_name,omitempty"`
+	SenderRole  string    `json:"sender_role,omitempty"`
+	Content     string    `json:"content"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 // --- Response Helpers ---
 
 type APIResponse struct {

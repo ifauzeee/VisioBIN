@@ -37,6 +37,8 @@ func main() {
 	alertRepo := repository.NewAlertRepository(db.Pool)
 	userRepo := repository.NewUserRepository(db.Pool)
 	maintRepo := repository.NewMaintenanceRepository(db.Pool)
+	chatRepo := repository.NewChatRepository(db.Pool)
+
 
 	// Service Layer
 	notifSvc    := services.NewNotificationService()
@@ -49,8 +51,11 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
 	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
 	maintHandler := handlers.NewMaintenanceHandler(maintRepo)
+	chatHandler := handlers.NewChatHandler(chatRepo, userRepo, broadcaster)
 
-	r := router.Setup(authHandler, binHandler, maintHandler, binRepo, cfg.JWTSecret, broadcaster)
+
+	r := router.Setup(authHandler, binHandler, maintHandler, chatHandler, binRepo, cfg.JWTSecret, broadcaster)
+
 
 	// Background Worker: Heartbeat & Data Retention
 	go func() {

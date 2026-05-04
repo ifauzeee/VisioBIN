@@ -101,9 +101,22 @@ func (c *Client) readPump(b *Broadcaster) {
 	}()
 
 	for {
-		_, _, err := c.conn.ReadMessage()
+		_, p, err := c.conn.ReadMessage()
 		if err != nil {
 			break
+		}
+
+		var msg struct {
+			Event string      `json:"event"`
+			Data  interface{} `json:"data"`
+		}
+		if err := json.Unmarshal(p, &msg); err == nil {
+			// If it's a client message, broadcast it to others
+			// Note: In a production app, we should validate the sender and save to DB here.
+			// But since Broadcaster is generic, we'll just relay for now or handle specifically.
+			if msg.Event == "send_chat" {
+				b.broadcast <- msg
+			}
 		}
 	}
 }

@@ -176,3 +176,16 @@ export async function listAllTelemetry(token, params = {}) {
   const query = qs.toString();
   return apiFetch(`/telemetry${query ? `?${query}` : ""}`, token);
 }
+
+// ── Chat ──────────────────────────────────────────────
+
+export async function listChatHistory(token, otherId = "", limit = 50) {
+  return apiFetch(`/chat/history?other_id=${otherId}&limit=${limit}`, token);
+}
+
+export async function sendChatMessage(token, content, recipientId = null) {
+  return apiFetch("/chat", token, {
+    method: "POST",
+    body: JSON.stringify({ content, recipient_id: recipientId }),
+  });
+}
