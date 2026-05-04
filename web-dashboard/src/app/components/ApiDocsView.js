@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { 
   Key, Database, Send, BarChart3, Shield, 
   ChevronRight, Copy, Check, Globe, Code, 
-  Smartphone, Cpu, Activity, MessageSquare, Wrench
+  Smartphone, Cpu, Activity, MessageSquare, Wrench,
+  Bell, FileDown, LayoutDashboard
 } from "lucide-react";
 
 const API_GROUPS = [
@@ -67,8 +68,8 @@ const API_GROUPS = [
     ]
   },
   {
-    title: "Bins & Analytics",
-    icon: <BarChart3 size={18} />,
+    title: "Bin Management",
+    icon: <Database size={18} />,
     color: "#3B82F6",
     endpoints: [
       {
@@ -76,20 +77,86 @@ const API_GROUPS = [
         path: "/bins",
         desc: "Dapatkan daftar semua unit stasiun VisioBin.",
         auth: "JWT",
-        res: [
-          { id: "VBIN-01", name: "Stasiun PNJ", status: "online", volume_pct: 65 }
-        ]
+        res: [{ id: "VBIN-01", name: "Stasiun PNJ", status: "online", volume_pct: 65 }]
       },
+      {
+        method: "POST",
+        path: "/bins",
+        desc: "Daftarkan unit stasiun baru ke sistem.",
+        auth: "JWT (Admin)",
+        req: { name: "Stasiun Depok", location: "UI Depok", max_volume_cm: 60, max_weight_kg: 15 },
+        res: { success: true, data: { id: "VBIN-02", ... } }
+      },
+      {
+        method: "PUT",
+        path: "/bins/{id}",
+        desc: "Perbarui konfigurasi unit stasiun.",
+        auth: "JWT (Admin)",
+        req: { name: "Nama Baru", location: "Lokasi Baru" },
+        res: { success: true, message: "Bin updated" }
+      },
+      {
+        method: "DELETE",
+        path: "/bins/{id}",
+        desc: "Hapus unit stasiun dari sistem secara permanen.",
+        auth: "JWT (Admin)",
+        res: { success: true, message: "Bin deleted" }
+      }
+    ]
+  },
+  {
+    title: "Monitoring & Alerts",
+    icon: <Bell size={18} />,
+    color: "#F43F5E",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/dashboard/summary",
+        desc: "Ringkasan statistik global untuk dashboard utama.",
+        auth: "JWT",
+        res: { total_bins: 5, active_alerts: 2, total_weight_kg: 120.5 }
+      },
+      {
+        method: "GET",
+        path: "/alerts",
+        desc: "Dapatkan daftar notifikasi sistem (threshold terlewati).",
+        auth: "JWT",
+        res: [{ id: 501, type: "FULL_BIN", message: "Unit VBIN-01 penuh!", created_at: "..." }]
+      },
+      {
+        method: "PUT",
+        path: "/alerts/{id}/read",
+        desc: "Tandai peringatan sebagai sudah dibaca.",
+        auth: "JWT",
+        res: { success: true, message: "Marked as read" }
+      }
+    ]
+  },
+  {
+    title: "Analytics & Reports",
+    icon: <FileDown size={18} />,
+    color: "#06B6D4",
+    endpoints: [
       {
         method: "GET",
         path: "/bins/{id}/forecast",
         desc: "Prediksi waktu penuh berdasarkan tren pengisian.",
         auth: "JWT",
-        res: {
-          bin_id: "VBIN-01",
-          hours_until_full: 4.5,
-          estimated_full_at: "2026-05-04T18:30:00Z"
-        }
+        res: { hours_until_full: 4.5, estimated_full_at: "..." }
+      },
+      {
+        method: "GET",
+        path: "/bins/{id}/history",
+        desc: "Ambil data historis sensor mentah (Volume/Gas).",
+        auth: "JWT",
+        res: [{ timestamp: "...", volume_organic_pct: 45 }]
+      },
+      {
+        method: "GET",
+        path: "/classifications/export",
+        desc: "Download laporan klasifikasi sampah dalam format CSV.",
+        auth: "JWT",
+        res: "Binary (CSV File)"
       }
     ]
   },
@@ -147,7 +214,8 @@ const API_GROUPS = [
 
 const CodeBlock = ({ code, title }) => {
   const [copied, setCopied] = useState(false);
-  const text = JSON.stringify(code, null, 2);
+  const text = typeof code === 'string' ? code : JSON.stringify(code, null, 2);
+
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(text);
