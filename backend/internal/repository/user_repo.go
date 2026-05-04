@@ -54,15 +54,19 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	return &u, nil
 }
 
-func (r *UserRepository) Create(ctx context.Context, username, email, passwordHash, fullName string) (*models.User, error) {
+func (r *UserRepository) Create(ctx context.Context, username, email, passwordHash, fullName, role string) (*models.User, error) {
+	if role == "" {
+		role = "operator"
+	}
+
 	query := `
-		INSERT INTO users (username, email, password_hash, full_name)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (username, email, password_hash, full_name, role)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, username, email, password_hash, full_name, role, fcm_token, created_at, updated_at
 	`
 
 	var u models.User
-	err := r.pool.QueryRow(ctx, query, username, email, passwordHash, fullName).Scan(
+	err := r.pool.QueryRow(ctx, query, username, email, passwordHash, fullName, role).Scan(
 		&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.FullName,
 		&u.Role, &u.FCMToken, &u.CreatedAt, &u.UpdatedAt,
 	)
@@ -132,7 +136,7 @@ func (r *UserRepository) GetAllFCMTokens(ctx context.Context) ([]string, error) 
 	query := `
 		SELECT fcm_token
 		FROM users 
-		WHERE role IN ('operator', 'admin') 
+		WHERE role IN ('operator', 'admin', 'technician') 
 		  AND fcm_token IS NOT NULL 
 		  AND fcm_token != ''
 	`

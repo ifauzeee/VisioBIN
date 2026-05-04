@@ -10,7 +10,8 @@ import {
   listAllTelemetry, listClassifications, listBins, 
   listUsers, listAlerts, listMaintenanceLogs,
   createBin, updateBin, deleteBin,
-  createMaintenanceLog, deleteMaintenanceLog, deleteUser
+  createMaintenanceLog, deleteMaintenanceLog, deleteUser,
+  registerUser
 } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 import { formatFullDateTime } from "../utils/formatters";
@@ -197,6 +198,7 @@ export default function DataManagementView() {
     let apiCall = null;
     if (activeTable.id === 'bins') apiCall = editData ? updateBin : createBin;
     else if (activeTable.id === 'maintenance_logs' && !editData) apiCall = createMaintenanceLog;
+    else if (activeTable.id === 'users' && !editData) apiCall = (tok, pay) => registerUser(pay);
 
     if (!apiCall) {
         alert("Operation not yet implemented for this table via UI.");

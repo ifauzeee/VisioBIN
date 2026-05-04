@@ -51,7 +51,7 @@ func Setup(
 			r.Use(middleware.JWTAuth(jwtSecret))
 
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Use(middleware.RequireRole("admin", "operator", "manager", "technician"))
 				r.Put("/auth/fcm-token", authHandler.UpdateFCMToken)
 				r.Put("/auth/profile", authHandler.UpdateProfile)
 			})
@@ -71,7 +71,7 @@ func Setup(
 
 				// Admin-only Management
 				r.Group(func(r chi.Router) {
-					r.Use(middleware.RequireRole("admin"))
+					r.Use(middleware.RequireRole("admin", "technician"))
 					r.Post("/", binHandler.CreateBin)
 					r.Put("/{id}", binHandler.UpdateBin)
 					r.Delete("/{id}", binHandler.DeleteBin)
@@ -83,7 +83,7 @@ func Setup(
 
 			r.Get("/alerts", binHandler.ListAlerts)
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Use(middleware.RequireRole("admin", "operator", "technician"))
 				r.Put("/alerts/{id}/read", binHandler.MarkAlertRead)
 			})
 
@@ -93,7 +93,7 @@ func Setup(
 			// Maintenance Logs
 			r.Get("/maintenance", maintHandler.ListLogs)
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.RequireRole("admin", "operator"))
+				r.Use(middleware.RequireRole("admin", "operator", "technician"))
 				r.Post("/maintenance", maintHandler.CreateLog)
 				r.Delete("/maintenance/{id}", maintHandler.DeleteLog)
 			})

@@ -104,7 +104,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userRepo.Create(r.Context(), req.Username, req.Email, string(hashedPassword), req.FullName)
+	user, err := h.userRepo.Create(r.Context(), req.Username, req.Email, string(hashedPassword), req.FullName, req.Role)
 	if err != nil {
 		writeJSON(w, http.StatusConflict, models.APIResponse{
 			Success: false, Message: "Username or email already exists",

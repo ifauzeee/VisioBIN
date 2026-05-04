@@ -15,7 +15,12 @@ import { useDashboardContext } from "../../context/DashboardContext";
 export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleTheme, user, logout }) {
   const pathname = usePathname();
   const { summary } = useDashboardContext();
-  const isGuest = user?.role === "guest";
+  const role = user?.role || "guest";
+  const isAdmin = role === "admin";
+  const isOperator = role === "operator";
+  const isManager = role === "manager";
+  const isTechnician = role === "technician";
+  const isGuest = role === "guest";
 
   const navItems = [
     {
@@ -24,47 +29,40 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         { key: "ringkasan", label: "Ringkasan", icon: SquareTerminal, href: "/ringkasan" },
         { key: "pemantauan", label: "Pemantauan Langsung", icon: Activity, href: "/pemantauan" },
         { key: "map", label: "Peta Lokasi", icon: MapPin, href: "/map" },
-        { key: "analitik", label: "Analitik", icon: BarChart, href: "/analitik" },
-      ],
+        (isAdmin || isManager) && { key: "analitik", label: "Analitik", icon: BarChart, href: "/analitik" },
+      ].filter(Boolean),
     },
     {
       section: "Laporan",
       items: [
-        { key: "laporan", label: "Laporan", icon: FileText, href: "/laporan" },
-        { key: "perangkat", label: "Perangkat IoT", icon: Cpu, href: "/perangkat" },
-      ],
+        (isAdmin || isManager) && { key: "laporan", label: "Laporan", icon: FileText, href: "/laporan" },
+        (isAdmin || isTechnician) && { key: "perangkat", label: "Perangkat IoT", icon: Cpu, href: "/perangkat" },
+      ].filter(Boolean),
+    },
+    {
+      section: "Manajemen",
+      items: [
+        (isAdmin || isTechnician) && {
+          key: "stasiun",
+          label: "Stasiun Bin",
+          icon: Box,
+          href: "/stasiun",
+          badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
+        },
+        (isAdmin || isOperator || isTechnician || isGuest) && { key: "maint", label: "Log Perawatan", icon: History, href: "/maint" },
+        isAdmin && { key: "data", label: "Eksplorasi Data", icon: Database, href: "/data" },
+      ].filter(Boolean),
     },
     ...(!isGuest ? [
       {
-        section: "Manajemen",
-        items: [
-          {
-            key: "stasiun",
-            label: "Stasiun Bin",
-            icon: Box,
-            href: "/stasiun",
-            badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
-          },
-          { key: "maint", label: "Log Perawatan", icon: History, href: "/maint" },
-          { key: "data", label: "Eksplorasi Data", icon: Database, href: "/data" },
-        ],
-      },
-      {
         section: "Pengaturan",
         items: [
-          { key: "team", label: "Anggota Tim", icon: Users, href: "/team" },
-          { key: "config", label: "Konfigurasi", icon: Settings2, href: "/config" },
-        ],
+          isAdmin && { key: "team", label: "Anggota Tim", icon: Users, href: "/team" },
+          (isAdmin || isTechnician) && { key: "config", label: "Konfigurasi", icon: Settings2, href: "/config" },
+        ].filter(Boolean),
       },
-    ] : [
-      {
-        section: "Manajemen",
-        items: [
-          { key: "maint", label: "Log Perawatan", icon: History, href: "/maint" },
-        ],
-      },
-    ]),
-  ];
+    ] : []),
+  ].filter(section => section.items.length > 0);
 
 
   return (

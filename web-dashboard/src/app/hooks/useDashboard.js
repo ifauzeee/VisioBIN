@@ -86,7 +86,7 @@ export function useDashboard(token) {
           // Fetch forecast for this bin
           try {
             const { getForecast } = await import("../services/api");
-            const forecastRes = await getForecast(token, b.id);
+            const forecastRes = await getForecast(token, b.bin_id);
             if (forecastRes.success) {
               setForecast(forecastRes.data);
             }

@@ -42,6 +42,13 @@ export async function login(username, password) {
   });
 }
 
+export async function registerUser(payload) {
+  return apiFetch("/auth/register", null, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function loginGuest() {
   return apiFetch("/auth/guest", null, {
     method: "POST",
