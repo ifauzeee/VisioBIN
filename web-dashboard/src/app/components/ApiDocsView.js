@@ -85,7 +85,7 @@ const API_GROUPS = [
         desc: "Daftarkan unit stasiun baru ke sistem.",
         auth: "JWT (Admin)",
         req: { name: "Stasiun Depok", location: "UI Depok", max_volume_cm: 60, max_weight_kg: 15 },
-        res: { success: true, data: { id: "VBIN-02", ... } }
+        res: { success: true, data: { id: "VBIN-02", info: "..." } }
       },
       {
         method: "PUT",
