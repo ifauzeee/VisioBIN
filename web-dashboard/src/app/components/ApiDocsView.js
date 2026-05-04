@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { 
   Key, Database, Send, BarChart3, Shield, 
   ChevronRight, Copy, Check, Globe, Code, 
-  Smartphone, Cpu, Activity
+  Smartphone, Cpu, Activity, MessageSquare, Wrench
 } from "lucide-react";
 
 const API_GROUPS = [
@@ -89,6 +89,56 @@ const API_GROUPS = [
           bin_id: "VBIN-01",
           hours_until_full: 4.5,
           estimated_full_at: "2026-05-04T18:30:00Z"
+        }
+      }
+    ]
+  },
+  {
+    title: "Team Chat",
+    icon: <MessageSquare size={18} />,
+    color: "#EC4899",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/chat/send",
+        desc: "Kirim pesan teks ke kanal diskusi tim atau individu.",
+        auth: "JWT",
+        req: { content: "Lapor: Unit VBIN-01 sudah dikosongkan.", recipient_id: null },
+        res: { success: true, data: { id: 101, content: "Lapor...", created_at: "2026-05-04T21:00:00Z" } }
+      },
+      {
+        method: "GET",
+        path: "/chat/history",
+        desc: "Ambil riwayat pesan terakhir. Gunakan query 'limit' untuk jumlah data.",
+        auth: "JWT",
+        res: { 
+          success: true, 
+          data: [{ id: 101, sender_name: "Admin", content: "Lapor...", role: "admin" }] 
+        }
+      }
+    ]
+  },
+  {
+    title: "Maintenance",
+    icon: <Wrench size={18} />,
+    color: "#F59E0B",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/maintenance/logs",
+        desc: "Buat catatan aktivitas pemeliharaan fisik pada unit stasiun.",
+        auth: "JWT",
+        req: { bin_id: "VBIN-01", action_type: "REPAIR", notes: "Penggantian modul HX711" },
+        res: { success: true, message: "Maintenance log created" }
+      },
+      {
+        method: "GET",
+        path: "/maintenance/logs",
+        desc: "Dapatkan riwayat log perawatan. Bisa difilter berdasarkan bin_id.",
+        auth: "JWT",
+        res: { 
+          success: true, 
+          data: [{ id: 50, action_type: "CLEANING", bin_id: "VBIN-01", creator_name: "Teknisi" }] 
         }
       }
     ]
@@ -333,6 +383,26 @@ export default function ApiDocsView() {
                   &nbsp;&nbsp;&#125;)<br/>
                   );
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* WebSockets Section */}
+          <div style={{ marginTop: 48, padding: 32, borderRadius: 16, background: "rgba(16, 185, 129, 0.05)", border: "1px solid rgba(16, 185, 129, 0.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--brand-organic)", fontWeight: 700, marginBottom: 16 }}>
+              <Activity size={20} /> Real-time Events (WebSockets)
+            </div>
+            <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.7, marginBottom: 20 }}>
+              VisioBIN menggunakan WebSocket untuk pengiriman data real-time. Sambungkan ke <span className="mono" style={{ color: "var(--text-main)" }}>ws://localhost:8080/ws</span> untuk mendengarkan event berikut:
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div style={{ padding: 16, background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-main)", marginBottom: 4 }}>chat_message</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Dikirim saat ada pesan baru di grup diskusi.</div>
+              </div>
+              <div style={{ padding: 16, background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-main)", marginBottom: 4 }}>telemetry_update</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Update status volume & sensor IoT secara instan.</div>
               </div>
             </div>
           </div>
