@@ -256,7 +256,7 @@ export default function HelpCenterView() {
                     border: "none", borderRadius: 8,
                     cursor: "pointer", 
                     color: isActive ? tab.color : "var(--text-muted)", 
-                    fontSize: 14, fontWeight: isActive ? 600 : 500,
+                    fontSize: 14, fontWeight: 500,
                     transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)", 
                     textAlign: "left",
                     position: "relative"

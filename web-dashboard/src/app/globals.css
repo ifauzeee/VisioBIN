@@ -160,7 +160,7 @@ h3 {
 .nav-item.active {
   background: var(--bg-hover);
   color: var(--brand-inorganic);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Live Feed */
