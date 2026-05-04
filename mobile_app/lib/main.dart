@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/api_service.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/maintenance_provider.dart';
+import 'providers/chat_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 
@@ -23,8 +25,11 @@ void main() async {
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    // Load .env configuration
+    await dotenv.load(fileName: ".env");
   } catch (e) {
-    debugPrint("Firebase initialization error (might missing google-services.json): $e");
+    debugPrint("Initialization error: $e");
   }
 
   runApp(const VisioBinApp());
@@ -42,6 +47,7 @@ class _VisioBinAppState extends State<VisioBinApp> {
   late final DashboardProvider _dashboardProvider;
 
   late final MaintenanceProvider _maintenanceProvider;
+  late final ChatProvider _chatProvider;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -50,6 +56,7 @@ class _VisioBinAppState extends State<VisioBinApp> {
     _apiService = ApiService();
     _dashboardProvider = DashboardProvider(_apiService);
     _maintenanceProvider = MaintenanceProvider(_apiService);
+    _chatProvider = ChatProvider(_apiService);
     _setupPushNotifications();
   }
 
@@ -129,6 +136,7 @@ class _VisioBinAppState extends State<VisioBinApp> {
       providers: [
         ChangeNotifierProvider.value(value: _dashboardProvider),
         ChangeNotifierProvider.value(value: _maintenanceProvider),
+        ChangeNotifierProvider.value(value: _chatProvider),
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,

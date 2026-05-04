@@ -6,6 +6,7 @@ import '../providers/dashboard_provider.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
 import 'maintenance_screen.dart';
+import 'chat_screen.dart';
 import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
       const DashboardScreen(),
       const HistoryScreen(),
       const MaintenanceScreen(),
+      const ChatScreen(),
       if (!isGuest) const SettingsScreen(),
     ];
   }
@@ -43,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
+          margin: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
@@ -60,7 +62,7 @@ class _MainScreenState extends State<MainScreen> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0),
                 decoration: BoxDecoration(
                   color: isDark 
                       ? const Color(0xFF1F2937).withValues(alpha: 0.75) 
@@ -76,8 +78,9 @@ class _MainScreenState extends State<MainScreen> {
                   children: [
                     _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
                     _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
-                    _buildNavItem(LucideIcons.wrench, 'Perawatan', 2, isDark, primaryColor),
-                    if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 3, isDark, primaryColor),
+                    _buildNavItem(LucideIcons.wrench, 'Repair', 2, isDark, primaryColor),
+                    _buildNavItem(LucideIcons.messageSquare, 'Chat', 3, isDark, primaryColor),
+                    if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 4, isDark, primaryColor),
                   ],
                 ),
               ),

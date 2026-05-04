@@ -333,3 +333,37 @@ class MaintenanceLog {
     );
   }
 }
+
+class ChatMessage {
+  final String id;
+  final String senderId;
+  final String? recipientId;
+  final String senderName;
+  final String senderRole;
+  final String content;
+  final DateTime createdAt;
+
+  ChatMessage({
+    required this.id,
+    required this.senderId,
+    this.recipientId,
+    required this.senderName,
+    required this.senderRole,
+    required this.content,
+    required this.createdAt,
+  });
+
+  bool isMe(String currentUserId) => senderId == currentUserId;
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] ?? '',
+      senderId: json['sender_id'] ?? '',
+      recipientId: json['recipient_id'],
+      senderName: json['sender_name'] ?? 'Unknown',
+      senderRole: json['sender_role'] ?? 'user',
+      content: json['content'] ?? '',
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+}

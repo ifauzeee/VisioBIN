@@ -1,17 +1,44 @@
-# mobile_app
+# VisioBin Mobile App 📱
 
-A new Flutter project.
+A modern Flutter application for monitoring waste bins, waste classification, and real-time team collaboration.
 
-## Getting Started
+## 🚀 Features
 
-This project is a starting point for a Flutter application.
+- **Real-time Monitoring**: Track bin levels, ammonia gas, and status.
+- **AI Classification**: View history of waste classification (Organic vs Inorganic).
+- **Maintenance Logs**: Log and track bin repairs/maintenance.
+- **Inter-role Chat**: Real-time communication between Admin, Manager, Technician, and Operator.
+- **Push Notifications**: Integrated with Firebase for critical alerts.
 
-A few resources to get you started if this is your first Flutter project:
+## ⚙️ Setup & Configuration
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 1. Environment Configuration
+This project uses `.env` for configuration.
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Update the `API_BASE_URL` and `WS_BASE_URL` in `.env` with your backend server address.
+   - **Android Emulator**: Use `http://10.0.2.2:8080/api/v1`
+   - **Physical Device**: Use your computer's local IP (e.g., `http://192.168.1.3:8080/api/v1`)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 2. Dependencies
+Install all required Flutter packages:
+```bash
+flutter pub get
+```
+
+### 3. Running the App
+```bash
+flutter run
+```
+
+## 🛠 Tech Stack
+- **Framework**: Flutter (Dart)
+- **State Management**: Provider
+- **Networking**: Http & WebSocket (web_socket_channel)
+- **UI Components**: Lucide Icons, Google Fonts, Framer-like animations
+- **Real-time**: WebSocket & Firebase Cloud Messaging
+
+---
+© 2026 VisioBIN Team

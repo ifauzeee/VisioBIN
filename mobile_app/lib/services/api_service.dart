@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Centralized API service for VisioBin mobile app.
 /// Mirrors the web dashboard's `api.js` service layer.
 class ApiService {
-  // Base URL — sesuaikan dengan backend
-  // Untuk emulator Android: gunakan 'http://10.0.2.2:8080/api/v1'
-  // Untuk device fisik: Gunakan IP lokal komputer kamu
-  static const String _defaultBaseUrl = 'http://192.168.1.7:8080/api/v1';
+  static String get _defaultBaseUrl => dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8080/api/v1';
 
   final String baseUrl;
   String? _token;
@@ -265,6 +264,34 @@ class ApiService {
   /// Create a new maintenance log
   Future<ApiResponse> createMaintenanceLog(Map<String, dynamic> data) async {
     return _post('/maintenance', body: data);
+  }
+
+  // ── Chat ──────────────────────────────────────────────
+
+  /// List chat history (General or Private with otherId)
+  Future<ApiResponse> getChatHistory({String? otherId, int? limit}) async {
+    final params = <String, String>{};
+    if (otherId != null && otherId.isNotEmpty) params['other_id'] = otherId;
+    if (limit != null) params['limit'] = limit.toString();
+
+    final query = params.isNotEmpty
+        ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}'
+        : '';
+    return _get('/chat/history$query');
+  }
+
+  /// Send chat message
+  Future<ApiResponse> sendChatMessage(String content, {String? recipientId}) async {
+    final body = {
+      'content': content,
+      if (recipientId != null && recipientId.isNotEmpty) 'recipient_id': recipientId,
+    };
+    return _post('/chat', body: body);
+  }
+
+  /// List users for chat member selection
+  Future<ApiResponse> listUsers() async {
+    return _get('/auth/users');
   }
 
   // ── Internal HTTP Helpers ─────────────────────────────
