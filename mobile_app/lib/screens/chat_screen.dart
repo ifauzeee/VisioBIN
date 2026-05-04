@@ -19,6 +19,11 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatProvider = context.read<ChatProvider>();
+      final dashboardProvider = context.read<DashboardProvider>();
+      
+      // Sangat Penting: Beritahu sistem chat siapa user saat ini agar filter real-time jalan
+      chatProvider.setCurrentUserId(dashboardProvider.currentUser?.id);
+      
       chatProvider.fetchMembers();
       
       // Connect WS in background for notifications if needed, 
@@ -185,8 +190,28 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatProvider>().fetchHistory();
+      final provider = context.read<ChatProvider>();
+      provider.fetchHistory();
+      
+      // Pasang listener: Jika ada pesan baru (dari WS), scroll ke bawah otomatis
+      provider.addListener(_onProviderUpdate);
     });
+  }
+
+  void _onProviderUpdate() {
+    if (mounted) {
+      // Berikan sedikit delay agar UI selesai merender pesan baru sebelum scroll
+      Future.delayed(const Duration(milliseconds: 300), _scrollToBottom);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Penting: Lepas listener saat keluar halaman agar tidak memory leak
+    context.read<ChatProvider>().removeListener(_onProviderUpdate);
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _scrollToBottom() {
@@ -371,12 +396,5 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 }
