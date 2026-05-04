@@ -5,8 +5,7 @@ import {
   SquareTerminal, BarChart, Settings2, Trash2,
   Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText,
-  Sun, Moon, MapPin, Database, Code, HelpCircle,
-  Activity
+  Sun, Moon, MapPin, Database, Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -54,8 +53,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         section: "Pengaturan",
         items: [
           { key: "team", label: "Anggota Tim", icon: Users, href: "/team" },
-          { key: "apidocs", label: "Dokumentasi API", icon: Code, href: "/apidocs" },
-          { key: "help", label: "Pusat Bantuan", icon: HelpCircle, href: "/help" },
           { key: "config", label: "Konfigurasi", icon: Settings2, href: "/config" },
         ],
       },
