@@ -62,10 +62,11 @@ class ApiService {
         statusCode: res.statusCode,
       );
     } catch (e) {
-      debugPrint('[API] Login error: $e');
+      debugPrint('[API] Login Exception: $e');
+      debugPrint('[API] Target URL: $baseUrl/auth/login');
       return ApiResponse(
         success: false,
-        message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
+        message: 'Gagal menghubungkan ke server ($e). Periksa apakah IP $_defaultBaseUrl sudah benar dan laptop Anda mengizinkan koneksi di port 8080.',
       );
     }
   }
