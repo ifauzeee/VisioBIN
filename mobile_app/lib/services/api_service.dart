@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Centralized API service for VisioBin mobile app.
 /// Mirrors the web dashboard's `api.js` service layer.
@@ -11,17 +12,56 @@ class ApiService {
 
   final String baseUrl;
   String? _token;
+  Map<String, dynamic>? _user;
 
   ApiService({String? baseUrl}) : baseUrl = baseUrl ?? _defaultBaseUrl;
 
-  /// Set auth token setelah login
-  void setToken(String token) => _token = token;
+  /// Set auth token dan user data, simpan ke local storage
+  Future<void> setToken(String token, [Map<String, dynamic>? userData]) async {
+    _token = token;
+    _user = userData;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    if (userData != null) {
+      await prefs.setString('user_data', jsonEncode(userData));
+    }
+  }
 
-  /// Clear auth token saat logout
-  void clearToken() => _token = null;
+  /// Clear auth token saat logout dari memory dan local storage
+  Future<void> clearToken() async {
+    _token = null;
+    _user = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
+  }
+
+  /// Load session dari local storage (Auto-login)
+  Future<bool> loadStoredSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userJson = prefs.getString('user_data');
+
+      if (token != null && token.isNotEmpty) {
+        _token = token;
+        if (userJson != null) {
+          _user = jsonDecode(userJson);
+        }
+        return true;
+      }
+    } catch (e) {
+      debugPrint('[API] Load Session Error: $e');
+    }
+    return false;
+  }
 
   /// Apakah sudah punya token?
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
+
+  /// User data saat ini
+  Map<String, dynamic>? get currentUser => _user;
 
   /// Headers standar dengan auth
   Map<String, String> get _headers => {
@@ -44,7 +84,7 @@ class ApiService {
 
       if (res.statusCode == 200 && data['success'] == true) {
         final token = data['data']['token'] as String;
-        setToken(token);
+        await setToken(token, data['data']['user']);
         return ApiResponse(success: true, data: data['data']);
       }
 
@@ -83,7 +123,7 @@ class ApiService {
 
       if (res.statusCode == 200 && data['success'] == true) {
         final token = data['data']['token'] as String;
-        setToken(token);
+        await setToken(token, data['data']['user']);
         return ApiResponse(success: true, data: data['data']);
       }
 
@@ -124,7 +164,7 @@ class ApiService {
 
       if (res.statusCode == 201 && data['success'] == true) {
         final token = data['data']['token'] as String;
-        setToken(token);
+        await setToken(token, data['data']['user']);
         return ApiResponse(success: true, data: data['data']);
       }
 
@@ -304,7 +344,7 @@ class ApiService {
         headers: _headers,
       );
 
-      return _parseResponse(res);
+      return await _parseResponse(res);
     } catch (e) {
       debugPrint('[API] GET $endpoint error: $e');
       return ApiResponse(
@@ -322,7 +362,7 @@ class ApiService {
         body: body != null ? jsonEncode(body) : null,
       );
 
-      return _parseResponse(res);
+      return await _parseResponse(res);
     } catch (e) {
       debugPrint('[API] POST $endpoint error: $e');
       return ApiResponse(
@@ -340,7 +380,7 @@ class ApiService {
         body: body != null ? jsonEncode(body) : null,
       );
 
-      return _parseResponse(res);
+      return await _parseResponse(res);
     } catch (e) {
       debugPrint('[API] PUT $endpoint error: $e');
       return ApiResponse(
@@ -350,7 +390,7 @@ class ApiService {
     }
   }
 
-  ApiResponse _parseResponse(http.Response res) {
+  Future<ApiResponse> _parseResponse(http.Response res) async {
     try {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
 
@@ -364,7 +404,7 @@ class ApiService {
 
       // Handle 401 Unauthorized
       if (res.statusCode == 401) {
-        clearToken();
+        await clearToken();
         return ApiResponse(
           success: false,
           message: 'Sesi habis, silakan login ulang',

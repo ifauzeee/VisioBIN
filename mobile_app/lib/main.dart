@@ -49,6 +49,7 @@ class _VisioBinAppState extends State<VisioBinApp> {
   late final MaintenanceProvider _maintenanceProvider;
   late final ChatProvider _chatProvider;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _isCheckingAuth = true;
 
   @override
   void initState() {
@@ -57,7 +58,20 @@ class _VisioBinAppState extends State<VisioBinApp> {
     _dashboardProvider = DashboardProvider(_apiService);
     _maintenanceProvider = MaintenanceProvider(_apiService);
     _chatProvider = ChatProvider(_apiService);
+    _checkAuth();
     _setupPushNotifications();
+  }
+
+  Future<void> _checkAuth() async {
+    await _apiService.loadStoredSession();
+    if (_apiService.isAuthenticated) {
+      _dashboardProvider.initializeFromStorage();
+    }
+    if (mounted) {
+      setState(() {
+        _isCheckingAuth = false;
+      });
+    }
   }
 
   Future<void> _setupPushNotifications() async {
@@ -262,14 +276,16 @@ class _VisioBinAppState extends State<VisioBinApp> {
           scaffoldBackgroundColor: const Color(0xFF111827),
         ),
         themeMode: ThemeMode.system,
-        home: Consumer<DashboardProvider>(
-          builder: (context, provider, _) {
-            if (provider.isAuthenticated) {
-              return const MainScreen();
-            }
-            return const LoginScreen();
-          },
-        ),
+        home: _isCheckingAuth
+            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+            : Consumer<DashboardProvider>(
+                builder: (context, provider, _) {
+                  if (provider.isAuthenticated) {
+                    return const MainScreen();
+                  }
+                  return const LoginScreen();
+                },
+              ),
       ),
     );
   }

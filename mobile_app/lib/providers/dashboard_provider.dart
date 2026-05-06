@@ -106,8 +106,8 @@ class DashboardProvider extends ChangeNotifier {
     return res.success;
   }
 
-  void logout() {
-    _api.clearToken();
+  Future<void> logout() async {
+    await _api.clearToken();
     _isAuthenticated = false;
     _currentUser = null;
     _summary = DashboardSummary();
@@ -116,6 +116,19 @@ class DashboardProvider extends ChangeNotifier {
     _alerts = [];
     _lastUpdated = null;
     notifyListeners();
+  }
+
+  /// Inisialisasi state provider dari data yang ada di ApiService (hasil auto-login)
+  void initializeFromStorage() {
+    if (_api.isAuthenticated) {
+      _isAuthenticated = true;
+      final userData = _api.currentUser;
+      if (userData != null) {
+        _currentUser = AppUser.fromJson(userData);
+      }
+      fetchAllData();
+      notifyListeners();
+    }
   }
 
   Future<ApiResponse> updateProfile({
