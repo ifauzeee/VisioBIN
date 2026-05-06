@@ -39,12 +39,14 @@ type BinSimulator struct {
 	GasAmonia         float64
 	CycleCount        int
 	IsPeakHour        bool
+	ApiKey            string
 }
 
-func NewBinSimulator(binID, binName string) *BinSimulator {
+func NewBinSimulator(binID, binName, apiKey string) *BinSimulator {
 	return &BinSimulator{
 		BinID:             binID,
 		BinName:           binName,
+		ApiKey:            apiKey,
 		DistanceOrganic:   48.0,
 		DistanceInorganic: 49.0,
 		WeightOrganic:     0.1,
@@ -229,8 +231,9 @@ func main() {
 		bin := b.(map[string]interface{})
 		id := bin["id"].(string)
 		name := bin["name"].(string)
+		apiKey, _ := bin["api_key"].(string)
 		fmt.Printf("   - %s (%s...)\n", name, id[:8])
-		simulators = append(simulators, NewBinSimulator(id, name))
+		simulators = append(simulators, NewBinSimulator(id, name, apiKey))
 	}
 
 	fmt.Println("\n▶️  Starting simulation (Ctrl+C to stop)")
@@ -261,7 +264,10 @@ func main() {
 			payloadJSON, _ := json.Marshal(payload)
 			telemetryReq, _ := http.NewRequest("POST", baseURL+"/telemetry", bytes.NewBuffer(payloadJSON))
 			telemetryReq.Header.Add("Content-Type", "application/json")
-			telemetryReq.Header.Add("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+			telemetryReq.Header.Add("X-API-Key", sim.ApiKey)
+			if telemetryReq.Header.Get("X-API-Key") == "" {
+				telemetryReq.Header.Set("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+			}
 			if telemetryReq.Header.Get("X-API-Key") == "" {
 				telemetryReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
 			}
@@ -303,7 +309,10 @@ func main() {
 				clsJSON, _ := json.Marshal(clsPayload)
 				clsReq, _ := http.NewRequest("POST", baseURL+"/classifications", bytes.NewBuffer(clsJSON))
 				clsReq.Header.Add("Content-Type", "application/json")
-				clsReq.Header.Add("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+				clsReq.Header.Add("X-API-Key", sim.ApiKey)
+				if clsReq.Header.Get("X-API-Key") == "" {
+					clsReq.Header.Set("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+				}
 				if clsReq.Header.Get("X-API-Key") == "" {
 					clsReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
 				}

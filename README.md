@@ -34,6 +34,19 @@ go mod download
 go run cmd/server/main.go
 ```
 
+## Uji Coba Sistem (End-to-End)
+
+Untuk menguji alur pengiriman data dari perangkat IoT hingga muncul notifikasi di aplikasi mobile:
+
+1.  **Jalankan Backend:** Pastikan server backend berjalan di port 8080.
+2.  **Jalankan Mobile App:** Jalankan aplikasi Flutter di emulator atau HP fisik yang terhubung ke Firebase.
+3.  **Jalankan Simulator IoT:**
+    ```bash
+    cd iot-simulator
+    go run main.go -user <username> -pass <password> -scenario full-bin
+    ```
+4.  **Hasil:** Backend akan menerima data "sampah penuh", membuat Alert di database, dan mengirimkan Push Notification ke topik `visiobin_alerts` yang kemudian ditampilkan di aplikasi mobile.
+
 ## Tim
 
 - Muhammad Ibnu Fauzi (2307422004)
