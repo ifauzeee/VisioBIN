@@ -15,8 +15,11 @@ import {
   dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
+import { useTranslations } from 'next-intl';
+
 
 export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive }) {
+  const t = useTranslations('dashboard');
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
@@ -66,17 +69,27 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     
     if (total > 500) {
       return {
-        text: `Minggu ini, volume pemrosesan di sektor utama meningkat ${trend}%. Stasiun Bin 04 menunjukkan aktivitas tertinggi. Disarankan untuk menambah jadwal pengangkutan di hari Jumat malam.`,
+        text: t.rich('insight_warning', {
+          trend: trend,
+          station: 'Bin 04',
+          day: t('friday'),
+          b: (chunks) => <b>{chunks}</b>
+        }),
         type: 'warning',
         icon: <TrendingUp size={16} />
       };
     }
     return {
-      text: `Sistem beroperasi optimal. Efisiensi pemilahan mencapai 97.8% hari ini. Emisi CO2 berhasil dikurangi sebanyak ${co2}kg secara kumulatif.`,
+      text: t.rich('insight_success', {
+        accuracy: '97.8%',
+        co2: co2,
+        b: (chunks) => <b>{chunks}</b>
+      }),
       type: 'success',
       icon: <Sparkles size={16} />
     };
   };
+
   const insight = generateInsight();
 
   return (
@@ -116,9 +129,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>VisioBin AI Insight</span>
+            <span style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-muted)" }}>{t('ai_insight_title')}</span>
             <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--border-hover)" }} />
-            <span style={{ fontSize: 11, color: "var(--brand-organic)", fontWeight: 600 }}>Baru saja</span>
+            <span style={{ fontSize: 11, color: "var(--brand-organic)", fontWeight: 600 }}>{t('just_now')}</span>
           </div>
           <div style={{ fontSize: 14, color: "var(--text-main)", lineHeight: 1.5 }}>
             {insight.text}
@@ -133,7 +146,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           color: "var(--text-main)",
           cursor: "pointer"
         }}>
-          Detail Analisis
+          {t('analysis_detail')}
         </button>
       </motion.div>
 
@@ -151,7 +164,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ padding: '20px 24px' }}
         >
           <div className="card-title">
-            <LeafIcon size={16} color="var(--brand-organic)" /> Total Diproses Hari Ini
+            <LeafIcon size={16} color="var(--brand-organic)" /> {t('total_processed_today')}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
@@ -159,11 +172,11 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             </span>
             {summary.total_processed > 0 && (
               <span style={{ color: 'var(--brand-organic)', fontSize: 13, display: 'flex', alignItems: 'center' }}>
-                <ArrowUpRight size={14} /> aktif
+                <ArrowUpRight size={14} /> {t('active')}
               </span>
             )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>item terklasifikasi</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('items_classified')}</div>
         </motion.div>
 
         <motion.div
@@ -172,7 +185,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ padding: '20px 24px' }}
         >
           <div className="card-title">
-            <Trash2 size={16} color="#22d3ee" /> Level Tempat Sampah
+            <Trash2 size={16} color="#22d3ee" /> {t('bin_level')}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{binLevel}</span>
@@ -196,12 +209,12 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="glass-card"
           style={{ padding: '20px 24px' }}
         >
-          <div className="card-title"><Orbit size={16} /> CO2 Dikurangi</div>
+          <div className="card-title"><Orbit size={16} /> {t('co2_reduced')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{summary.co2}</span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>kg</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>estimasi bulan ini</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('monthly_estimate')}</div>
         </motion.div>
 
         <motion.div
@@ -209,12 +222,12 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="glass-card"
           style={{ padding: '20px 24px' }}
         >
-          <div className="card-title"><Cpu size={16} /> Latensi Edge</div>
+          <div className="card-title"><Cpu size={16} /> {t('edge_latency')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedLatency}</span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>ms</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>waktu respons model</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('response_time')}</div>
         </motion.div>
 
         <motion.div
@@ -222,12 +235,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="glass-card"
           style={{ padding: '20px 24px' }}
         >
-          <div className="card-title"><Award size={16} color="#f59e0b" /> Akurasi Model AI</div>
+          <div className="card-title"><Award size={16} color="#f59e0b" /> {t('ai_accuracy')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedAccuracy}</span>
             <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{logs.length > 0 ? `dari ${logs.length} klasifikasi` : 'rata-rata 7 hari'}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+            {logs.length > 0 
+              ? t('classifications_from', { count: logs.length }) 
+              : t('avg_7_days')}
+          </div>
         </motion.div>
 
         <motion.div
@@ -243,7 +260,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         >
           <div className="card-title">
             <Clock size={16} color="var(--brand-organic)" /> 
-            Estimasi Penuh
+            {t('est_full')}
             {wsActive && (
               <div className="pulse-dot-green" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-organic)', marginLeft: 'auto' }} title="Live Connection Active" />
             )}
@@ -253,7 +270,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
               <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-1px' }}>
                 {forecast?.hours_until_full_organic ? Math.round(forecast.hours_until_full_organic) : '—'}
               </span>
-              <span style={{ color: 'var(--brand-organic)', fontSize: 13, fontWeight: 600 }}>jam</span>
+              <span style={{ color: 'var(--brand-organic)', fontSize: 13, fontWeight: 600 }}>{t('hours')}</span>
             </div>
             
             {/* Sparkline for trend */}
@@ -275,8 +292,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.4 }}>
             {forecast?.estimated_full_organic 
-              ? `Prediksi penuh pada pukul ${new Date(forecast.estimated_full_organic).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
-              : 'Menunggu data telemetri tambahan...'}
+              ? t('pred_full', { time: new Date(forecast.estimated_full_organic).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) })
+              : t('waiting_data')}
           </div>
         </motion.div>
       </motion.div>
@@ -290,7 +307,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ padding: 0, display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="card-title" style={{ margin: 0 }}><Focus size={16} /> Mesin Visi AI</div>
+            <div className="card-title" style={{ margin: 0 }}><Focus size={16} /> {t('vision_engine')}</div>
             <div style={{ width: 8, height: 8, background: vision.state === 'locked' ? 'var(--brand-organic)' : 'var(--text-muted)', borderRadius: '50%' }} />
           </div>
           <div className="scanner-container" style={{ height: 320 }}>
@@ -312,7 +329,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   }}
                 >
                   <div className="mono" style={{ position: 'absolute', top: -25, left: -1, background: 'var(--brand-organic)', color: 'var(--bg-card)', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
-                    {(vision.label || 'TERDETEKSI').toUpperCase()} {(vision.prob).toFixed(1)}%
+                    {(vision.label || 'DETECTED').toUpperCase()} {(vision.prob).toFixed(1)}%
                   </div>
                 </motion.div>
               )}
@@ -327,7 +344,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="card"
           style={{ display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title"><Activity size={16} /> Reservoir Tempat Sampah</div>
+          <div className="card-title"><Activity size={16} /> {t('bin_reservoir')}</div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
             <svg width="200" height="220" viewBox="0 0 100 120">
               <path d="M10,20 L90,20 L80,110 L20,110 Z" fill="rgba(255,255,255,0.03)" stroke="var(--border-hover)" strokeWidth="2" strokeLinejoin="round" />
@@ -358,10 +375,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             </svg>
           </div>
           <div style={{ marginTop: 24, padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-            <div style={{ fontSize: 12, color: 'var(--brand-organic)' }}>Kapasitas Bin Utama</div>
+            <div style={{ fontSize: 12, color: 'var(--brand-organic)' }}>{t('bin_capacity')}</div>
             <div style={{ fontSize: 24, fontWeight: 600 }}>{binLevel}%</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              {binLevel > 80 ? '⚠️ Segera kosongkan!' : binLevel > 60 ? '🟡 Mulai penuh' : '✅ Normal'}
+              {binLevel > 80 ? t('empty_soon') : binLevel > 60 ? t('filling_up') : t('normal')}
             </div>
           </div>
         </motion.div>
@@ -376,7 +393,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ minHeight: 400, display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
-            <div className="card-title" style={{ margin: 0 }}>📈 Riwayat Volume Per Jam</div>
+            <div className="card-title" style={{ margin: 0 }}>📈 {t('volume_history')}</div>
             <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8 }}>
               {['6h', '12h', '24h', 'all'].map(r => (
                 <button
@@ -439,7 +456,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="card" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title">🥧 Distribusi Jenis Sampah</div>
+          <div className="card-title">🥧 {t('waste_distribution')}</div>
           <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height={220}>
               <RPieChart style={{ background: 'transparent' }}>
@@ -458,7 +475,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 return (
                   <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, background: 'rgba(255,255,255,0.03)', padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                     <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color }} />
-                    <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{d.name}</span>
+                    <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{d.name === 'Organik' ? t('organic') : d.name === 'Anorganik' ? t('inorganic') : d.name}</span>
                     <span style={{ color: 'var(--text-muted)', fontWeight: 600, marginLeft: 4 }}>{percent}%</span>
                   </div>
                 );
@@ -476,7 +493,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="card" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title">📊 Klasifikasi Harian - 7 Hari Terakhir</div>
+          <div className="card-title">📊 {t('daily_classification')}</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
@@ -485,8 +502,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name="Organik" isAnimationActive={true} />
-                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name="Anorganik" isAnimationActive={true} />
+                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
+                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -499,7 +516,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           className="card" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title"><Activity size={16} /> Log Aktivitas Terbaru</div>
+          <div className="card-title"><Activity size={16} /> {t('recent_activity')}</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <AnimatePresence initial={false}>
               {displayLogs.map((log, i) => (
@@ -515,7 +532,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                     <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>tempat-sampah</div>
+                    <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>{t('bin_reservoir').toLowerCase()}</div>
                     <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
                   </div>
                 </motion.div>

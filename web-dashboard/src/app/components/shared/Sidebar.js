@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import {
   SquareTerminal, BarChart, Settings2, Trash2,
@@ -12,8 +10,11 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDashboardContext } from "../../context/DashboardContext";
+import { useTranslations } from 'next-intl';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleTheme, user, logout }) {
+  const t = useTranslations('common');
+  const td = useTranslations('dashboard');
   const pathname = usePathname();
   const { summary } = useDashboardContext();
   const role = user?.role || "guest";
@@ -25,43 +26,43 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
 
   const navItems = [
     {
-      section: "Pemantauan",
+      section: td('overview'),
       items: [
-        { key: "ringkasan", label: "Ringkasan", icon: SquareTerminal, href: "/ringkasan" },
-        { key: "pemantauan", label: "Pemantauan Langsung", icon: Activity, href: "/pemantauan" },
-        { key: "map", label: "Peta Lokasi", icon: MapPin, href: "/map" },
-        !isGuest && { key: "chat", label: "Diskusi Tim", icon: MessageSquare, href: "/chat" },
-        (isAdmin || isManager) && { key: "analitik", label: "Analitik", icon: BarChart, href: "/analitik" },
+        { key: "ringkasan", label: td('overview'), icon: SquareTerminal, href: "/ringkasan" },
+        { key: "pemantauan", label: t('monitoring'), icon: Activity, href: "/pemantauan" },
+        { key: "map", label: t('map'), icon: MapPin, href: "/map" },
+        !isGuest && { key: "chat", label: t('chat'), icon: MessageSquare, href: "/chat" },
+        (isAdmin || isManager) && { key: "analitik", label: t('analytics'), icon: BarChart, href: "/analitik" },
 
       ].filter(Boolean),
     },
     {
-      section: "Laporan",
+      section: t('reports'),
       items: [
-        (isAdmin || isManager) && { key: "laporan", label: "Laporan", icon: FileText, href: "/laporan" },
-        (isAdmin || isTechnician) && { key: "perangkat", label: "Perangkat IoT", icon: Cpu, href: "/perangkat" },
+        (isAdmin || isManager) && { key: "laporan", label: t('reports'), icon: FileText, href: "/laporan" },
+        (isAdmin || isTechnician) && { key: "perangkat", label: t('devices'), icon: Cpu, href: "/perangkat" },
       ].filter(Boolean),
     },
     {
-      section: "Manajemen",
+      section: t('management'),
       items: [
         (isAdmin || isTechnician) && {
           key: "stasiun",
-          label: "Stasiun Bin",
+          label: t('stasiun'),
           icon: Box,
           href: "/stasiun",
           badge: summary.total_bins > 0 ? String(summary.total_bins) : undefined,
         },
-        (isAdmin || isOperator || isTechnician || isGuest) && { key: "maint", label: "Log Perawatan", icon: History, href: "/maint" },
-        isAdmin && { key: "data", label: "Eksplorasi Data", icon: Database, href: "/data" },
+        (isAdmin || isOperator || isTechnician || isGuest) && { key: "maint", label: t('maintenance'), icon: History, href: "/maint" },
+        isAdmin && { key: "data", label: t('data_exploration'), icon: Database, href: "/data" },
       ].filter(Boolean),
     },
     ...(!isGuest ? [
       {
-        section: "Pengaturan",
+        section: t('settings'),
         items: [
-          isAdmin && { key: "team", label: "Anggota Tim", icon: Users, href: "/team" },
-          (isAdmin || isTechnician) && { key: "config", label: "Konfigurasi", icon: Settings2, href: "/config" },
+          isAdmin && { key: "team", label: t('users'), icon: Users, href: "/team" },
+          (isAdmin || isTechnician) && { key: "config", label: t('config'), icon: Settings2, href: "/config" },
         ].filter(Boolean),
       },
     ] : []),
@@ -145,7 +146,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         />
         <input
           type="text"
-          placeholder="Cari..."
+          placeholder={t('search')}
           style={{
             width: "100%",
             padding: "8px 12px 8px 32px",
@@ -233,17 +234,17 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           }}
         >
           <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.5px" }}>
-            SYSTEM STATUS
+            {t('system_status')}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-            <span style={{ color: "var(--text-muted)" }}>AI Vision</span>
+            <span style={{ color: "var(--text-muted)" }}>{t('ai_vision')}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--brand-organic)", fontWeight: 500 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-organic)" }} />
-              Online
+              {t('online')}
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-            <span style={{ color: "var(--text-muted)" }}>Storage</span>
+            <span style={{ color: "var(--text-muted)" }}>{t('storage')}</span>
             <span style={{ color: "var(--text-main)", fontWeight: 500 }}>45%</span>
           </div>
         </div>
@@ -293,7 +294,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                     borderRadius: "50%",
                   }}
                 ></div>
-                {isGuest ? "Guest Access" : "Online"}
+                {isGuest ? t('guest_access') : t('online')}
               </div>
             </div>
           </div>
@@ -311,10 +312,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         >
           <LogOut size={16} />
           <span style={{ fontSize: 13, fontWeight: 500 }}>
-            Keluar Sistem
+            {t('logout')}
           </span>
         </div>
       </div>
     </aside>
   );
 }
+

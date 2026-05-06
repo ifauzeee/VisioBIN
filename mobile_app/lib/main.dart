@@ -8,8 +8,13 @@ import 'services/api_service.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/maintenance_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/locale_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+
+
 
 // Menangkap notifikasi saat aplikasi berjalan di background/terminated
 @pragma('vm:entry-point')
@@ -48,6 +53,8 @@ class _VisioBinAppState extends State<VisioBinApp> {
 
   late final MaintenanceProvider _maintenanceProvider;
   late final ChatProvider _chatProvider;
+  late final LocaleProvider _localeProvider;
+
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isCheckingAuth = true;
 
@@ -58,7 +65,9 @@ class _VisioBinAppState extends State<VisioBinApp> {
     _dashboardProvider = DashboardProvider(_apiService);
     _maintenanceProvider = MaintenanceProvider(_apiService);
     _chatProvider = ChatProvider(_apiService);
+    _localeProvider = LocaleProvider();
     _checkAuth();
+
     _setupPushNotifications();
   }
 
@@ -246,12 +255,27 @@ class _VisioBinAppState extends State<VisioBinApp> {
         ChangeNotifierProvider.value(value: _dashboardProvider),
         ChangeNotifierProvider.value(value: _maintenanceProvider),
         ChangeNotifierProvider.value(value: _chatProvider),
+        ChangeNotifierProvider.value(value: _localeProvider),
       ],
-      child: MaterialApp(
-        navigatorKey: _navigatorKey,
-        title: 'VisioBin',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
+      child: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, _) {
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            title: 'VisioBin',
+            debugShowCheckedModeBanner: false,
+            locale: localeProvider.locale,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('id'),
+            ],
+            theme: ThemeData(
+
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF10b981), // Emerald green
             brightness: Brightness.light,
@@ -286,8 +310,12 @@ class _VisioBinAppState extends State<VisioBinApp> {
                   return const LoginScreen();
                 },
               ),
+          );
+
+        },
       ),
     );
   }
 }
+
 

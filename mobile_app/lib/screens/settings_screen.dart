@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/locale_provider.dart';
 import 'edit_profile_screen.dart';
+import '../l10n/app_localizations.dart';
+
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -10,10 +13,12 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final localeProvider = context.watch<LocaleProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settings),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -33,7 +38,50 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _buildSettingsTile(
-            title: 'Notifications',
+            title: l10n.language,
+            icon: LucideIcons.globe,
+            isDark: isDark,
+
+            trailing: const SizedBox.shrink(),
+            subContent: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'en',
+                    label: Text('English', style: TextStyle(fontSize: 12)),
+                    icon: Text('🇺🇸'),
+                  ),
+                  ButtonSegment(
+                    value: 'id',
+                    label: Text('Indonesia', style: TextStyle(fontSize: 12)),
+                    icon: Text('🇮🇩'),
+                  ),
+                ],
+                selected: {localeProvider.locale.languageCode},
+                onSelectionChanged: (Set<String> newSelection) {
+                  localeProvider.setLocale(Locale(newSelection.first));
+                },
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                    (states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
+                      }
+                      return Colors.transparent;
+                    },
+                  ),
+                  side: WidgetStateProperty.all(
+                    BorderSide(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.1))
+                  ),
+
+                ),
+              ),
+            ),
+          ),
+
+          _buildSettingsTile(
+            title: l10n.notifications,
             icon: LucideIcons.bell,
             isDark: isDark,
             trailing: Switch(
@@ -77,9 +125,9 @@ class SettingsScreen extends StatelessWidget {
                 context.read<DashboardProvider>().logout();
               },
               icon: const Icon(LucideIcons.logOut, color: Colors.red),
-              label: const Text(
-                'Log Out',
-                style: TextStyle(color: Colors.red, fontSize: 16),
+              label: Text(
+                l10n.logout,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
               ),
             ),
           ),
@@ -168,6 +216,7 @@ class SettingsScreen extends StatelessWidget {
     required IconData icon,
     required bool isDark,
     required Widget trailing,
+    Widget? subContent,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -183,26 +232,34 @@ class SettingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[800] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 20, color: isDark ? Colors.white70 : Colors.black87),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[800] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 20, color: isDark ? Colors.white70 : Colors.black87),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+              trailing,
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ),
-          trailing,
+          if (subContent != null) subContent,
         ],
       ),
     );
   }
 }
+
+

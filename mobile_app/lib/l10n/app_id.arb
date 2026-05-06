@@ -1,0 +1,15 @@
+{
+  "@@locale": "id",
+  "dashboard": "Dasbor",
+  "map": "Peta",
+  "settings": "Pengaturan",
+  "notifications": "Notifikasi",
+  "profile": "Profil",
+  "logout": "Keluar",
+  "language": "Bahasa",
+  "home": "Beranda",
+  "history": "Riwayat",
+  "repair": "Perbaikan",
+  "chat": "Obrolan"
+}
+

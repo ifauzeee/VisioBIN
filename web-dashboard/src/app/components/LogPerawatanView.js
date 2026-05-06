@@ -10,18 +10,11 @@ import { listMaintenanceLogs, createMaintenanceLog, deleteMaintenanceLog, listBi
 import { SkeletonCard } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { useToast } from "./shared/Toast";
-
-const ACTION_TYPES = [
-  { value: "cleaning", label: "Pembersihan", icon: "🧹" },
-  { value: "repair", label: "Perbaikan Fisik", icon: "🔧" },
-  { value: "sensor_calibration", label: "Kalibrasi Sensor", icon: "📡" },
-  { value: "battery_replacement", label: "Ganti Baterai", icon: "🔋" },
-  { value: "bin_emptied", label: "Pengambilan Sampah", icon: "🗑️" },
-  { value: "inspection", label: "Inspeksi Rutin", icon: "🔍" },
-  { value: "other", label: "Lainnya", icon: "📝" },
-];
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function LogPerawatanView() {
+  const t = useTranslations('maintenance');
+  const locale = useLocale();
   const { token } = useAuth();
   const toast = useToast();
   const [logs, setLogs] = useState([]);
@@ -33,6 +26,16 @@ export default function LogPerawatanView() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ bin_id: "", action_type: "", notes: "" });
+
+  const ACTION_TYPES = [
+    { value: "cleaning", label: t('types.cleaning'), icon: "🧹" },
+    { value: "repair", label: t('types.repair'), icon: "🔧" },
+    { value: "sensor_calibration", label: t('types.calibration'), icon: "📡" },
+    { value: "battery_replacement", label: t('types.battery'), icon: "🔋" },
+    { value: "bin_emptied", label: t('types.emptied'), icon: "🗑️" },
+    { value: "inspection", label: t('types.inspection'), icon: "🔍" },
+    { value: "other", label: t('types.other'), icon: "📝" },
+  ];
 
   const fetchLogs = useCallback(async () => {
     if (!token) return;
@@ -47,11 +50,11 @@ export default function LogPerawatanView() {
       }
     } catch (e) {
       console.error(e);
-      toast.error("Gagal memuat data", e.message);
+      toast.error(locale === 'id' ? "Gagal memuat data" : "Failed to load data", e.message);
     } finally {
       setLoading(false);
     }
-  }, [token, page, filterBinId, toast]);
+  }, [token, page, filterBinId, toast, locale]);
 
   const fetchBins = useCallback(async () => {
     if (!token) return;
@@ -69,20 +72,20 @@ export default function LogPerawatanView() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.bin_id || !form.action_type) {
-      toast.warning("Form Tidak Lengkap", "Pilih unit bin dan jenis perawatan.");
+      toast.warning(locale === 'id' ? "Form Tidak Lengkap" : "Form Incomplete", locale === 'id' ? "Pilih unit bin dan jenis perawatan." : "Select bin unit and action type.");
       return;
     }
     setSubmitting(true);
     try {
       const res = await createMaintenanceLog(token, form);
       if (res.success) {
-        toast.success("Berhasil!", "Log perawatan berhasil ditambahkan.");
+        toast.success(locale === 'id' ? "Berhasil!" : "Success!", locale === 'id' ? "Log perawatan berhasil ditambahkan." : "Maintenance log added successfully.");
         setForm({ bin_id: "", action_type: "", notes: "" });
         setShowForm(false);
         fetchLogs();
       }
     } catch (e) {
-      toast.error("Gagal menyimpan", e.message);
+      toast.error(locale === 'id' ? "Gagal menyimpan" : "Failed to save", e.message);
     } finally {
       setSubmitting(false);
     }
@@ -91,18 +94,18 @@ export default function LogPerawatanView() {
   const handleDelete = async (id) => {
     try {
       await deleteMaintenanceLog(token, id);
-      toast.success("Dihapus", "Log perawatan berhasil dihapus.");
+      toast.success(locale === 'id' ? "Dihapus" : "Deleted", locale === 'id' ? "Log perawatan berhasil dihapus." : "Maintenance log deleted.");
       fetchLogs();
     } catch (e) {
-      toast.error("Gagal menghapus", e.message);
+      toast.error(locale === 'id' ? "Gagal menghapus" : "Failed to delete", e.message);
     }
   };
 
   const getActionLabel = (type) => ACTION_TYPES.find(a => a.value === type) || { label: type, icon: "📝" };
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
-      " " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString(locale === 'id' ? "id-ID" : "en-US", { day: "numeric", month: "short", year: "numeric" }) +
+      " " + d.toLocaleTimeString(locale === 'id' ? "id-ID" : "en-US", { hour: "2-digit", minute: "2-digit" });
   };
 
   const totalPages = Math.ceil(total / 15);
@@ -131,18 +134,18 @@ export default function LogPerawatanView() {
           animate={{ opacity: 1, x: 0 }}
         >
           <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 8 }}>
-            <ClipboardList size={20} /> Log Perawatan
+            <ClipboardList size={20} /> {t('title')}
           </h2>
           <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
-            Riwayat perawatan dan inspeksi unit VisioBin
+            {t('subtitle')}
           </p>
         </motion.div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={fetchLogs} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <RefreshCw size={14} /> Muat Ulang
+            <RefreshCw size={14} /> {t('reload')}
           </button>
           <button onClick={() => setShowForm(!showForm)} className="btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Plus size={14} /> Tambah Log
+            <Plus size={14} /> {t('addLog')}
           </button>
         </div>
       </div>
@@ -158,50 +161,50 @@ export default function LogPerawatanView() {
             style={{ overflow: "hidden", marginBottom: 24 }}
           >
             <form onSubmit={handleCreate} className="card" style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24 }}>
-              <div className="card-title"><Wrench size={16} /> Form Perawatan Baru</div>
+              <div className="card-title"><Wrench size={16} /> {t('newForm')}</div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
-                  <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>Unit Bin *</label>
+                  <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>{t('binUnit')} *</label>
                   <select
                     value={form.bin_id}
                     onChange={(e) => setForm(p => ({ ...p, bin_id: e.target.value }))}
                     className="form-select"
                     required
                   >
-                    <option value="">Pilih bin...</option>
+                    <option value="">{locale === 'id' ? "Pilih bin..." : "Select bin..."}</option>
                     {bins.map(b => <option key={b.id} value={b.id}>{b.name} — {b.location}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>Jenis Perawatan *</label>
+                  <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>{t('actionType')} *</label>
                   <select
                     value={form.action_type}
                     onChange={(e) => setForm(p => ({ ...p, action_type: e.target.value }))}
                     className="form-select"
                     required
                   >
-                    <option value="">Pilih jenis...</option>
+                    <option value="">{locale === 'id' ? "Pilih jenis..." : "Select type..."}</option>
                     {ACTION_TYPES.map(a => <option key={a.value} value={a.value}>{a.icon} {a.label}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>Catatan</label>
+                <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>{t('notes')}</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Detail perawatan, observasi, atau catatan teknis..."
+                  placeholder={t('notesPlaceholder')}
                   className="form-textarea"
                   rows={3}
                 />
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Batal</button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">{t('cancel')}</button>
                 <button type="submit" disabled={submitting} className="btn-primary">
-                  {submitting ? "Menyimpan..." : "Simpan Log"}
+                  {submitting ? t('saving') : t('save')}
                 </button>
               </div>
             </form>
@@ -218,18 +221,18 @@ export default function LogPerawatanView() {
         style={{ padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}
       >
         <ChevronDown size={14} color="var(--text-muted)" />
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Filter:</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t('filter')}:</span>
         <select
           value={filterBinId}
           onChange={(e) => { setFilterBinId(e.target.value); setPage(1); }}
           className="form-select"
           style={{ maxWidth: 260, padding: "6px 10px", fontSize: 12 }}
         >
-          <option value="">Semua Unit</option>
+          <option value="">{t('allUnits')}</option>
           {bins.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: "auto" }}>
-          {total} total log
+          {total} {t('totalLogs')}
         </span>
       </motion.div>
 
@@ -238,8 +241,8 @@ export default function LogPerawatanView() {
         <div className="card">
           <EmptyState
             icon={ClipboardList}
-            title="Belum Ada Log Perawatan"
-            description='Klik "Tambah Log" untuk mencatat perawatan pertama.'
+            title={t('emptyTitle')}
+            description={t('emptyDesc')}
           />
         </div>
       ) : (
@@ -306,7 +309,7 @@ export default function LogPerawatanView() {
 
                   {log.performer_name && (
                     <div style={{ marginTop: 6, fontSize: 11, color: "var(--text-muted)" }}>
-                      Oleh: <span style={{ fontWeight: 500 }}>{log.performer_name}</span>
+                      {t('performedBy')}: <span style={{ fontWeight: 500 }}>{log.performer_name}</span>
                     </div>
                   )}
                 </div>
@@ -330,7 +333,7 @@ export default function LogPerawatanView() {
             className="btn-secondary"
             style={{ padding: "6px 12px", fontSize: 12 }}
           >
-            ← Sebelumnya
+            ← {t('prev')}
           </button>
           <span style={{ display: "flex", alignItems: "center", fontSize: 12, color: "var(--text-muted)", padding: "0 12px" }}>
             {page} / {totalPages}
@@ -341,10 +344,11 @@ export default function LogPerawatanView() {
             className="btn-secondary"
             style={{ padding: "6px 12px", fontSize: 12 }}
           >
-            Selanjutnya →
+            {t('next')} →
           </button>
         </motion.div>
       )}
     </motion.div>
   );
 }
+

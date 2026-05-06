@@ -8,8 +8,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listChatHistory, sendChatMessage, listUsers, WS_BASE } from "../services/api";
+import { useTranslations } from 'next-intl';
 
 export default function ChatView() {
+  const t = useTranslations('chat');
   const { user, token } = useAuth();
   const [messages, setMessages] = useState([]);
   const [members, setMembers] = useState([]);
@@ -104,7 +106,7 @@ export default function ChatView() {
     try {
       const res = await sendChatMessage(token, text, recipientId);
       if (!res.success) {
-        alert("Gagal mengirim pesan: " + res.message);
+        alert(t('errorSend') + ": " + res.message);
         setInputText(text);
       }
     } catch (err) {
@@ -157,10 +159,10 @@ export default function ChatView() {
             </div>
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)" }}>
-                {selectedRecipient ? selectedRecipient.full_name : "Diskusi Tim General"}
+                {selectedRecipient ? selectedRecipient.full_name : t('general')}
               </h2>
               <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                {selectedRecipient ? `Chat pribadi dengan ${selectedRecipient.role}` : `${members.length} anggota terhubung`}
+                {selectedRecipient ? `${t('privateChat')} ${selectedRecipient.role}` : `${members.length} ${t('membersConnected')}`}
               </div>
             </div>
           </div>
@@ -212,7 +214,7 @@ export default function ChatView() {
               >
                 {messages.length === 0 && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-muted)", fontSize: 13 }}>
-                    {selectedRecipient ? `Mulai percakapan pribadi dengan ${selectedRecipient.full_name}` : "Belum ada pesan dalam diskusi ini"}
+                    {selectedRecipient ? `${t('startPrivate')} ${selectedRecipient.full_name}` : t('noMessages')}
                   </div>
                 )}
                 
@@ -274,7 +276,7 @@ export default function ChatView() {
             <button type="button" style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><Paperclip size={18} /></button>
             <input 
               type="text"
-              placeholder={selectedRecipient ? `Pesan ke ${selectedRecipient.full_name}...` : "Ketik pesan..."}
+              placeholder={selectedRecipient ? `Pesan ke ${selectedRecipient.full_name}...` : t('typeMessage')}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               disabled={sending}
@@ -321,7 +323,7 @@ export default function ChatView() {
             style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
           >
             <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid var(--border-color)" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Anggota Tim</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>{t('members')}</div>
             </div>
             
             <div style={{ flex: 1, overflowY: "auto", padding: 8 }} className="hide-scrollbar">
@@ -344,11 +346,11 @@ export default function ChatView() {
                 }}>
                   <Hash size={18} />
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>General Channel</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>{t('general')}</div>
               </div>
 
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", padding: "12px 12px 8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Pesan Langsung
+                {t('dm')}
               </div>
 
               {members.filter(m => m.id !== user?.id).map(m => (
@@ -399,3 +401,4 @@ export default function ChatView() {
     </div>
   );
 }
+

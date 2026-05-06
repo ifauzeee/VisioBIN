@@ -8,6 +8,8 @@ import 'history_screen.dart';
 import 'maintenance_screen.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
+import '../l10n/app_localizations.dart';
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -33,6 +35,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context)!;
 
     final isGuest = context.read<DashboardProvider>().currentUser?.role == 'guest';
     final screens = _getScreens(isGuest);
@@ -62,11 +65,11 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(LucideIcons.layoutDashboard, 'Home', 0, isDark, primaryColor),
-                _buildNavItem(LucideIcons.history, 'History', 1, isDark, primaryColor),
-                _buildNavItem(LucideIcons.wrench, 'Repair', 2, isDark, primaryColor),
-                _buildNavItem(LucideIcons.messageSquare, 'Chat', 3, isDark, primaryColor),
-                if (!isGuest) _buildNavItem(LucideIcons.settings, 'Config', 4, isDark, primaryColor),
+                _buildNavItem(LucideIcons.layoutDashboard, l10n.home, 0, isDark, primaryColor),
+                _buildNavItem(LucideIcons.history, l10n.history, 1, isDark, primaryColor),
+                _buildNavItem(LucideIcons.wrench, l10n.repair, 2, isDark, primaryColor),
+                _buildNavItem(LucideIcons.messageSquare, l10n.chat, 3, isDark, primaryColor),
+                if (!isGuest) _buildNavItem(LucideIcons.settings, l10n.settings, 4, isDark, primaryColor),
               ],
             ),
           ),
@@ -74,6 +77,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+
 
   Widget _buildNavItem(IconData icon, String label, int index, bool isDark, Color primaryColor) {
     final isSelected = _currentIndex == index;

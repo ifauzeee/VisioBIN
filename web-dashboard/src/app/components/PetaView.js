@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Battery, Zap, Trash2 } from "lucide-react";
 import { getBinLevelColor } from "../utils/formatters";
+import { useTranslations } from 'next-intl';
 
 // We will load Leaflet dynamically inside the component
 export default function PetaView({ bins }) {
+  const t = useTranslations('map');
   const [activeBin, setActiveBin] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [LeafletComponents, setLeafletComponents] = useState(null);
@@ -79,7 +81,7 @@ export default function PetaView({ bins }) {
       <div className="card" style={{ height: "calc(100vh - 180px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <div className="shimmer" style={{ width: 40, height: 40, borderRadius: "50%", margin: "0 auto 16px" }} />
-          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Inisialisasi Peta...</div>
+          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>{t('initMap')}</div>
         </div>
       </div>
     );
@@ -109,8 +111,8 @@ export default function PetaView({ bins }) {
         style={{ width: 320, padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
       >
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)" }}>
-          <div className="card-title" style={{ margin: 0 }}>📍 Daftar Unit VisioBin</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{enrichedBins.length} perangkat terdeteksi</div>
+          <div className="card-title" style={{ margin: 0 }}>📍 {t('unitList')}</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{enrichedBins.length} {t('unitsDetected')}</div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
           {enrichedBins.map((bin) => {
@@ -135,7 +137,7 @@ export default function PetaView({ bins }) {
                   <span style={{ fontWeight: 600, fontSize: 14 }}>{bin.name}</span>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: bin.status === 'active' ? 'var(--brand-organic)' : '#f59e0b' }} />
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{bin.location || "Lokasi tidak tersedia"}</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{bin.location || t('noLocation')}</div>
                 <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1 }}>
                     <div className="progress-bar" style={{ height: 4 }}>
@@ -186,15 +188,15 @@ export default function PetaView({ bins }) {
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                         <Trash2 size={14} color="var(--brand-organic)" />
-                        <span>Kapasitas: {level}%</span>
+                        <span>{t('capacity')}: {level}%</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                         <Battery size={14} color="#f59e0b" />
-                        <span>Baterai: 88%</span>
+                        <span>{t('battery')}: 88%</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                         <Zap size={14} color="#22d3ee" />
-                        <span>Sinyal: Kuat</span>
+                        <span>{t('signal')}: {t('strong')}</span>
                       </div>
                     </div>
                   </div>
@@ -217,16 +219,16 @@ export default function PetaView({ bins }) {
           zIndex: 1000,
           pointerEvents: "none"
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase" }}>Kapasitas Bin</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase" }}>{t('capacity')}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--brand-organic)" }} /> <span>Kosong / Aman</span>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--brand-organic)" }} /> <span>{t('safe')}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} /> <span>Hampir Penuh</span>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} /> <span>{t('nearFull')}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} /> <span>Penuh (Segera Angkut)</span>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} /> <span>{t('full')}</span>
             </div>
           </div>
         </div>
@@ -250,3 +252,4 @@ export default function PetaView({ bins }) {
     </div>
   );
 }
+

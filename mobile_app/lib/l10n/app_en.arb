@@ -1,0 +1,48 @@
+{
+  "@@locale": "en",
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Label for the dashboard screen"
+  },
+  "map": "Map",
+  "@map": {
+    "description": "Label for the map screen"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Label for the settings screen"
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Label for the notifications screen"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Label for the profile screen"
+  },
+  "logout": "Logout",
+  "@logout": {
+    "description": "Label for the logout button"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Label for the home screen"
+  },
+  "history": "History",
+  "@history": {
+    "description": "Label for the history screen"
+  },
+  "repair": "Repair",
+  "@repair": {
+    "description": "Label for the maintenance screen"
+  },
+  "chat": "Chat",
+  "@chat": {
+    "description": "Label for the chat screen"
+  },
+  "language": "Language",
+
+  "@language": {
+    "description": "Label for the language selection"
+  }
+}
