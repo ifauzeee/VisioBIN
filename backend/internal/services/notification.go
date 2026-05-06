@@ -245,3 +245,36 @@ func (s *NotificationService) NotifyGasAlert(
 		log.Printf("[FCM] Error kirim gas alert: %v", err)
 	}
 }
+
+// NotifyChatMessage mengirim notifikasi ketika ada pesan chat baru.
+func (s *NotificationService) NotifyChatMessage(
+	ctx context.Context,
+	userRepo *repository.UserRepository,
+	senderName, content string,
+	recipientID *string,
+) {
+	title := fmt.Sprintf("💬 Pesan dari %s", senderName)
+	body := content
+	if len(body) > 100 {
+		body = body[:97] + "..."
+	}
+
+	data := map[string]string{
+		"sender_name": senderName,
+		"alert_type":  "chat",
+		"screen":      "chat",
+	}
+
+	if recipientID != nil {
+		// Private message: Kirim ke token spesifik recipient
+		token, err := userRepo.GetFCMToken(ctx, *recipientID)
+		if err == nil && token != "" {
+			s.SendToToken(ctx, token, title, body, data)
+		}
+	} else {
+		// Broadcast message: Kirim ke topic agar semua petugas tahu
+		if err := s.SendToTopic(ctx, "visiobin_alerts", title, body, data); err != nil {
+			log.Printf("[FCM] Error kirim chat notification: %v", err)
+		}
+	}
+}

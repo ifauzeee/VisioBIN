@@ -159,6 +159,16 @@ func (r *UserRepository) GetAllFCMTokens(ctx context.Context) ([]string, error) 
 	return tokens, nil
 }
 
+func (r *UserRepository) GetFCMToken(ctx context.Context, userID string) (string, error) {
+	query := "SELECT fcm_token FROM users WHERE id = $1"
+	var token string
+	err := r.pool.QueryRow(ctx, query, userID).Scan(&token)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	query := "DELETE FROM users WHERE id = $1"
 	if _, err := r.pool.Exec(ctx, query, id); err != nil {

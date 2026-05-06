@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -15,13 +16,15 @@ type ChatHandler struct {
 	chatRepo    *repository.ChatRepository
 	userRepo    *repository.UserRepository
 	broadcaster *services.Broadcaster
+	notifSvc    *services.NotificationService
 }
 
-func NewChatHandler(cr *repository.ChatRepository, ur *repository.UserRepository, b *services.Broadcaster) *ChatHandler {
+func NewChatHandler(cr *repository.ChatRepository, ur *repository.UserRepository, b *services.Broadcaster, ns *services.NotificationService) *ChatHandler {
 	return &ChatHandler{
 		chatRepo:    cr,
 		userRepo:    ur,
 		broadcaster: b,
+		notifSvc:    ns,
 	}
 }
 
@@ -75,6 +78,9 @@ func (h *ChatHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		"event": "chat_message",
 		"data":  msg,
 	})
+
+	// Send Push Notification
+	go h.notifSvc.NotifyChatMessage(context.Background(), h.userRepo, msg.SenderName, msg.Content, req.RecipientID)
 
 	writeJSON(w, http.StatusCreated, models.APIResponse{Success: true, Data: msg})
 }

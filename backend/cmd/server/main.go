@@ -51,7 +51,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
 	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
 	maintHandler := handlers.NewMaintenanceHandler(maintRepo)
-	chatHandler := handlers.NewChatHandler(chatRepo, userRepo, broadcaster)
+	chatHandler := handlers.NewChatHandler(chatRepo, userRepo, broadcaster, notifSvc)
 
 
 	r := router.Setup(authHandler, binHandler, maintHandler, chatHandler, binRepo, cfg.JWTSecret, broadcaster)
