@@ -96,22 +96,117 @@ class _VisioBinAppState extends State<VisioBinApp> {
         debugPrint('Menerima notifikasi foreground: ${message.notification?.title}');
         final context = _navigatorKey.currentContext;
         if (context != null && message.notification != null) {
+          final String title = message.notification!.title ?? 'Notifikasi Baru';
+          final String body = message.notification!.body ?? '';
+          final String? location = message.data['location'];
+          final String? severity = message.data['severity'];
+
+          Color accentColor = const Color(0xFF10b981); // Default green
+          IconData icon = Icons.notifications_active;
+
+          if (severity == 'critical') {
+            accentColor = Colors.redAccent;
+            icon = Icons.warning_rounded;
+          } else if (severity == 'warning') {
+            accentColor = Colors.orangeAccent;
+            icon = Icons.info_outline_rounded;
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.notification!.title ?? 'Notifikasi Baru',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(message.notification!.body ?? ''),
-                ],
-              ),
-              backgroundColor: Colors.redAccent,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
               behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
+              duration: const Duration(seconds: 6),
+              content: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? const Color(0xFF1F2937).withOpacity(0.9)
+                      : Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: accentColor.withOpacity(0.5),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: accentColor, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white 
+                                  : const Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            body,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white70 
+                                  : Colors.black87,
+                            ),
+                          ),
+                          if (location != null && location.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined, 
+                                  size: 14, 
+                                  color: accentColor
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  location,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: accentColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      },
+                      icon: const Icon(Icons.close, size: 18),
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         }

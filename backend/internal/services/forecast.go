@@ -124,30 +124,32 @@ func (s *ForecastService) calculateFillRate(readings []models.SensorReading, get
 }
 
 func (s *ForecastService) CheckThresholds(ctx context.Context, reading *models.SensorReading, alertRepo *repository.AlertRepository) {
-	// Ambil nama bin untuk notifikasi yang lebih informatif
+	// Ambil data bin lengkap untuk notifikasi yang lebih informatif
 	binName := reading.BinID
+	location := "Lokasi tidak diketahui"
 	if bin, err := s.binRepo.GetByID(ctx, reading.BinID); err == nil {
 		binName = bin.Name
+		location = bin.Location
 	}
 
 	// Volume Checks
-	s.checkVolume(ctx, alertRepo, reading.BinID, binName, "ORGANIK", reading.VolumeOrganicPct)
-	s.checkVolume(ctx, alertRepo, reading.BinID, binName, "ANORGANIK", reading.VolumeInorganicPct)
+	s.checkVolume(ctx, alertRepo, reading.BinID, binName, location, "ORGANIK", reading.VolumeOrganicPct)
+	s.checkVolume(ctx, alertRepo, reading.BinID, binName, location, "ANORGANIK", reading.VolumeInorganicPct)
 
 	// Ammonia Checks
 	if reading.GasAmoniaPpm != nil {
 		gas := *reading.GasAmoniaPpm
 		if gas >= 50 {
 			s.createAlert(ctx, alertRepo, reading.BinID, "gas_critical", "Kadar amonia TINGGI (>50 ppm)! Sampah organik membusuk.", "critical")
-			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, gas)
+			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, location, gas)
 		} else if gas >= 25 {
 			s.createAlert(ctx, alertRepo, reading.BinID, "gas_warning", "Kadar amonia meningkat (>25 ppm)", "warning")
-			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, gas)
+			s.notifSvc.NotifyGasAlert(ctx, reading.BinID, binName, location, gas)
 		}
 	}
 }
 
-func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository.AlertRepository, binID, binName, label string, volPtr *float64) {
+func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository.AlertRepository, binID, binName, location, label string, volPtr *float64) {
 	if volPtr == nil {
 		return
 	}
@@ -156,11 +158,11 @@ func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository
 	if vol >= 95 {
 		msg := fmt.Sprintf("Kompartemen %s hampir penuh (>95%%)!", label)
 		s.createAlert(ctx, alertRepo, binID, "volume_critical", msg, "critical")
-		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, "volume_critical", "critical", vol)
+		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, location, "volume_critical", "critical", vol)
 	} else if vol >= 80 {
 		msg := fmt.Sprintf("Volume kompartemen %s melebihi 80%%", label)
 		s.createAlert(ctx, alertRepo, binID, "volume_high", msg, "warning")
-		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, "volume_high", "warning", vol)
+		s.notifSvc.NotifyVolumeAlert(ctx, s.userRepo, binID, binName, location, "volume_high", "warning", vol)
 	}
 }
 

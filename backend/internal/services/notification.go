@@ -160,7 +160,7 @@ func (s *NotificationService) SendToTopic(ctx context.Context, topic, title, bod
 func (s *NotificationService) NotifyVolumeAlert(
 	ctx context.Context,
 	userRepo *repository.UserRepository,
-	binID, binName, alertType, severity string,
+	binID, binName, location, alertType, severity string,
 	volumePct float64,
 ) {
 	var title, body string
@@ -170,18 +170,20 @@ func (s *NotificationService) NotifyVolumeAlert(
 	case "critical":
 		icon = "🚨"
 		title = fmt.Sprintf("%s %s — Kritis!", icon, binName)
-		body  = fmt.Sprintf("Volume sudah %.0f%%. Segera kosongkan!", volumePct)
+		body  = fmt.Sprintf("Volume sudah %.0f%%. Segera kosongkan!\nLokasi: %s", volumePct, location)
 	case "warning":
 		icon = "⚠️"
 		title = fmt.Sprintf("%s %s — Peringatan", icon, binName)
-		body  = fmt.Sprintf("Volume mencapai %.0f%%. Persiapkan pengangkutan.", volumePct)
+		body  = fmt.Sprintf("Volume mencapai %.0f%%. Persiapkan pengangkutan.\nLokasi: %s", volumePct, location)
 	default:
 		title = fmt.Sprintf("%s %s", icon, binName)
-		body  = fmt.Sprintf("Volume: %.0f%%", volumePct)
+		body  = fmt.Sprintf("Volume: %.0f%%\nLokasi: %s", volumePct, location)
 	}
 
 	data := map[string]string{
 		"bin_id":     binID,
+		"bin_name":   binName,
+		"location":   location,
 		"alert_type": alertType,
 		"volume":     fmt.Sprintf("%.1f", volumePct),
 		"severity":   severity,
@@ -217,21 +219,23 @@ func (s *NotificationService) NotifyVolumeAlert(
 // NotifyGasAlert mengirim notifikasi khusus deteksi gas amonia.
 func (s *NotificationService) NotifyGasAlert(
 	ctx context.Context,
-	binID, binName string,
+	binID, binName, location string,
 	gasPpm float64,
 ) {
 	var title, body string
 
 	if gasPpm >= 50 {
 		title = fmt.Sprintf("☠️ %s — Gas Amonia Bahaya!", binName)
-		body  = fmt.Sprintf("Konsentrasi NH3: %.1f ppm (>50 ppm). Periksa segera!", gasPpm)
+		body  = fmt.Sprintf("Konsentrasi NH3: %.1f ppm (>50 ppm). Periksa segera!\nLokasi: %s", gasPpm, location)
 	} else {
 		title = fmt.Sprintf("😷 %s — Gas Amonia Tinggi", binName)
-		body  = fmt.Sprintf("Konsentrasi NH3: %.1f ppm. Sampah organik mulai membusuk.", gasPpm)
+		body  = fmt.Sprintf("Konsentrasi NH3: %.1f ppm. Sampah organik mulai membusuk.\nLokasi: %s", gasPpm, location)
 	}
 
 	data := map[string]string{
 		"bin_id":   binID,
+		"bin_name": binName,
+		"location": location,
 		"alert_type": "gas",
 		"gas_ppm":  fmt.Sprintf("%.1f", gasPpm),
 		"screen":   "dashboard",

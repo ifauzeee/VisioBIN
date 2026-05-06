@@ -60,7 +60,7 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    command: ["-url", "http://backend:8080/api/v1", "-interval", "5", "-user", "simulator", "-pass", "sim123456"]
+    command: ["-url", "http://backend:8080/api/v1", "-interval", "5", "-user", "ibnu", "-pass", "zee343212"]
 
   adminer:
     image: adminer
