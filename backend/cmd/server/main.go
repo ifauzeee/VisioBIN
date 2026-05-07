@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,16 +18,19 @@ import (
 )
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Config error: %v", err)
+		slog.Error("Config error", "error", err)
+		os.Exit(1)
 	}
 
 	db, err := database.Connect(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Database error: %v", err)
+		slog.Error("Database error", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -47,6 +50,8 @@ func main() {
 	broadcaster := services.NewBroadcaster()
 	go broadcaster.Run()
 
+	slog.Info("Service layer initialized")
+
 	// Handler Layer
 	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
 	binHandler := handlers.NewBinHandler(binRepo, telemetryRepo, alertRepo, forecastSvc, dashboardSvc, broadcaster)
@@ -61,30 +66,30 @@ func main() {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Background worker panic recovered: %v", r)
+				slog.Error("Background worker panic recovered", "panic", r)
 			}
 		}()
 
 		ticker := time.NewTicker(1 * time.Minute)
-		log.Println("Background worker started (Heartbeat & Retention)")
+		slog.Info("Background worker started", "task", "Heartbeat & Retention")
 		for range ticker.C {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			
 			// 1. Mark bins offline if > 5 minutes inactive
 			affected, err := binRepo.UpdateOfflineStatuses(ctx, 5)
 			if err != nil {
-				log.Printf("Worker Error (UpdateOfflineStatuses): %v", err)
+				slog.Error("Worker Error", "module", "UpdateOfflineStatuses", "error", err)
 			} else if affected > 0 {
-				log.Printf("Worker: Marked %d bins as offline", affected)
+				slog.Info("Worker Update", "task", "UpdateOfflineStatuses", "affected_bins", affected)
 			}
 
 			// 2. Data Retention: Cleanup readings > 30 days (Once an hour)
 			if time.Now().Minute() == 0 {
 				cleaned, err := telemetryRepo.CleanupOldReadings(ctx, 30)
 				if err != nil {
-					log.Printf("Worker Error (CleanupOldReadings): %v", err)
+					slog.Error("Worker Error", "module", "CleanupOldReadings", "error", err)
 				} else if cleaned > 0 {
-					log.Printf("Worker: Cleaned up %d old sensor readings", cleaned)
+					slog.Info("Worker Update", "task", "CleanupOldReadings", "cleaned_readings", cleaned)
 				}
 			}
 			cancel()
@@ -108,18 +113,19 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("Server shutdown error: %v", err)
+			slog.Error("Server shutdown error", "error", err)
 		}
 	}()
 
-	log.Printf("VisioBin API started on port %s (%s)", cfg.Port, cfg.Env)
+	slog.Info("VisioBin API started", "port", cfg.Port, "env", cfg.Env)
 	printRoutes()
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("Listen error: %v", err)
+		slog.Error("Listen error", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server stopped")
+	slog.Info("Server stopped")
 }
 
 func printRoutes() {
@@ -137,8 +143,8 @@ func printRoutes() {
 		"POST   /maintenance",
 	}
 
-	log.Println("Available Endpoints:")
+	slog.Info("Available Endpoints initialized")
 	for _, route := range routes {
-		log.Printf("  -> %s", route)
+		slog.Debug("Route registered", "path", route)
 	}
 }

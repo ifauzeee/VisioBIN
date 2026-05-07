@@ -44,7 +44,18 @@ func NewBinHandler(
 // --- Bin Management ---
 
 func (h *BinHandler) ListBins(w http.ResponseWriter, r *http.Request) {
-	bins, err := h.binRepo.GetAll(r.Context())
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 50
+	}
+	offset := (page - 1) * limit
+
+	bins, total, err := h.binRepo.GetPaginated(r.Context(), limit, offset)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
 			Success: false, Message: "Failed to fetch bins",
@@ -56,7 +67,9 @@ func (h *BinHandler) ListBins(w http.ResponseWriter, r *http.Request) {
 		bins = []models.Bin{}
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: bins})
+	writeJSON(w, http.StatusOK, models.PaginatedResponse{
+		Success: true, Data: bins, Page: page, Limit: limit, Total: total,
+	})
 }
 
 func (h *BinHandler) GetBin(w http.ResponseWriter, r *http.Request) {

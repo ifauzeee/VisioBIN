@@ -17,16 +17,23 @@ func NewBinRepository(pool *pgxpool.Pool) *BinRepository {
 	return &BinRepository{pool: pool}
 }
 
-func (r *BinRepository) GetAll(ctx context.Context) ([]models.Bin, error) {
+func (r *BinRepository) GetPaginated(ctx context.Context, limit, offset int) ([]models.Bin, int, error) {
+	var total int
+	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM bins").Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count bins: %w", err)
+	}
+
 	query := `
 		SELECT id, name, location, latitude, longitude, max_volume_cm, max_weight_kg, status, api_key, last_seen, created_at, updated_at
 		FROM bins 
 		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
 	`
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("query bins: %w", err)
+		return nil, 0, fmt.Errorf("query bins paginated: %w", err)
 	}
 	defer rows.Close()
 
@@ -38,12 +45,12 @@ func (r *BinRepository) GetAll(ctx context.Context) ([]models.Bin, error) {
 			&b.MaxVolumeCm, &b.MaxWeightKg, &b.Status, &b.ApiKey, &b.LastSeen, &b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("scan bin: %w", err)
+			return nil, 0, fmt.Errorf("scan bin: %w", err)
 		}
 		bins = append(bins, b)
 	}
 
-	return bins, nil
+	return bins, total, nil
 }
 
 func (r *BinRepository) GetByID(ctx context.Context, id string) (*models.Bin, error) {
