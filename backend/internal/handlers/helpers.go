@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"runtime"
@@ -14,6 +15,12 @@ var startTime = time.Now()
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
+	// Log errors (4xx and 5xx)
+	if status >= 400 {
+		slog.Warn("API Error Response", "status", status, "data", data)
+	}
+
 	json.NewEncoder(w).Encode(data)
 }
 
