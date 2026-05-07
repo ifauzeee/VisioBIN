@@ -16,6 +16,7 @@ type Config struct {
 	JWTExpiryHours int
 	FCMServerKey   string
 	APIKey         string
+	AllowedOrigins []string
 }
 
 func Load() (*Config, error) {
@@ -52,6 +53,11 @@ func Load() (*Config, error) {
 		JWTExpiryHours: jwtExpiry,
 		FCMServerKey:   getEnv("FCM_SERVER_KEY", ""),
 		APIKey:         getEnv("API_KEY", "visiobin-iot-secret-key"),
+		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:5173"}, // Default dev origins
+	}
+
+	if origins := os.Getenv("ALLOWED_ORIGINS"); origins != "" {
+		conf.AllowedOrigins = append(conf.AllowedOrigins, origins)
 	}
 
 	return conf, nil

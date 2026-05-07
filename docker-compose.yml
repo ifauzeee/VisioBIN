@@ -29,6 +29,7 @@ services:
       - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-visiobin}?sslmode=disable
       - JWT_SECRET=${JWT_SECRET}
       - PORT=8080
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/firebase-service-account.json}
     volumes:
       - ./backend/.env:/app/.env:ro

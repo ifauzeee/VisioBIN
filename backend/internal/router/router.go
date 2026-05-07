@@ -17,13 +17,14 @@ func Setup(
 	binRepo *repository.BinRepository,
 	jwtSecret string,
 	broadcaster *services.Broadcaster,
+	allowedOrigins []string,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "*"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
 		ExposedHeaders:   []string{"Link"},

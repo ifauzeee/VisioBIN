@@ -54,7 +54,7 @@ func main() {
 	chatHandler := handlers.NewChatHandler(chatRepo, userRepo, broadcaster, notifSvc)
 
 
-	r := router.Setup(authHandler, binHandler, maintHandler, chatHandler, binRepo, cfg.JWTSecret, broadcaster)
+	r := router.Setup(authHandler, binHandler, maintHandler, chatHandler, binRepo, cfg.JWTSecret, broadcaster, cfg.AllowedOrigins)
 
 
 	// Background Worker: Heartbeat & Data Retention
