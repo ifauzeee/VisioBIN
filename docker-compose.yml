@@ -4,9 +4,9 @@ services:
     container_name: visiobin-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: visiobin
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-visiobin}
     ports:
       - "5433:5432"
     volumes:
@@ -26,10 +26,10 @@ services:
     container_name: visiobin-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/visiobin?sslmode=disable
-      - JWT_SECRET=visiobin_super_secret_key_2024
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-visiobin}?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET}
       - PORT=8080
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/firebase-service-account.json}
     volumes:
       - ./backend/.env:/app/.env:ro
       - ./backend/firebase-service-account.json:/app/firebase-service-account.json:ro
@@ -46,7 +46,7 @@ services:
     container_name: visiobin-dashboard
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     ports:
       - "3000:3000"
     depends_on:
