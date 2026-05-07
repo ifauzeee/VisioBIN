@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/ifauze/visiobin/internal/middleware"
 	"github.com/ifauze/visiobin/internal/models"
@@ -130,10 +131,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
-	// Create a mock user for guest
+	// Create a mock user for guest with a unique suffix
+	guestID := "guest-" + time.Now().Format("050415") // Simple unique-ish ID for demo
 	guestUser := &models.User{
-		ID:       "guest-id-0000",
-		Username: "guest",
+		ID:       guestID,
+		Username: "guest-" + guestID[6:],
 		Email:    "guest@visiobin.local",
 		FullName: "Guest User",
 		Role:     "guest",

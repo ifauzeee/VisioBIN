@@ -59,25 +59,35 @@ func main() {
 
 	// Background Worker: Heartbeat & Data Retention
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Background worker panic recovered: %v", r)
+			}
+		}()
+
 		ticker := time.NewTicker(1 * time.Minute)
 		log.Println("Background worker started (Heartbeat & Retention)")
 		for range ticker.C {
-			ctx := context.Background()
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			
 			// 1. Mark bins offline if > 5 minutes inactive
 			affected, err := binRepo.UpdateOfflineStatuses(ctx, 5)
-			if err == nil && affected > 0 {
+			if err != nil {
+				log.Printf("Worker Error (UpdateOfflineStatuses): %v", err)
+			} else if affected > 0 {
 				log.Printf("Worker: Marked %d bins as offline", affected)
 			}
 
-			// 2. Data Retention: Cleanup readings > 30 days
-			// Run this less frequently, e.g., once an hour or day, but once a minute is fine for small DBs
-			if time.Now().Minute() == 0 { // Once an hour
+			// 2. Data Retention: Cleanup readings > 30 days (Once an hour)
+			if time.Now().Minute() == 0 {
 				cleaned, err := telemetryRepo.CleanupOldReadings(ctx, 30)
-				if err == nil && cleaned > 0 {
+				if err != nil {
+					log.Printf("Worker Error (CleanupOldReadings): %v", err)
+				} else if cleaned > 0 {
 					log.Printf("Worker: Cleaned up %d old sensor readings", cleaned)
 				}
 			}
+			cancel()
 		}
 	}()
 
