@@ -311,6 +311,20 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             <div style={{ width: 8, height: 8, background: vision.state === 'locked' ? 'var(--brand-organic)' : 'var(--text-muted)', borderRadius: '50%' }} />
           </div>
           <div className="scanner-container" style={{ height: 320 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="http://192.168.1.8:8000/stream"
+              alt="Live Camera"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
             {vision.state === 'scanning' && <div className="scan-laser" />}
             <AnimatePresence>
               {vision.state === 'locked' && (

@@ -14,11 +14,13 @@ const ICONS_MAP = {
   'Critical Alerts': AlertTriangle
 };
 
+const PI_CAMERA_STREAM_URL = "http://192.168.1.8:8000/stream";
+
 export default function PemantauanView() {
   const t = useTranslations('monitoring');
   const locale = useLocale();
   const [streams, setStreams] = useState(initialStreams);
-  const [streamUrl, setStreamUrl] = useState("https://assets.mixkit.co/videos/preview/mixkit-security-camera-view-of-a-warehouse-at-night-42283-large.mp4");
+  const [streamUrl, setStreamUrl] = useState(PI_CAMERA_STREAM_URL);
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempUrl, setTempUrl] = useState(streamUrl);
 
@@ -191,12 +193,11 @@ export default function PemantauanView() {
                       >
                         {s.status !== 'offline' && (
                           <>
-                            <video 
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img 
                               key={streamUrl}
-                              autoPlay 
-                              muted 
-                              loop 
-                              playsInline
+                              src={streamUrl}
+                              alt={`${s.zone} Live Camera`}
                               style={{
                                 position: 'absolute',
                                 width: '100%',
@@ -205,9 +206,8 @@ export default function PemantauanView() {
                                 opacity: 1,
                                 filter: 'contrast(1.05) brightness(1)'
                               }}
-                            >
-                              <source src={streamUrl} type="video/mp4" />
-                            </video>
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
                             
                             <div className="live-feed-scan" style={{ opacity: 0.3 }} />
                             
@@ -237,7 +237,7 @@ export default function PemantauanView() {
                                 <div style={{ textAlign: 'right' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
                                     <Activity size={12} color="var(--brand-organic)" />
-                                    <span className="mono">{(2.4 + Math.random()).toFixed(1)} Mbps</span>
+                                    <span className="mono">{((s.fps || 30) / 10).toFixed(1)} Mbps</span>
                                   </div>
                                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{s.latency} latency</div>
                                 </div>
