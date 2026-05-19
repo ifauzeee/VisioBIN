@@ -4,7 +4,8 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
-import '../models/models.dart';
+import '../widgets/live_camera_stream.dart';
+import 'live_camera_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -44,6 +45,27 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildSystemStatus(isDark, provider),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Live Camera',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          TextButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const LiveCameraScreen(),
+                              ),
+                            ),
+                            icon: const Icon(LucideIcons.maximize2, size: 16),
+                            label: const Text('Open'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLiveCameraCard(context, isDark),
                       const SizedBox(height: 32),
                       Text(
                         'Real-time Capacity',
@@ -365,6 +387,81 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLiveCameraCard(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LiveCameraScreen()),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1F2937) : Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: const LiveCameraStream(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10b981).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      LucideIcons.video,
+                      color: Color(0xFF10b981),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Raspberry Pi Camera',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          defaultPiCameraStreamUrl,
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(LucideIcons.chevronRight, color: Colors.grey),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

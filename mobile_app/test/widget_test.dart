@@ -6,12 +6,17 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mobile_app/main.dart';
+import 'package:visiobin/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('VisioBin app smoke test', (WidgetTester tester) async {
+    dotenv.loadFromString(
+      envString: 'API_BASE_URL=http://127.0.0.1:8080/api/v1',
+    );
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const VisioBinApp());
 
