@@ -32,6 +32,7 @@
     "status": "Status",
     "battery": "Battery",
     "capacity": "Capacity",
+    "ai_insight_title": "AI Insight",
     "insight_warning": "This week, processing volume in the main sector increased by <b>{trend}%</b>. Station <b>{station}</b> shows the highest activity. It is recommended to increase collection schedules on <b>{day} nights</b>.",
     "insight_success": "System operating optimally. Sorting efficiency reached <b>{accuracy}</b> today. CO2 emissions were successfully reduced by <b>{co2}kg</b> cumulatively.",
     "friday": "Friday",
