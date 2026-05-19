@@ -43,3 +43,17 @@ android {
 flutter {
     source = "../.."
 }
+
+tasks.named("preBuild") {
+    doLast {
+        val debugDexDir = file("${project.layout.buildDirectory.get()}/intermediates/external_file_lib_dex_archives/debug/desugarDebugFileDependencies")
+        if (!debugDexDir.exists()) {
+            debugDexDir.mkdirs()
+        }
+        val releaseDexDir = file("${project.layout.buildDirectory.get()}/intermediates/external_file_lib_dex_archives/release/desugarReleaseFileDependencies")
+        if (!releaseDexDir.exists()) {
+            releaseDexDir.mkdirs()
+        }
+    }
+}
+
