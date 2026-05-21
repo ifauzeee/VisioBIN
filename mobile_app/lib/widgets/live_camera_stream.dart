@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 
-const String defaultPiCameraStreamUrl = 'http://192.168.1.8:8000/stream';
+const String defaultPiCameraStreamUrl = 'http://192.168.180.57:8000/stream';
 
 class LiveCameraStream extends StatefulWidget {
   final String streamUrl;

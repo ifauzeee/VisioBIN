@@ -128,6 +128,6 @@ class StreamHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     t = threading.Thread(target=inference_loop, daemon=True)
     t.start()
-    print("🌐 Stream server running at http://192.168.1.8:8000")
+    print("🌐 Stream server running at http://192.168.180.57:8000")
     print("   Buka di browser laptop kamu!")
     HTTPServer(("0.0.0.0", 8000), StreamHandler).serve_forever()

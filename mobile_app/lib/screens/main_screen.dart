@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/chat_provider.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
 import 'maintenance_screen.dart';
@@ -20,6 +21,22 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatProvider = context.read<ChatProvider>();
+      final dashboardProvider = context.read<DashboardProvider>();
+      
+      chatProvider.setCurrentUserId(dashboardProvider.currentUser?.id);
+      chatProvider.fetchMembers();
+      
+      final apiBaseUrl = chatProvider.apiService.baseUrl;
+      final wsUrl = apiBaseUrl.replaceAll('http', 'ws').replaceAll('/api/v1', '/ws');
+      chatProvider.connectWebSocket(wsUrl);
+    });
+  }
 
   List<Widget> _getScreens(bool isGuest) {
     return [

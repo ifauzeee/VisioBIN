@@ -14,7 +14,7 @@ const ICONS_MAP = {
   'Critical Alerts': AlertTriangle
 };
 
-const PI_CAMERA_STREAM_URL = "http://192.168.1.8:8000/stream";
+const PI_CAMERA_STREAM_URL = "http://192.168.180.57:8000/stream";
 
 export default function PemantauanView() {
   const t = useTranslations('monitoring');
@@ -291,4 +291,4 @@ export default function PemantauanView() {
       </div>
     </>
   );
-}
+}

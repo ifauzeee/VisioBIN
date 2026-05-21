@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
+import '../screens/chat_screen.dart';
 
 class ChatProvider extends ChangeNotifier {
   final ApiService apiService;
@@ -17,8 +18,13 @@ class ChatProvider extends ChangeNotifier {
   String? _wsUrl;
   Timer? _reconnectTimer;
   bool _isDisposed = false;
+  GlobalKey<NavigatorState>? _navigatorKey;
 
   ChatProvider(this.apiService);
+
+  void setNavigatorKey(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
+  }
 
   List<ChatMessage> get messages => _messages;
   List<AppUser> get members => _members;
@@ -89,20 +95,37 @@ class ChatProvider extends ChangeNotifier {
             final msg = ChatMessage.fromJson(data['data']);
             
             final isGeneral = msg.recipientId == null;
-            if (_selectedRecipient == null) {
-              if (isGeneral) {
-                _messages.add(msg);
-                if (!_isDisposed) notifyListeners();
-              }
-            } else {
-              final isFromSelected = msg.senderId == _selectedRecipient!.id;
-              final isToSelected = msg.recipientId == _selectedRecipient!.id;
-              final isForMe = msg.recipientId == _currentUserId;
-              final isByMe = msg.senderId == _currentUserId;
+            final isForMe = isGeneral || msg.recipientId == _currentUserId;
+            final isByMe = msg.senderId == _currentUserId;
 
-              if ((isByMe && isToSelected) || (isFromSelected && isForMe)) {
-                _messages.add(msg);
-                if (!_isDisposed) notifyListeners();
+            if (isForMe) {
+              bool isCurrentlyViewingChat = false;
+              if (_selectedRecipient == null) {
+                isCurrentlyViewingChat = isGeneral;
+              } else {
+                isCurrentlyViewingChat = msg.senderId == _selectedRecipient!.id;
+              }
+
+              // Update messages locally
+              if (_selectedRecipient == null) {
+                if (isGeneral) {
+                  _messages.add(msg);
+                  if (!_isDisposed) notifyListeners();
+                }
+              } else {
+                final isFromSelected = msg.senderId == _selectedRecipient!.id;
+                final isToSelected = msg.recipientId == _selectedRecipient!.id;
+                final isMe = msg.senderId == _currentUserId;
+
+                if ((isMe && isToSelected) || (isFromSelected && isForMe)) {
+                  _messages.add(msg);
+                  if (!_isDisposed) notifyListeners();
+                }
+              }
+
+              // Show in-app notification if we are not currently in the chat view with this sender
+              if (!isByMe && !isCurrentlyViewingChat) {
+                _showInAppNotification(msg);
               }
             }
           }
@@ -119,6 +142,82 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('[ChatProvider] WS Connect Exception: $e');
       _scheduleReconnect();
+    }
+  }
+
+  void _showInAppNotification(ChatMessage msg) {
+    final context = _navigatorKey?.currentContext;
+    if (context != null) {
+      final isGeneral = msg.recipientId == null;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          elevation: 4,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark 
+              ? const Color(0xFF1F2937) 
+              : Colors.white,
+          duration: const Duration(seconds: 4),
+          content: Row(
+            children: [
+              Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      msg.senderName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white 
+                            : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      msg.content,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white70 
+                            : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          action: SnackBarAction(
+            label: 'Balas',
+            textColor: Theme.of(context).colorScheme.primary,
+            onPressed: () {
+              final sender = _members.firstWhere(
+                (m) => m.id == msg.senderId,
+                orElse: () => AppUser(
+                  id: msg.senderId,
+                  username: '',
+                  email: '',
+                  fullName: msg.senderName,
+                  role: msg.senderRole,
+                ),
+              );
+              setSelectedRecipient(isGeneral ? null : sender);
+              _navigatorKey!.currentState?.push(
+                MaterialPageRoute(builder: (_) => const ChatDetailScreen()),
+              );
+            },
+          ),
+        ),
+      );
     }
   }
 

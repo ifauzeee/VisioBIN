@@ -313,7 +313,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div className="scanner-container" style={{ height: 320 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="http://192.168.1.8:8000/stream"
+              src="http://192.168.180.57:8000/stream"
               alt="Live Camera"
               style={{
                 width: '100%',

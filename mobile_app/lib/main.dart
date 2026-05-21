@@ -65,6 +65,7 @@ class _VisioBinAppState extends State<VisioBinApp> {
     _dashboardProvider = DashboardProvider(_apiService);
     _maintenanceProvider = MaintenanceProvider(_apiService);
     _chatProvider = ChatProvider(_apiService);
+    _chatProvider.setNavigatorKey(_navigatorKey);
     _localeProvider = LocaleProvider();
     _checkAuth();
 
