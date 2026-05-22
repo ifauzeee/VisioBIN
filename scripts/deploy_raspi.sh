@@ -41,11 +41,29 @@ SERVICE_NAME="visiobin-ai"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 # ── Konfigurasi (edit sesuai kebutuhan) ─────────────────────
-BIN_ID="${VISIOBIN_BIN_ID:-VBIN-01}"
-BACKEND_URL="${VISIOBIN_BACKEND:-http://192.168.1.100:8080/api/v1/classifications}"
-CAMERA_SOURCE="${VISIOBIN_CAMERA:-0}"
-THRESHOLD="${VISIOBIN_THRESHOLD:-0.85}"
-COOLDOWN="${VISIOBIN_COOLDOWN:-3.0}"
+if [ -f "$PROJECT_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$PROJECT_DIR/.env"
+    set +a
+else
+    log_error "File .env tidak ditemukan di root project."
+fi
+
+: "${VISIOBIN_BIN_ID:?VISIOBIN_BIN_ID wajib ada di .env}"
+: "${VISIOBIN_BACKEND:?VISIOBIN_BACKEND wajib ada di .env}"
+: "${VISIOBIN_CAMERA:?VISIOBIN_CAMERA wajib ada di .env}"
+: "${VISIOBIN_THRESHOLD:?VISIOBIN_THRESHOLD wajib ada di .env}"
+: "${VISIOBIN_COOLDOWN:?VISIOBIN_COOLDOWN wajib ada di .env}"
+: "${VISIOBIN_BACKEND_API_BASE:?VISIOBIN_BACKEND_API_BASE wajib ada di .env}"
+: "${VISIOBIN_UART_PORT:?VISIOBIN_UART_PORT wajib ada di .env}"
+: "${VISIOBIN_UART_BAUD:?VISIOBIN_UART_BAUD wajib ada di .env}"
+
+BIN_ID="$VISIOBIN_BIN_ID"
+BACKEND_URL="$VISIOBIN_BACKEND"
+CAMERA_SOURCE="$VISIOBIN_CAMERA"
+THRESHOLD="$VISIOBIN_THRESHOLD"
+COOLDOWN="$VISIOBIN_COOLDOWN"
 
 log_info "Project dir : $PROJECT_DIR"
 log_info "Bin ID      : $BIN_ID"
@@ -123,12 +141,12 @@ fi
 # ── Step 6: Cek koneksi ke backend ──────────────────────────
 log_info "Step 6/7: Test koneksi ke backend..."
 BACKEND_HOST=$(echo "$BACKEND_URL" | sed 's|http://||' | cut -d'/' -f1 | cut -d':' -f1)
-BACKEND_PORT=$(echo "$BACKEND_URL" | sed 's|http://||' | cut -d'/' -f1 | cut -d':' -f2)
+BACKEND_CHECK_PORT=$(echo "$BACKEND_URL" | sed 's|http://||' | cut -d'/' -f1 | cut -d':' -f2)
 
-if nc -z -w 3 "$BACKEND_HOST" "${BACKEND_PORT:-8080}" 2>/dev/null; then
-    log_ok "Backend tersedia: $BACKEND_HOST:${BACKEND_PORT:-8080}"
+if nc -z -w 3 "$BACKEND_HOST" "$BACKEND_CHECK_PORT" 2>/dev/null; then
+    log_ok "Backend tersedia: $BACKEND_HOST:$BACKEND_CHECK_PORT"
 else
-    log_warn "Backend tidak dapat dijangkau: $BACKEND_HOST:${BACKEND_PORT:-8080}"
+    log_warn "Backend tidak dapat dijangkau: $BACKEND_HOST:$BACKEND_CHECK_PORT"
     log_warn "Pastikan backend sudah berjalan dan IP benar."
 fi
 
@@ -181,10 +199,10 @@ Type=simple
 User=${CURRENT_USER}
 WorkingDirectory=${AI_DIR}
 ExecStart=${VENV_DIR}/bin/python ${AI_DIR}/uart_bridge.py \\
-    --port ${VISIOBIN_UART_PORT:-/dev/ttyUSB0} \\
-    --baud ${VISIOBIN_UART_BAUD:-115200} \\
+    --port ${VISIOBIN_UART_PORT} \\
+    --baud ${VISIOBIN_UART_BAUD} \\
     --bin-id ${BIN_ID} \\
-    --url http://localhost:8080/api/v1
+    --url ${VISIOBIN_BACKEND_API_BASE}
 Restart=on-failure
 RestartSec=5s
 StandardOutput=journal

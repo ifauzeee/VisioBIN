@@ -9,9 +9,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/visiobin-api ./cmd/server
 
 FROM alpine:latest
 WORKDIR /app
+ARG PORT
 COPY --from=builder /app/visiobin-api .
 # Optional: copy migrations if you want the API to run them, but docker-compose does this via volume
 COPY migrations ./migrations
 
-EXPOSE 8080
+EXPOSE ${PORT}
 CMD ["./visiobin-api"]

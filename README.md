@@ -28,10 +28,24 @@
 ## Quick Start (Backend)
 
 ```bash
+cp .env.example .env    # Edit konfigurasi pusat
 cd backend
-cp .env.example .env    # Edit konfigurasi DB
 go mod download
 go run cmd/server/main.go
+```
+
+## Environment Terpusat
+
+Semua konfigurasi runtime disimpan di satu file root `.env`. Untuk kamera, cukup ubah:
+
+```env
+CAMERA_STREAM_URL=http://192.168.1.10:8000/stream
+```
+
+Dashboard web, Docker, AI stream, simulator, dan mobile mengambil nilai dari root `.env`. Untuk menjalankan mobile dengan nilai root `.env`:
+
+```powershell
+.\scripts\flutter_run_from_env.ps1
 ```
 
 ## Uji Coba Sistem (End-to-End)

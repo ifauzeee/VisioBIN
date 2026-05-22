@@ -9,6 +9,7 @@ import {
   Bell, FileDown, LayoutDashboard, Terminal, ExternalLink,
   Lock, Zap, Layers, AlertCircle
 } from "lucide-react";
+import { APP_CONFIG } from "../config/appConfig";
 
 const API_GROUPS = [
   {
@@ -462,6 +463,7 @@ const EndpointCard = ({ endpoint }) => {
 export default function ApiDocsView() {
   const [activeGroup, setActiveGroup] = useState(API_GROUPS[0].title);
   const observer = useRef(null);
+  const wsBaseUrl = APP_CONFIG.apiBaseUrl.replace("http", "ws").split("/api")[0] + "/ws";
 
   useEffect(() => {
     const options = {
@@ -522,7 +524,7 @@ export default function ApiDocsView() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)" }}>BASE URL</div>
               <div className="mono" style={{ background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: 8, fontSize: 12, border: "1px solid var(--border-color)", color: "var(--brand-organic)" }}>
-                http://localhost:8080/api/v1
+                {APP_CONFIG.apiBaseUrl}
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -660,7 +662,7 @@ export default function ApiDocsView() {
                   </div>
                   <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)", background: "#050505", padding: 20, borderRadius: 12, border: "1px solid var(--border-color)" }}>
                     HTTPClient http;<br/>
-                    http.begin(<span style={{ color: "#10b981" }}>"http://vbin.local/api/v1/telemetry"</span>);<br/>
+                    http.begin(<span style={{ color: "#10b981" }}>"{APP_CONFIG.apiBaseUrl}/telemetry"</span>);<br/>
                     http.addHeader(<span style={{ color: "#10b981" }}>"X-API-Key"</span>, <span style={{ color: "#10b981" }}>"SECRET"</span>);<br/>
                     <span style={{ color: "#8b5cf6" }}>int</span> code = http.POST(<span style={{ color: "#10b981" }}>"&#123;\"bin_id\":\"VBIN-01\"...&#125;"</span>);
                   </div>
@@ -716,7 +718,7 @@ export default function ApiDocsView() {
               <div className="card" style={{ marginTop: 24, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, background: "rgba(0,0,0,0.4)" }}>
                 <AlertCircle size={16} color="var(--brand-organic)" />
                 <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  WebSocket URL: <span className="mono" style={{ color: "var(--text-main)" }}>ws://localhost:8080/ws</span>
+                  WebSocket URL: <span className="mono" style={{ color: "var(--text-main)" }}>{wsBaseUrl}</span>
                 </span>
               </div>
             </div>

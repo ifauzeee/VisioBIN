@@ -14,7 +14,11 @@ import 'package:visiobin/main.dart';
 void main() {
   testWidgets('VisioBin app smoke test', (WidgetTester tester) async {
     dotenv.loadFromString(
-      envString: 'API_BASE_URL=http://127.0.0.1:8080/api/v1',
+      envString: '''
+API_BASE_URL=test-api-base-url
+WS_BASE_URL=test-ws-base-url
+CAMERA_STREAM_URL=test-camera-stream-url
+''',
     );
 
     // Build our app and trigger a frame.

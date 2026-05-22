@@ -37,25 +37,28 @@ class LiveCameraScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(LucideIcons.wifi, color: Color(0xFF10b981)),
-                  SizedBox(width: 12),
+                  const Icon(LucideIcons.wifi, color: Color(0xFF10b981)),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Raspberry Pi Stream',
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           defaultPiCameraStreamUrl,
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),

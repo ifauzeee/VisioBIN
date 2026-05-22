@@ -6,11 +6,17 @@ import cv2
 import onnxruntime as ort
 from picamera2 import Picamera2
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from env_config import env_float, env_int, load_root_env, require_env
+
+load_root_env()
 
 LABELS = {0: "Anorganik", 1: "Organik"}
-MODEL_PATH = "best.onnx"
-WIDTH, HEIGHT = 1640, 1232
-THRESHOLD = 0.5
+MODEL_PATH = require_env("VISIOBIN_ONNX")
+WIDTH = env_int("CAMERA_CAPTURE_WIDTH")
+HEIGHT = env_int("CAMERA_CAPTURE_HEIGHT")
+THRESHOLD = env_float("VISIOBIN_THRESHOLD")
+STREAM_HOST = require_env("CAMERA_STREAM_HOST")
+STREAM_PORT = env_int("CAMERA_STREAM_PORT")
 
 # Shared state
 latest_frame = None
@@ -128,6 +134,6 @@ class StreamHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     t = threading.Thread(target=inference_loop, daemon=True)
     t.start()
-    print("🌐 Stream server running at http://192.168.180.57:8000")
+    print(f"🌐 Stream server running at {require_env('CAMERA_STREAM_URL')}")
     print("   Buka di browser laptop kamu!")
-    HTTPServer(("0.0.0.0", 8000), StreamHandler).serve_forever()
+    HTTPServer((STREAM_HOST, STREAM_PORT), StreamHandler).serve_forever()

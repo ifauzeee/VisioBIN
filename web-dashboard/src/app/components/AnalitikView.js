@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { listClassifications } from "../services/api";
+import { APP_CONFIG } from "../config/appConfig";
 import { SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import {
@@ -124,7 +125,7 @@ export default React.memo(function AnalitikView() {
           <motion.button 
             whileHover={{ scale: 1.02 }} 
             whileTap={{ scale: 0.98 }}
-            onClick={() => window.open(`http://localhost:8080/api/v1/classifications/export?token=${token}`, "_blank")}
+            onClick={() => window.open(`${APP_CONFIG.apiBaseUrl}/classifications/export?token=${token}`, "_blank")}
             className="btn-primary" 
             style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
           >

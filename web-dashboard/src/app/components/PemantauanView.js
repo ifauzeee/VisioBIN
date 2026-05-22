@@ -4,6 +4,7 @@ import { liveFeedSummary, liveFeedStreams as initialStreams, liveEventQueue } fr
 import EmptyState from './shared/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
+import { APP_CONFIG } from '../config/appConfig';
 
 const ICONS_MAP = {
   'Stream Aktif': Video,
@@ -14,13 +15,11 @@ const ICONS_MAP = {
   'Critical Alerts': AlertTriangle
 };
 
-const PI_CAMERA_STREAM_URL = "http://192.168.180.57:8000/stream";
-
 export default function PemantauanView() {
   const t = useTranslations('monitoring');
   const locale = useLocale();
   const [streams, setStreams] = useState(initialStreams);
-  const [streamUrl, setStreamUrl] = useState(PI_CAMERA_STREAM_URL);
+  const [streamUrl, setStreamUrl] = useState(APP_CONFIG.cameraStreamUrl);
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempUrl, setTempUrl] = useState(streamUrl);
 

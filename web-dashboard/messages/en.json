@@ -80,7 +80,7 @@
     "refresh": "Refresh Stream",
     "apply": "Apply",
     "placeholder": "Enter Stream URL (MJPEG/MP4/HLS)",
-    "tip": "Tip: Enter your Raspberry Pi IP (e.g. http://192.168.1.10:8081) to connect physical camera.",
+    "tip": "Tip: The main camera URL is read from CAMERA_STREAM_URL in the root .env file.",
     "configTitle": "Main Stream Configuration",
     "emptyTitle": "Camera Inactive",
     "emptyDesc": "AI system does not detect any active streams. Ensure Edge devices are connected.",

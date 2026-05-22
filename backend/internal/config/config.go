@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -20,19 +21,19 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	_ = godotenv.Load()
+	_ = godotenv.Load("../.env", ".env")
 
-	port := getEnv("PORT", "8080")
+	port := requireEnv("PORT")
 	env := getEnv("ENV", "development")
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		dbHost := getEnv("DB_HOST", "localhost")
-		dbPort := getEnv("DB_PORT", "5432")
-		dbUser := getEnv("DB_USER", "postgres")
-		dbPassword := getEnv("DB_PASSWORD", "postgres")
-		dbName := getEnv("DB_NAME", "visiobin")
-		dbSSLMode := getEnv("DB_SSLMODE", "disable")
+		dbHost := requireEnv("DB_HOST")
+		dbPort := requireEnv("DB_PORT")
+		dbUser := requireEnv("DB_USER")
+		dbPassword := requireEnv("DB_PASSWORD")
+		dbName := requireEnv("DB_NAME")
+		dbSSLMode := requireEnv("DB_SSLMODE")
 
 		databaseURL = fmt.Sprintf(
 			"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -40,7 +41,7 @@ func Load() (*Config, error) {
 		)
 	}
 
-	jwtExpiry, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
+	jwtExpiry, err := strconv.Atoi(requireEnv("JWT_EXPIRY_HOURS"))
 	if err != nil {
 		jwtExpiry = 72
 	}
@@ -49,18 +50,34 @@ func Load() (*Config, error) {
 		Port:           port,
 		Env:            env,
 		DatabaseURL:    databaseURL,
-		JWTSecret:      getEnv("JWT_SECRET", "visiobin-dev-secret-key"),
+		JWTSecret:      requireEnv("JWT_SECRET"),
 		JWTExpiryHours: jwtExpiry,
 		FCMServerKey:   getEnv("FCM_SERVER_KEY", ""),
-		APIKey:         getEnv("API_KEY", "visiobin-iot-secret-key"),
-		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:5173"}, // Default dev origins
-	}
-
-	if origins := os.Getenv("ALLOWED_ORIGINS"); origins != "" {
-		conf.AllowedOrigins = append(conf.AllowedOrigins, origins)
+		APIKey:         requireEnv("API_KEY"),
+		AllowedOrigins: splitEnvList(requireEnv("ALLOWED_ORIGINS")),
 	}
 
 	return conf, nil
+}
+
+func requireEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		panic(fmt.Sprintf("missing required environment variable: %s", key))
+	}
+	return value
+}
+
+func splitEnvList(value string) []string {
+	parts := strings.Split(value, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
 }
 
 func getEnv(key, fallback string) string {

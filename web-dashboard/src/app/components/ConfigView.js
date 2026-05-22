@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw, Loader2 } from "lucide-react";
 import { useToast } from "./shared/Toast";
+import { APP_CONFIG } from "../config/appConfig";
 
 const DEFAULT_CONFIG = {
-  apiUrl: "http://localhost:8080/api/v1",
+  apiUrl: APP_CONFIG.apiBaseUrl,
   pollDashboard: 5,
   pollAlerts: 8,
   pollBins: 10,

@@ -1,5 +1,6 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+import { APP_CONFIG } from "../config/appConfig";
+
+const API_BASE = APP_CONFIG.apiBaseUrl;
 
 export const WS_BASE = API_BASE.replace("http", "ws").split("/api")[0] + "/ws";
 

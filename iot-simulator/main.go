@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-const defaultBaseURL = "http://localhost:8080/api/v1"
-
 type TelemetryPayload struct {
 	BinID               string  `json:"bin_id"`
 	DistanceOrganicCm   float64 `json:"distance_organic_cm"`
@@ -134,13 +132,13 @@ func max(a, b float64) float64 {
 func main() {
 	intervalPtr := flag.Int("interval", 10, "Seconds between readings")
 	fastPtr := flag.Bool("fast", false, "Fast mode: 2 second interval")
-	urlPtr := flag.String("url", defaultBaseURL, "Backend API base URL")
-	userPtr := flag.String("user", "", "Username for authentication (required)")
-	passPtr := flag.String("pass", "", "Password for authentication (required)")
-	scenarioPtr := flag.String("scenario", "default", "Scenario: default, full-bin, gas-spike")
+	urlPtr := flag.String("url", os.Getenv("SIMULATOR_API_URL"), "Backend API base URL")
+	userPtr := flag.String("user", os.Getenv("SIMULATOR_USER"), "Username for authentication (required)")
+	passPtr := flag.String("pass", os.Getenv("SIMULATOR_PASSWORD"), "Password for authentication (required)")
+	scenarioPtr := flag.String("scenario", os.Getenv("SIMULATOR_SCENARIO"), "Scenario: default, full-bin, gas-spike")
 	flag.Parse()
 
-	if *userPtr == "" || *passPtr == "" {
+	if *urlPtr == "" || *userPtr == "" || *passPtr == "" || *scenarioPtr == "" || os.Getenv("API_KEY") == "" {
 		fmt.Println("❌ Error: Username (-user) and Password (-pass) are required.")
 		flag.Usage()
 		return
@@ -266,7 +264,7 @@ func main() {
 			telemetryReq.Header.Add("Content-Type", "application/json")
 			telemetryReq.Header.Add("X-API-Key", sim.ApiKey)
 			if telemetryReq.Header.Get("X-API-Key") == "" {
-				telemetryReq.Header.Set("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+				telemetryReq.Header.Set("X-API-Key", os.Getenv("API_KEY"))
 			}
 			if telemetryReq.Header.Get("X-API-Key") == "" {
 				telemetryReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")
@@ -311,7 +309,7 @@ func main() {
 				clsReq.Header.Add("Content-Type", "application/json")
 				clsReq.Header.Add("X-API-Key", sim.ApiKey)
 				if clsReq.Header.Get("X-API-Key") == "" {
-					clsReq.Header.Set("X-API-Key", os.Getenv("VISIOBIN_API_KEY"))
+					clsReq.Header.Set("X-API-Key", os.Getenv("API_KEY"))
 				}
 				if clsReq.Header.Get("X-API-Key") == "" {
 					clsReq.Header.Set("X-API-Key", "visiobin-iot-secret-key")

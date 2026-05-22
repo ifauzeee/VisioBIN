@@ -14,4 +14,3 @@ COPY --from=builder /app/simulator .
 # The simulator needs to point to the backend service in docker-compose
 # We'll use an environment variable to override the base URL
 ENTRYPOINT ["./simulator"]
-CMD ["-url", "http://backend:8080/api/v1", "-interval", "5"]

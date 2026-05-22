@@ -22,7 +22,7 @@ go run main.go -user <username> -pass <password>
 |------|---------|-----------|
 | `-user` | (wajib) | Username untuk login ke backend |
 | `-pass` | (wajib) | Password untuk login ke backend |
-| `-url` | `http://localhost:8080/api/v1` | Base URL API Backend |
+| `-url` | dari `SIMULATOR_API_URL` di root `.env` | Base URL API Backend |
 | `-interval` | `10` | Jeda waktu antar pengiriman data (detik) |
 | `-scenario` | `default` | Skenario: `default`, `full-bin`, `gas-spike` |
 | `-fast` | `false` | Mode cepat (interval 2 detik) |

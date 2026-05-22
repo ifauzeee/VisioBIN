@@ -8,9 +8,12 @@ import cv2
 import requests
 import onnxruntime as ort
 from picamera2 import Picamera2
+from env_config import load_root_env, require_env
+
+load_root_env()
 
 DEFAULT_ONNX      = os.environ.get("VISIOBIN_ONNX", "best.onnx")
-DEFAULT_BACKEND   = os.environ.get("VISIOBIN_BACKEND", "http://localhost:8080/api/v1/classifications")
+DEFAULT_BACKEND   = require_env("VISIOBIN_BACKEND")
 DEFAULT_BIN_ID    = os.environ.get("VISIOBIN_BIN_ID", "VBIN-01")
 DEFAULT_THRESHOLD = float(os.environ.get("VISIOBIN_THRESHOLD", "0.75"))
 DEFAULT_COOLDOWN  = float(os.environ.get("VISIOBIN_COOLDOWN", "3.0"))

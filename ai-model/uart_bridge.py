@@ -42,6 +42,9 @@ import random
 import logging
 
 import requests
+from env_config import load_root_env, require_env
+
+load_root_env()
 
 # ─────────────────────────────────────────────────────────────────
 # Logging
@@ -58,7 +61,7 @@ log = logging.getLogger("uart_bridge")
 # ─────────────────────────────────────────────────────────────────
 DEFAULT_PORT     = os.environ.get("VISIOBIN_UART_PORT",    "/dev/ttyUSB0")
 DEFAULT_BAUD     = int(os.environ.get("VISIOBIN_UART_BAUD", "115200"))
-DEFAULT_BACKEND  = os.environ.get("VISIOBIN_BACKEND",       "http://localhost:8080/api/v1")
+DEFAULT_BACKEND  = require_env("VISIOBIN_BACKEND_API_BASE")
 DEFAULT_BIN_ID   = os.environ.get("VISIOBIN_BIN_ID",        "VBIN-01")
 DEFAULT_INTERVAL = float(os.environ.get("VISIOBIN_INTERVAL", "5.0"))
 

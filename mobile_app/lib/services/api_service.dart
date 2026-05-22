@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 
 /// Centralized API service for VisioBin mobile app.
 /// Mirrors the web dashboard's `api.js` service layer.
 class ApiService {
-  static String get _defaultBaseUrl => dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8080/api/v1';
+  static String get _defaultBaseUrl => AppConfig.apiBaseUrl;
 
   final String baseUrl;
   String? _token;
@@ -20,7 +20,7 @@ class ApiService {
   Future<void> setToken(String token, [Map<String, dynamic>? userData]) async {
     _token = token;
     _user = userData;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     if (userData != null) {
@@ -65,9 +65,9 @@ class ApiService {
 
   /// Headers standar dengan auth
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
-      };
+    'Content-Type': 'application/json',
+    if (_token != null) 'Authorization': 'Bearer $_token',
+  };
 
   // ── Auth ──────────────────────────────────────────────
 
@@ -106,7 +106,8 @@ class ApiService {
       debugPrint('[API] Target URL: $baseUrl/auth/login');
       return ApiResponse(
         success: false,
-        message: 'Gagal menghubungkan ke server ($e). Periksa apakah IP $_defaultBaseUrl sudah benar dan laptop Anda mengizinkan koneksi di port 8080.',
+        message:
+            'Gagal menghubungkan ke server ($e). Periksa apakah IP $_defaultBaseUrl sudah benar dan laptop Anda mengizinkan koneksi di port 8080.',
       );
     }
   }
@@ -219,7 +220,8 @@ class ApiService {
   }
 
   /// Riwayat sensor sebuah bin
-  Future<ApiResponse> getSensorHistory(String binId, {
+  Future<ApiResponse> getSensorHistory(
+    String binId, {
     String? from,
     String? to,
     int? limit,
@@ -322,10 +324,14 @@ class ApiService {
   }
 
   /// Send chat message
-  Future<ApiResponse> sendChatMessage(String content, {String? recipientId}) async {
+  Future<ApiResponse> sendChatMessage(
+    String content, {
+    String? recipientId,
+  }) async {
     final body = {
       'content': content,
-      if (recipientId != null && recipientId.isNotEmpty) 'recipient_id': recipientId,
+      if (recipientId != null && recipientId.isNotEmpty)
+        'recipient_id': recipientId,
     };
     return _post('/chat', body: body);
   }
@@ -354,7 +360,10 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse> _post(String endpoint, {Map<String, dynamic>? body}) async {
+  Future<ApiResponse> _post(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
     try {
       final res = await http.post(
         Uri.parse('$baseUrl$endpoint'),
@@ -372,7 +381,10 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse> _put(String endpoint, {Map<String, dynamic>? body}) async {
+  Future<ApiResponse> _put(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
     try {
       final res = await http.put(
         Uri.parse('$baseUrl$endpoint'),

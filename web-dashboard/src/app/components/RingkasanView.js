@@ -16,6 +16,7 @@ import {
   dampakLingkungan, defaultLogs, dataPemrosesanPerJam
 } from '../dashboardData';
 import { useTranslations } from 'next-intl';
+import { APP_CONFIG } from '../config/appConfig';
 
 
 export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive }) {
@@ -313,7 +314,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div className="scanner-container" style={{ height: 320 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="http://192.168.180.57:8000/stream"
+              src={APP_CONFIG.cameraStreamUrl}
               alt="Live Camera"
               style={{
                 width: '100%',

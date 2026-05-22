@@ -7,7 +7,7 @@ Usage (development, Windows):
     python ai_bridge.py --source 0
 
 Usage (production, Raspberry Pi):
-    python ai_bridge.py --source 0 --url http://<backend-ip>:8080/api/v1/classifications
+    python ai_bridge.py --source 0 --url "$VISIOBIN_BACKEND"
 
 Usage (mock/testing tanpa kamera):
     python ai_bridge.py --mock --mock-dir test_images/
@@ -26,6 +26,9 @@ import cv2
 import requests
 import torch
 import numpy as np
+from env_config import load_root_env, require_env
+
+load_root_env()
 
 # ─────────────────────────────────────────────────────────────────
 # Patch kompatibilitas lintas OS HANYA saat dev di Windows
@@ -39,7 +42,7 @@ if platform.system() == "Windows":
 # Konfigurasi default (dapat di-override via argparse atau env var)
 # ─────────────────────────────────────────────────────────────────
 DEFAULT_WEIGHTS    = os.environ.get("VISIOBIN_WEIGHTS", "best.pt")
-DEFAULT_BACKEND    = os.environ.get("VISIOBIN_BACKEND", "http://localhost:8080/api/v1/classifications")
+DEFAULT_BACKEND    = require_env("VISIOBIN_BACKEND")
 DEFAULT_BIN_ID     = os.environ.get("VISIOBIN_BIN_ID", "VBIN-01")
 DEFAULT_THRESHOLD  = float(os.environ.get("VISIOBIN_THRESHOLD", "0.85"))
 DEFAULT_COOLDOWN   = float(os.environ.get("VISIOBIN_COOLDOWN", "3.0"))
@@ -144,7 +147,7 @@ class AIBridge:
         }
         headers = {
             "Content-Type": "application/json",
-            "X-API-Key": os.environ.get("VISIOBIN_API_KEY", "visiobin-iot-secret-key")
+            "X-API-Key": require_env("API_KEY")
         }
         try:
             resp = requests.post(self.url, json=payload, headers=headers, timeout=2)

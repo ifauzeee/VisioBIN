@@ -13,14 +13,18 @@ A modern Flutter application for monitoring waste bins, waste classification, an
 ## ⚙️ Setup & Configuration
 
 ### 1. Environment Configuration
-This project uses `.env` for configuration.
-1. Copy `.env.example` to `.env`:
+VisioBin memakai satu `.env` di root project. Jalankan dari root:
+
+```powershell
+.\scripts\flutter_run_from_env.ps1
+```
+
+Script itu membaca `API_BASE_URL`, `WS_BASE_URL`, dan `CAMERA_STREAM_URL` dari root `.env`, lalu meneruskannya ke Flutter dengan `--dart-define`.
+
+Jika perlu membuat env awal:
    ```bash
-   cp .env.example .env
+   cp ../.env.example ../.env
    ```
-2. Update the `API_BASE_URL` and `WS_BASE_URL` in `.env` with your backend server address.
-   - **Android Emulator**: Use `http://10.0.2.2:8080/api/v1`
-   - **Physical Device**: Use your computer's local IP (e.g., `http://192.168.1.3:8080/api/v1`)
 
 ### 2. Dependencies
 Install all required Flutter packages:

@@ -5,16 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 
-const String defaultPiCameraStreamUrl = 'http://192.168.180.57:8000/stream';
+import '../config/app_config.dart';
+
+String get defaultPiCameraStreamUrl => AppConfig.cameraStreamUrl;
 
 class LiveCameraStream extends StatefulWidget {
-  final String streamUrl;
+  final String? streamUrl;
   final BoxFit fit;
   final bool showStatusOverlay;
 
   const LiveCameraStream({
     super.key,
-    this.streamUrl = defaultPiCameraStreamUrl,
+    this.streamUrl,
     this.fit = BoxFit.cover,
     this.showStatusOverlay = true,
   });
@@ -29,6 +31,9 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
   Uint8List? _frame;
   String? _error;
   bool _connecting = true;
+
+  String get _effectiveStreamUrl =>
+      widget.streamUrl ?? AppConfig.cameraStreamUrl;
 
   @override
   void initState() {
@@ -58,7 +63,7 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
     _client = client;
 
     try {
-      final request = http.Request('GET', Uri.parse(widget.streamUrl));
+      final request = http.Request('GET', Uri.parse(_effectiveStreamUrl));
       final response = await client
           .send(request)
           .timeout(const Duration(seconds: 8));
@@ -200,7 +205,7 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
             if (_error != null) ...[
               const SizedBox(height: 8),
               Text(
-                widget.streamUrl,
+                _effectiveStreamUrl,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),

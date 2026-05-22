@@ -80,7 +80,7 @@
     "refresh": "Refresh Stream",
     "apply": "Terapkan",
     "placeholder": "Masukkan URL Stream (MJPEG/MP4/HLS)",
-    "tip": "Tip: Masukkan IP Raspberry Pi Anda (misal: http://192.168.1.10:8081) untuk menghubungkan kamera fisik.",
+    "tip": "Tip: URL kamera utama diambil dari CAMERA_STREAM_URL pada file .env root.",
     "configTitle": "Konfigurasi Stream Utama",
     "emptyTitle": "Kamera Tidak Aktif",
     "emptyDesc": "Sistem AI tidak mendeteksi adanya stream aktif. Pastikan perangkat Edge terhubung.",

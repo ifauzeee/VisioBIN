@@ -10,7 +10,7 @@ import 'maintenance_screen.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
 import '../l10n/app_localizations.dart';
-
+import '../config/app_config.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -28,13 +28,11 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatProvider = context.read<ChatProvider>();
       final dashboardProvider = context.read<DashboardProvider>();
-      
+
       chatProvider.setCurrentUserId(dashboardProvider.currentUser?.id);
       chatProvider.fetchMembers();
-      
-      final apiBaseUrl = chatProvider.apiService.baseUrl;
-      final wsUrl = apiBaseUrl.replaceAll('http', 'ws').replaceAll('/api/v1', '/ws');
-      chatProvider.connectWebSocket(wsUrl);
+
+      chatProvider.connectWebSocket(AppConfig.wsBaseUrl);
     });
   }
 
@@ -54,7 +52,8 @@ class _MainScreenState extends State<MainScreen> {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final l10n = AppLocalizations.of(context)!;
 
-    final isGuest = context.read<DashboardProvider>().currentUser?.role == 'guest';
+    final isGuest =
+        context.read<DashboardProvider>().currentUser?.role == 'guest';
     final screens = _getScreens(isGuest);
 
     return Scaffold(
@@ -78,15 +77,49 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 12.0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(LucideIcons.layoutDashboard, l10n.home, 0, isDark, primaryColor),
-                _buildNavItem(LucideIcons.history, l10n.history, 1, isDark, primaryColor),
-                _buildNavItem(LucideIcons.wrench, l10n.repair, 2, isDark, primaryColor),
-                _buildNavItem(LucideIcons.messageSquare, l10n.chat, 3, isDark, primaryColor),
-                if (!isGuest) _buildNavItem(LucideIcons.settings, l10n.settings, 4, isDark, primaryColor),
+                _buildNavItem(
+                  LucideIcons.layoutDashboard,
+                  l10n.home,
+                  0,
+                  isDark,
+                  primaryColor,
+                ),
+                _buildNavItem(
+                  LucideIcons.history,
+                  l10n.history,
+                  1,
+                  isDark,
+                  primaryColor,
+                ),
+                _buildNavItem(
+                  LucideIcons.wrench,
+                  l10n.repair,
+                  2,
+                  isDark,
+                  primaryColor,
+                ),
+                _buildNavItem(
+                  LucideIcons.messageSquare,
+                  l10n.chat,
+                  3,
+                  isDark,
+                  primaryColor,
+                ),
+                if (!isGuest)
+                  _buildNavItem(
+                    LucideIcons.settings,
+                    l10n.settings,
+                    4,
+                    isDark,
+                    primaryColor,
+                  ),
               ],
             ),
           ),
@@ -95,8 +128,13 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-
-  Widget _buildNavItem(IconData icon, String label, int index, bool isDark, Color primaryColor) {
+  Widget _buildNavItem(
+    IconData icon,
+    String label,
+    int index,
+    bool isDark,
+    Color primaryColor,
+  ) {
     final isSelected = _currentIndex == index;
 
     return GestureDetector(
@@ -110,27 +148,29 @@ class _MainScreenState extends State<MainScreen> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutQuart,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 18.0 : 12.0, 
-          vertical: 10.0
+          horizontal: isSelected ? 18.0 : 12.0,
+          vertical: 10.0,
         ),
         decoration: BoxDecoration(
           color: isSelected ? primaryColor : Colors.transparent,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected 
-                  ? Colors.white 
+              color: isSelected
+                  ? Colors.white
                   : (isDark ? Colors.white60 : Colors.black54),
               size: 20,
             ),

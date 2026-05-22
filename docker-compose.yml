@@ -4,17 +4,17 @@ services:
     container_name: visiobin-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-visiobin}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432"
+      - "${DB_HOST_PORT}:${DB_PORT}"
     volumes:
       - visiobin_pgdata:/var/lib/postgresql/data
       - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
       - ./backend/migrations/002_maintenance_logs.sql:/docker-entrypoint-initdb.d/002_maintenance_logs.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\""]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,19 +23,21 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        PORT: ${BACKEND_PORT}
     container_name: visiobin-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-visiobin}?sslmode=disable
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT=8080
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/firebase-service-account.json}
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}
+      JWT_SECRET: ${JWT_SECRET}
+      API_KEY: ${API_KEY}
+      PORT: ${BACKEND_PORT}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     volumes:
-      - ./backend/.env:/app/.env:ro
       - ./backend/firebase-service-account.json:/app/firebase-service-account.json:ro
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,12 +46,18 @@ services:
     build:
       context: ./web-dashboard
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        CAMERA_STREAM_URL: ${CAMERA_STREAM_URL}
+        PORT: ${DASHBOARD_PORT}
     container_name: visiobin-dashboard
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      CAMERA_STREAM_URL: ${CAMERA_STREAM_URL}
+      NEXT_PUBLIC_CAMERA_STREAM_URL: ${CAMERA_STREAM_URL}
     ports:
-      - "3000:3000"
+      - "${DASHBOARD_PORT}:${DASHBOARD_PORT}"
     depends_on:
       - backend
 
@@ -59,16 +67,32 @@ services:
       dockerfile: Dockerfile
     container_name: visiobin-simulator
     restart: unless-stopped
+    environment:
+      API_KEY: ${API_KEY}
+      SIMULATOR_API_URL: ${SIMULATOR_API_URL}
+      SIMULATOR_USER: ${SIMULATOR_USER}
+      SIMULATOR_PASSWORD: ${SIMULATOR_PASSWORD}
+      SIMULATOR_SCENARIO: ${SIMULATOR_SCENARIO}
     depends_on:
       - backend
-    command: ["-url", "http://backend:8080/api/v1", "-interval", "5", "-user", "ibnu", "-pass", "zee343212", "-scenario", "default"]
+    command:
+      - "-url"
+      - "${SIMULATOR_API_URL}"
+      - "-interval"
+      - "${SIMULATOR_INTERVAL}"
+      - "-user"
+      - "${SIMULATOR_USER}"
+      - "-pass"
+      - "${SIMULATOR_PASSWORD}"
+      - "-scenario"
+      - "${SIMULATOR_SCENARIO}"
 
   adminer:
     image: adminer
     container_name: visiobin-adminer
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "${ADMINER_PORT}:${ADMINER_CONTAINER_PORT}"
     depends_on:
       - postgres
 
