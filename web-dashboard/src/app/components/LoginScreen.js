@@ -1,12 +1,56 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trash2, ShieldCheck, Eye, Code, HelpCircle } from 'lucide-react';
+import { Trash2, ShieldCheck, Eye, Code, HelpCircle, Moon, Sun } from 'lucide-react';
 
-export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin, onShowDocs, onShowHelp }) {
+const getInitialTheme = () => {
+  if (typeof window === 'undefined') return 'dark';
+  return localStorage.getItem('visiobin-theme') || (document.body.classList.contains('light-mode') ? 'light' : 'dark');
+};
+
+export default function LoginScreen({ loginForm, setLoginForm, handleLogin, handleGuestLogin }) {
+  const [theme, setTheme] = useState(getInitialTheme);
+  const isLight = theme === 'light';
+  const ThemeIcon = isLight ? Moon : Sun;
+
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', isLight);
+    localStorage.setItem('visiobin-theme', theme);
+  }, [isLight, theme]);
+
+  const toggleTheme = () => {
+    setTheme(currentTheme => (currentTheme === 'dark' ? 'light' : 'dark'));
+  };
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', position: 'relative' }}>
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={isLight ? 'Gunakan dark mode' : 'Gunakan light mode'}
+        title={isLight ? 'Gunakan dark mode' : 'Gunakan light mode'}
+        style={{
+          position: 'absolute',
+          top: 24,
+          right: 24,
+          width: 40,
+          height: 40,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-card)',
+          color: 'var(--text-main)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 8,
+          cursor: 'pointer',
+          zIndex: 10,
+          boxShadow: 'var(--shadow-card)'
+        }}
+      >
+        <ThemeIcon size={18} />
+      </button>
+
       <div style={{
         flex: 1,
         borderRight: '1px solid var(--border-color)',
@@ -15,10 +59,10 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
         padding: 60,
         position: 'relative',
         overflow: 'hidden',
-        background: '#000000'
+        background: 'var(--bg-page)'
       }}>
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
+          <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)' }}>
             VisioBIN Core
           </span>
         </div>
@@ -32,39 +76,39 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
           zIndex: 1,
           marginTop: 40
         }}>
-        <div style={{ 
-          marginBottom: 60,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 240,
-          height: 240,
-          position: 'relative'
-        }}>
-          <Trash2 
-            size={160} 
-            strokeWidth={1.5} 
-            color="var(--text-main)"
-            style={{ position: 'relative', zIndex: 2, opacity: 0.9 }}
-          />
           <div style={{
-            position: 'absolute',
-            top: '55%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 3,
-            background: 'var(--bg-card)',
-            padding: 6,
-            borderRadius: '50%',
+            marginBottom: 60,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(0,0,0,0.5)'
+            width: 240,
+            height: 240,
+            position: 'relative'
           }}>
-            <Eye size={40} color="var(--brand-organic)" strokeWidth={2.5} />
+            <Trash2
+              size={160}
+              strokeWidth={1.5}
+              color="var(--text-main)"
+              style={{ position: 'relative', zIndex: 2, opacity: 0.92 }}
+            />
+            <div style={{
+              position: 'absolute',
+              top: '55%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 3,
+              background: 'var(--bg-card)',
+              padding: 6,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'var(--shadow-card)'
+            }}>
+              <Eye size={40} color="var(--brand-organic)" strokeWidth={2.5} />
+            </div>
           </div>
-        </div>
-          <h2 style={{ fontSize: 40, fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-1.5px', marginBottom: 16, lineHeight: 1.1 }}>
+          <h2 style={{ fontSize: 40, fontWeight: 600, color: 'var(--text-main)', letterSpacing: 0, marginBottom: 16, lineHeight: 1.1 }}>
             Terminal Sortir AI<br />Pintar & Otomatis.
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 16, lineHeight: 1.6, maxWidth: 440 }}>
@@ -76,7 +120,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, background: 'var(--bg-page)' }}>
         <div style={{ width: '100%', maxWidth: 360 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.5px', marginBottom: 8 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--text-main)', letterSpacing: 0, marginBottom: 8 }}>
             Masuk dengan aman
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 40 }}>
@@ -107,7 +151,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
                 value={loginForm.password}
                 onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
                 style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', fontSize: 14, outline: 'none' }}
-                placeholder="••••••••"
+                placeholder="********"
                 required
               />
             </div>
@@ -147,9 +191,9 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0' }}>
-              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>atau</span>
-              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
             </div>
 
             <button
@@ -174,14 +218,14 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
               Masuk sebagai Tamu
             </button>
 
-            <Link 
+            <Link
               href="/apidocs"
               style={{
                 width: '100%',
                 padding: '14px',
-                background: 'rgba(139, 92, 246, 0.1)',
-                color: '#8B5CF6',
-                border: '1px solid rgba(139, 92, 246, 0.3)',
+                background: 'var(--bg-hover)',
+                color: 'var(--brand-inorganic)',
+                border: '1px solid var(--border-color)',
                 borderRadius: 8,
                 fontSize: 14,
                 fontWeight: 600,
@@ -220,7 +264,7 @@ export default function LoginScreen({ loginForm, setLoginForm, handleLogin, hand
             justifyContent: 'center',
             gap: 20
           }}>
-            <Link 
+            <Link
               href="/help"
               style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
             >
