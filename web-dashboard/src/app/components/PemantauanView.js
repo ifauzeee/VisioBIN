@@ -82,18 +82,18 @@ export default function PemantauanView() {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)',
+            background: 'linear-gradient(to bottom, var(--stream-overlay-bg-top), transparent)',
             zIndex: 10,
             pointerEvents: 'none'
           }}>
-            <div className="card-title" style={{ margin: 0, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
+            <div className="card-title" style={{ margin: 0, color: 'var(--stream-text)', textShadow: 'var(--stream-text-shadow)', pointerEvents: 'auto' }}>
               <Video size={16} /> {t('streamMatrix')}
             </div>
             <div style={{ display: 'flex', gap: 10, pointerEvents: 'auto' }}>
               <button 
                 onClick={() => setIsConfiguring(!isConfiguring)}
                 className="btn-secondary"
-                style={{ padding: '6px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ padding: '6px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--stream-btn-bg)', backdropFilter: 'blur(10px)', color: 'var(--stream-btn-text)', border: '1px solid var(--stream-btn-border)' }}
               >
                 <Settings2 size={12} /> {isConfiguring ? t('cancel') : t('configure')}
               </button>
@@ -120,11 +120,11 @@ export default function PemantauanView() {
                   zIndex: 20, 
                   position: 'absolute', 
                   top: 70, left: 24, right: 24,
-                  background: 'rgba(10,10,10,0.9)',
+                  background: 'var(--glass-bg)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: 12,
-                  border: '1px solid var(--border-color)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                  border: '1px solid var(--glass-border)',
+                  boxShadow: 'var(--shadow-card)'
                 }}
               >
                 <div style={{ padding: '16px' }}>
@@ -183,7 +183,7 @@ export default function PemantauanView() {
                       <div
                         className="live-feed-preview"
                         style={{
-                          backgroundColor: s.status === 'offline' ? 'rgba(0,0,0,0.4)' : '#000',
+                          backgroundColor: s.status === 'offline' ? 'var(--stream-offline-bg)' : 'var(--stream-tile-bg)',
                           position: 'absolute',
                           inset: 0,
                           height: '100%',
@@ -212,10 +212,10 @@ export default function PemantauanView() {
                             
                             <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', alignItems: 'center', gap: 8, zIndex: 5 }}>
                               <div style={{ width: 10, height: 10, background: '#ef4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
-                              <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)', letterSpacing: '1px' }}>REC</span>
+                              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--stream-text)', textShadow: 'var(--stream-text-shadow)', letterSpacing: '1px' }}>REC</span>
                             </div>
                             
-                            <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 11, color: '#fff', fontFamily: 'monospace', textShadow: '0 1px 4px rgba(0,0,0,0.8)', zIndex: 5 }}>
+                            <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 11, color: 'var(--stream-text)', fontFamily: 'monospace', textShadow: 'var(--stream-text-shadow)', zIndex: 5 }}>
                               {new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US')}
                             </div>
                             
@@ -225,20 +225,20 @@ export default function PemantauanView() {
                               left: 0, 
                               right: 0, 
                               padding: '40px 16px 16px',
-                              background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                              background: 'var(--stream-overlay-bg-bottom)',
                               zIndex: 5
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                                 <div>
                                   <div style={{ fontSize: 10, color: 'var(--brand-organic)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{s.id}</div>
-                                  <div style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>{s.zone}</div>
+                                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--stream-text)' }}>{s.zone}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--stream-text)', opacity: 0.85 }}>
                                     <Activity size={12} color="var(--brand-organic)" />
                                     <span className="mono">{((s.fps || 30) / 10).toFixed(1)} Mbps</span>
                                   </div>
-                                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{s.latency} latency</div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{s.latency} latency</div>
                                 </div>
                               </div>
                             </div>
@@ -247,8 +247,8 @@ export default function PemantauanView() {
                         
                         {s.status === 'offline' && (
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-                            <VideoOff size={40} color="rgba(255,255,255,0.2)" />
-                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>{t('signalLost')}</span>
+                            <VideoOff size={40} color="var(--stream-offline-icon)" />
+                            <span style={{ fontSize: 12, color: 'var(--stream-offline-text)', fontWeight: 500 }}>{t('signalLost')}</span>
                           </div>
                         )}
                       </div>
