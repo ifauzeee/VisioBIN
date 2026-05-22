@@ -210,10 +210,7 @@ export default function PemantauanView() {
                             
                             <div className="live-feed-scan" style={{ opacity: 0.3 }} />
                             
-                            <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', alignItems: 'center', gap: 8, zIndex: 5 }}>
-                              <div style={{ width: 10, height: 10, background: '#ef4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
-                              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--stream-text)', textShadow: 'var(--stream-text-shadow)', letterSpacing: '1px' }}>REC</span>
-                            </div>
+                            
                             
                             <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 11, color: 'var(--stream-text)', fontFamily: 'monospace', textShadow: 'var(--stream-text-shadow)', zIndex: 5 }}>
                               {new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US')}
