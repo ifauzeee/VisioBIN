@@ -212,9 +212,7 @@ export default function PemantauanView() {
                             
                             
                             
-                            <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 11, color: 'var(--stream-text)', fontFamily: 'monospace', textShadow: 'var(--stream-text-shadow)', zIndex: 5 }}>
-                              {new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US')}
-                            </div>
+                            
                             
                             <div style={{ 
                               position: 'absolute', 
