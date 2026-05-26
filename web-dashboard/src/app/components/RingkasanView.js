@@ -10,7 +10,7 @@ import {
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
   ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock 
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate } from "framer-motion";
 import {
   hasClassificationData,
   mapDailyStats,
@@ -19,8 +19,167 @@ import {
 import { useTranslations } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
+// A simple rolling number counter using Framer Motion animate
+function RollingNumber({ value, duration = 1 }) {
+  const nodeRef = React.useRef();
+  const prevValueRef = React.useRef(0);
 
-export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive }) {
+  React.useEffect(() => {
+    const node = nodeRef.current;
+    if (!node) return;
+
+    const start = prevValueRef.current;
+    const end = typeof value === 'string' ? parseFloat(value) : value;
+
+    if (isNaN(end)) {
+      node.textContent = value;
+      return;
+    }
+
+    const controls = animate(start, end, {
+      duration: duration,
+      ease: "easeOut",
+      onUpdate(current) {
+        if (Number.isInteger(end)) {
+          node.textContent = Math.round(current);
+        } else {
+          node.textContent = current.toFixed(1);
+        }
+      }
+    });
+
+    prevValueRef.current = end;
+    return () => controls.stop();
+  }, [value, duration]);
+
+  return <span ref={nodeRef}>{value}</span>;
+}
+
+// Custom tooltip for weekly trend daily stats
+const CustomWeeklyTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const organik = payload.find(p => p.dataKey === 'organik')?.value || 0;
+    const anorganik = payload.find(p => p.dataKey === 'anorganik')?.value || 0;
+    const total = organik + anorganik;
+    const ratio = anorganik > 0 ? `${(organik / anorganik).toFixed(2)}:1` : '—';
+    const organicPercent = total > 0 ? Math.round((organik / total) * 100) : 0;
+    const inorganicPercent = total > 0 ? Math.round((anorganik / total) * 100) : 0;
+
+    return (
+      <div className="custom-tooltip" style={{
+        background: "rgba(10, 10, 10, 0.85)",
+        backdropFilter: "blur(8px)",
+        border: "1px solid var(--border-hover)",
+        borderRadius: "12px",
+        padding: "12px 16px",
+        color: "var(--text-main)",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.5)"
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: "var(--text-main)" }}>{label}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
+            <span style={{ color: "var(--brand-organic)", fontWeight: 500 }}>🟢 Organik:</span>
+            <span className="mono" style={{ fontWeight: 600 }}>{organik} ({organicPercent}%)</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
+            <span style={{ color: "var(--brand-inorganic)", fontWeight: 500 }}>🔵 Anorganik:</span>
+            <span className="mono" style={{ fontWeight: 600 }}>{anorganik} ({inorganicPercent}%)</span>
+          </div>
+          <div style={{ height: 1, background: "var(--border-color)", margin: "4px 0" }} />
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
+            <span style={{ color: "var(--text-muted)" }}>Total Sampah:</span>
+            <span className="mono" style={{ fontWeight: 600 }}>{total}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
+            <span style={{ color: "var(--text-muted)" }}>Rasio O/A:</span>
+            <span className="mono" style={{ fontWeight: 600, color: "#8B5CF6" }}>{ratio}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom tooltip for volume history
+const CustomVolumeTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const volume = payload[0].value;
+    let status = 'Aman';
+    let color = 'var(--brand-organic)';
+    if (volume > 80) {
+      status = 'Penuh';
+      color = '#ef4444';
+    } else if (volume > 60) {
+      status = 'Waspada';
+      color = '#f59e0b';
+    }
+
+    return (
+      <div className="custom-tooltip" style={{
+        background: "rgba(10, 10, 10, 0.85)",
+        backdropFilter: "blur(8px)",
+        border: "1px solid var(--border-hover)",
+        borderRadius: "12px",
+        padding: "10px 14px",
+        color: "var(--text-main)",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.5)"
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Waktu: {label}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <span style={{ color: "var(--text-muted)" }}>Tingkat Kepenuhan:</span>
+            <span className="mono" style={{ fontWeight: 600, color: "var(--brand-organic)" }}>{volume}%</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <span style={{ color: "var(--text-muted)" }}>Status:</span>
+            <span style={{ fontWeight: 600, color: color }}>{status}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+function RingkasanSkeleton() {
+  return (
+    <div style={{ opacity: 0.8 }}>
+      {/* AI Insight Placeholder */}
+      <div className="card skeleton-shimmer" style={{ height: 72, marginBottom: 24, borderRadius: 16 }} />
+
+      {/* KPI Grid Placeholders */}
+      <div className="kpi-grid" style={{ marginBottom: 24 }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="glass-card skeleton-shimmer" style={{ height: 120, borderRadius: 16 }} />
+        ))}
+      </div>
+
+      {/* Camera & Reservoir Grid */}
+      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        <div className="card skeleton-shimmer" style={{ height: 360 }} />
+        <div className="card skeleton-shimmer" style={{ height: 360 }} />
+      </div>
+
+      {/* History & Distribution Grid */}
+      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        <div className="card skeleton-shimmer" style={{ height: 400 }} />
+        <div className="card skeleton-shimmer" style={{ height: 400 }} />
+      </div>
+
+      {/* Daily & Recent Activity Grid */}
+      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        <div className="card skeleton-shimmer" style={{ height: 350 }} />
+        <div className="card skeleton-shimmer" style={{ height: 350 }} />
+      </div>
+    </div>
+  );
+}
+
+export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading }) {
+  if (loading) {
+    return <RingkasanSkeleton />;
+  }
   const t = useTranslations('dashboard');
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
@@ -167,15 +326,17 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
       >
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
-          style={{ padding: '20px 24px' }}
+          style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title">
             <LeafIcon size={16} color="var(--brand-organic)" /> {t('total_processed_today')}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
-              {summary.total_processed}
+              <RollingNumber value={summary.total_processed} />
             </span>
             {summary.total_processed > 0 && (
               <span style={{ color: 'var(--brand-organic)', fontSize: 13, display: 'flex', alignItems: 'center' }}>
@@ -188,14 +349,18 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
-          style={{ padding: '20px 24px' }}
+          style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title">
             <Trash2 size={16} color="#22d3ee" /> {t('bin_level')}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{binLevel}</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+              <RollingNumber value={binLevel} />
+            </span>
             <span style={{ color: binLevel > 80 ? '#ef4444' : '#22d3ee', fontSize: 13 }}>%</span>
           </div>
           <div className="progress-bar" style={{ marginTop: 8 }}>
@@ -213,12 +378,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
-          style={{ padding: '20px 24px' }}
+          style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Orbit size={16} /> {t('co2_reduced')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{summary.co2}</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+              <RollingNumber value={summary.co2} />
+            </span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>kg</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('monthly_estimate')}</div>
@@ -226,12 +395,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
-          style={{ padding: '20px 24px' }}
+          style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Cpu size={16} /> {t('edge_latency')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedLatency}</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+              <RollingNumber value={computedLatency} />
+            </span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>ms</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('response_time')}</div>
@@ -239,12 +412,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
-          style={{ padding: '20px 24px' }}
+          style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> {t('ai_accuracy')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>{computedAccuracy}</span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+              <RollingNumber value={computedAccuracy} />
+            </span>
             <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
@@ -256,13 +433,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card"
           style={{ 
             padding: '20px 24px', 
             border: '1px solid rgba(16, 185, 129, 0.2)',
             background: 'linear-gradient(135deg, var(--glass-bg) 0%, rgba(16, 185, 129, 0.05) 100%)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            cursor: 'pointer'
           }}
         >
           <div className="card-title">
@@ -275,7 +455,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
               <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-1px' }}>
-                {forecast?.hours_until_full_organic ? Math.round(forecast.hours_until_full_organic) : '—'}
+                {forecast?.hours_until_full_organic ? (
+                  <RollingNumber value={Math.round(forecast.hours_until_full_organic)} />
+                ) : '—'}
               </span>
               <span style={{ color: 'var(--brand-organic)', fontSize: 13, fontWeight: 600 }}>{t('hours')}</span>
             </div>
@@ -454,7 +636,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                   <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                  <Tooltip content={<CustomVolumeTooltip />} />
                   <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={true} />
                   <Brush
                     dataKey="jam"
@@ -534,7 +716,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                   <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                  <Tooltip content={<CustomWeeklyTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
                   <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />

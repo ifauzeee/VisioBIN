@@ -6,7 +6,7 @@ import { useDashboardContext } from "../../context/DashboardContext";
 import { motion } from "framer-motion";
 
 export default function RingkasanPage() {
-  const { summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive } = useDashboardContext();
+  const { summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading } = useDashboardContext();
 
   return (
     <motion.div
@@ -23,6 +23,7 @@ export default function RingkasanPage() {
         logs={logs}
         forecast={forecast}
         wsActive={wsActive}
+        loading={loading}
       />
     </motion.div>
   );
