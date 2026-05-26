@@ -10,11 +10,11 @@ const DashboardContext = createContext(null);
 export function DashboardProvider({ children }) {
   const { token, isAuthenticated } = useAuth();
   
-  const dashboardData = useDashboard(isAuthenticated ? token : null);
+  const dashboardState = useDashboard(isAuthenticated ? token : null);
   const alertData = useAlerts(isAuthenticated ? token : null);
 
   return (
-    <DashboardContext.Provider value={{ ...dashboardData, ...alertData }}>
+    <DashboardContext.Provider value={{ ...dashboardState, ...alertData }}>
       {children}
     </DashboardContext.Provider>
   );

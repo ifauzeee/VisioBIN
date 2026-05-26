@@ -14,6 +14,7 @@ export function useDashboard(token) {
     organic: 0,
     inorganic: 0,
     co2: 0,
+    compost: 0,
     latency: 0,
     unread_alerts: 0,
     bins_near_full: 0,
@@ -56,8 +57,9 @@ export function useDashboard(token) {
           total_processed: org + inorg,
           organic: org,
           inorganic: inorg,
-          co2: +(org * 0.05 + inorg * 0.02).toFixed(2),
-          latency: 14,
+          co2: +(s.total_co2 || 0).toFixed(2),
+          compost: +(s.total_compost || 0).toFixed(2),
+          latency: 0,
           unread_alerts: s.unread_alerts || 0,
           bins_near_full: s.bins_near_full || 0,
           total_bins: s.total_bins || 0,
@@ -111,6 +113,15 @@ export function useDashboard(token) {
           bin_id: l.bin_id,
         }));
         setLogs(newLogs);
+        setSummary((prev) => ({
+          ...prev,
+          latency: newLogs.length
+            ? Math.round(
+                newLogs.reduce((acc, log) => acc + (log.inference_ms || 0), 0) /
+                  newLogs.length
+              )
+            : 0,
+        }));
 
         // Update vision state with latest classification
         if (newLogs.length > 0) {
@@ -146,7 +157,7 @@ export function useDashboard(token) {
   useEffect(() => {
     if (!token) return;
 
-    fetchData();
+    const initialFetch = setTimeout(fetchData, 0);
     const interval = setInterval(fetchData, POLL_DASHBOARD);
 
     // WebSocket for Real-time
@@ -215,6 +226,7 @@ export function useDashboard(token) {
     };
 
     return () => {
+      clearTimeout(initialFetch);
       clearInterval(interval);
       ws.close();
       if (visionTimeoutRef.current) clearTimeout(visionTimeoutRef.current);

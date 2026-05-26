@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  dataVolumePerJam, dataKlasifikasiHarian, dataDistribusiSampah,
-  dampakLingkungan, defaultLogs, dataPemrosesanPerJam
-} from '../dashboardData';
+  mapDailyStats,
+  mapVolumeHistory,
+} from '../utils/realDataTransforms.mjs';
 import { useTranslations } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
@@ -30,10 +30,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     }
   }, []);
 
-  // Use real data from summary if available, fallback to sample data for visual consistency if empty
-  const rawGraphData = summary.volume_history?.length > 0 
-    ? summary.volume_history.map(d => ({ jam: d.hour, volume: d.volume }))
-    : dataVolumePerJam;
+  const rawGraphData = mapVolumeHistory(summary.volume_history || []);
 
   const graphData = React.useMemo(() => {
     if (filterRange === 'all') return rawGraphData;
@@ -41,27 +38,19 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     return rawGraphData.slice(-hours);
   }, [rawGraphData, filterRange]);
 
-  const dailyStats = summary.daily_stats?.length > 0
-    ? summary.daily_stats.map(d => ({ hari: d.day, organik: d.organic, anorganik: d.inorganic }))
-    : dataKlasifikasiHarian;
+  const dailyStats = mapDailyStats(summary.daily_stats || []);
 
   const distributionData = summary.distribution?.length > 0
     ? summary.distribution
-    : dataDistribusiSampah;
-
-  const processingData = summary.processing_history?.length > 0
-    ? summary.processing_history.map(d => ({ jam: d.hour, items: d.items }))
-    : dataPemrosesanPerJam;
-
-  const displayLogs = logs.length ? logs : defaultLogs;
+    : [];
 
   const computedAccuracy = logs.length > 0
     ? (logs.reduce((acc, l) => acc + (l.prob || 0), 0) / logs.length).toFixed(1)
-    : '97.8';
+    : '0.0';
 
   const computedLatency = logs.length > 0
     ? Math.round(logs.reduce((acc, l) => acc + (l.inference_ms || 0), 0) / logs.length)
-    : summary.latency || 14;
+    : summary.latency || 0;
 
   const generateInsight = () => {
     const total = summary.total_processed || 0;
@@ -82,7 +71,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     }
     return {
       text: t.rich('insight_success', {
-        accuracy: '97.8%',
+        accuracy: `${computedAccuracy}%`,
         co2: co2,
         b: (chunks) => <b>{chunks}</b>
       }),
@@ -436,31 +425,37 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             </div>
           </div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
-                <defs>
-                  <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="var(--brand-organic)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
-                <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-                <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={true} />
-                <Brush 
-                  dataKey="jam" 
-                  height={30} 
-                  stroke="var(--brand-organic)" 
-                  fill="var(--bg-card)" 
-                  tickFormatter={() => ''} 
-                  startIndex={brushRange.start}
-                  endIndex={brushRange.end}
-                  onChange={handleBrushChange}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {graphData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+                  <defs>
+                    <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--brand-organic)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
+                  <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                  <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={true} />
+                  <Brush
+                    dataKey="jam"
+                    height={30}
+                    stroke="var(--brand-organic)"
+                    fill="var(--bg-card)"
+                    tickFormatter={() => ''}
+                    startIndex={brushRange.start}
+                    endIndex={brushRange.end}
+                    onChange={handleBrushChange}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                Belum ada data telemetry.
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -473,14 +468,20 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         >
           <div className="card-title">🥧 {t('waste_distribution')}</div>
           <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height={220}>
-              <RPieChart style={{ background: 'transparent' }}>
-                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
-                  {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-              </RPieChart>
-            </ResponsiveContainer>
+            {distributionData.length ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <RPieChart style={{ background: 'transparent' }}>
+                  <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
+                    {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                </RPieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: 220, display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                Belum ada data klasifikasi.
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, padding: '0 4px' }}>
             {(() => {
@@ -510,17 +511,23 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         >
           <div className="card-title">📊 {t('daily_classification')}</div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
-                <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
-                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />
-              </BarChart>
-            </ResponsiveContainer>
+            {dailyStats.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
+                  <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
+                  <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                Belum ada klasifikasi harian.
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -534,7 +541,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div className="card-title"><Activity size={16} /> {t('recent_activity')}</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <AnimatePresence initial={false}>
-              {displayLogs.map((log, i) => (
+              {logs.length ? logs.map((log, i) => (
                 <motion.div 
                   key={log.id} 
                   initial={{ opacity: 0, x: -20 }}
@@ -551,7 +558,11 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                     <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
                   </div>
                 </motion.div>
-              ))}
+              )) : (
+                <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                  Belum ada aktivitas klasifikasi.
+                </div>
+              )}
             </AnimatePresence>
           </div>
         </motion.div>

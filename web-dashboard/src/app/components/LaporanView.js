@@ -2,21 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
-import { Download, FileText } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Download } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { listClassifications } from "../services/api";
-import { SkeletonChart, SkeletonTable } from "./shared/Skeleton";
+import { getDashboardSummary, listClassifications } from "../services/api";
+import { SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { formatDate } from "../utils/formatters";
 import { useTranslations } from 'next-intl';
-import {
-  dataLaporanHarian as defDaily, dataRingkasanMingguan as defWeekly,
-  dataLingkunganBulanan as defEnv,
-} from "../dashboardData";
+import { averageConfidence, groupClassificationsByDay } from "../utils/realDataTransforms.mjs";
 
 export default React.memo(function LaporanView() {
   const t = useTranslations('reports');
@@ -33,15 +30,17 @@ export default React.memo(function LaporanView() {
   const fetchReports = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await listClassifications(token, { limit: 100 });
-      if (res.success) {
-        const logs = res.data || [];
-        const daily = logs.slice(0, 15).map(l => ({
-          tgl: formatDate(l.classified_at),
-          organik: l.predicted_class === 'organic' ? 1 : 0,
-          anorganik: l.predicted_class === 'inorganic' ? 1 : 0,
-        }));
-        setData({ daily, logs });
+      const [classRes, summaryRes] = await Promise.all([
+        listClassifications(token, { limit: 100 }),
+        getDashboardSummary(token),
+      ]);
+      if (classRes.success) {
+        const logs = classRes.data || [];
+        setData({
+          daily: groupClassificationsByDay(logs),
+          logs,
+          summary: summaryRes.success ? summaryRes.data : null,
+        });
       }
     } catch (err) {
       console.error("Laporan fetch error:", err);
@@ -57,9 +56,14 @@ export default React.memo(function LaporanView() {
   if (loading && !data) return <div style={{ padding: 40 }}><SkeletonChart /></div>;
   if (!data) return <EmptyState title="No report data available" />;
 
-  const dailyData = data.daily.length ? data.daily : defDaily;
+  const dailyData = data.daily;
   const logs = data.logs;
   const totalItems = logs.length;
+  const avgAccuracy = averageConfidence(logs);
+  const totalCo2 = +(data.summary?.total_co2 || 0).toFixed(2);
+  const totalCompost = +(data.summary?.total_compost || 0).toFixed(2);
+  const organicTotal = logs.filter((log) => log.predicted_class === "organic").length;
+  const inorganicTotal = logs.filter((log) => log.predicted_class === "inorganic").length;
 
   return (
     <motion.div
@@ -80,16 +84,16 @@ export default React.memo(function LaporanView() {
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="card">
           <div className="card-title">{t('totalClassifications')}</div>
           <div style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>{totalItems}</div>
-          <div style={{ fontSize: 11, color: "var(--brand-organic)", marginTop: 4 }}>+12% vs yesterday</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Dari log klasifikasi backend</div>
         </motion.div>
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="card">
           <div className="card-title">{t('avgAccuracy')}</div>
-          <div style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>97.4%</div>
-          <div style={{ fontSize: 11, color: "var(--brand-organic)", marginTop: 4 }}>Very Stable</div>
+          <div style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>{avgAccuracy.toFixed(1)}%</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Rata-rata confidence real</div>
         </motion.div>
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="card">
           <div className="card-title">{t('estVolume')}</div>
-          <div style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>12.4 Kg</div>
+          <div style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>{totalCompost.toFixed(1)} Kg</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{t('cumulative')}</div>
         </motion.div>
       </motion.div>
@@ -106,27 +110,33 @@ export default React.memo(function LaporanView() {
             <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 12 }}>{t('downloadCsv')}</button>
           </div>
           <div style={{ flex: 1, marginLeft: -20, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                <XAxis dataKey="tgl" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={d('organic')} isAnimationActive={false} />
-                <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={d('inorganic')} isAnimationActive={false} />
-                <Brush 
-                  dataKey="tgl" 
-                  height={30} 
-                  stroke="var(--border-color)" 
-                  fill="var(--bg-card)" 
-                  tickFormatter={() => ''} 
-                  startIndex={brushRange.start}
-                  endIndex={brushRange.end}
-                  onChange={handleBrushChange}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {dailyData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                  <XAxis dataKey="tgl" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={d('organic')} isAnimationActive={false} />
+                  <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={d('inorganic')} isAnimationActive={false} />
+                  <Brush
+                    dataKey="tgl"
+                    height={30}
+                    stroke="var(--border-color)"
+                    fill="var(--bg-card)"
+                    tickFormatter={() => ''}
+                    startIndex={brushRange.start}
+                    endIndex={brushRange.end}
+                    onChange={handleBrushChange}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: "100%", display: "grid", placeItems: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                Belum ada data laporan harian.
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -136,19 +146,19 @@ export default React.memo(function LaporanView() {
             <div style={{ marginTop: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t('co2Avoided')}</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>42.1 Kg</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{totalCo2.toFixed(1)} Kg</span>
               </div>
               <div style={{ height: 6, background: "rgba(16,185,129,0.1)", borderRadius: 3 }}>
-                <div style={{ width: "75%", height: "100%", background: "var(--brand-organic)", borderRadius: 3 }} />
+                <div style={{ width: `${Math.min(100, totalCo2)}%`, height: "100%", background: "var(--brand-organic)", borderRadius: 3 }} />
               </div>
             </div>
             <div style={{ marginTop: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t('landSaved')}</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>2.4 m²</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{totalCompost.toFixed(1)} Kg kompos</span>
               </div>
               <div style={{ height: 6, background: "rgba(34,211,238,0.1)", borderRadius: 3 }}>
-                <div style={{ width: "45%", height: "100%", background: "#22d3ee", borderRadius: 3 }} />
+                <div style={{ width: `${Math.min(100, totalCompost)}%`, height: "100%", background: "#22d3ee", borderRadius: 3 }} />
               </div>
             </div>
           </div>
@@ -158,11 +168,11 @@ export default React.memo(function LaporanView() {
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px solid var(--border-color)" }}>
                 <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>{t('mostOrganic')}</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>Food Waste</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{organicTotal} item organik</div>
               </div>
               <div style={{ padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px solid var(--border-color)" }}>
                 <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>{t('mostInorganic')}</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>PET Plastic Bottles</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{inorganicTotal} item anorganik</div>
               </div>
             </div>
           </div>
@@ -192,7 +202,7 @@ export default React.memo(function LaporanView() {
               </tr>
             </thead>
             <tbody>
-              {logs.slice(0, 10).map((log, i) => (
+              {logs.length ? logs.slice(0, 10).map((log) => (
                 <tr key={log.id} style={{ borderTop: "1px solid var(--border-color)" }}>
                   <td style={{ padding: "16px 24px", fontSize: 13 }}>{formatDate(log.classified_at)}</td>
                   <td style={{ padding: "16px 24px", fontSize: 13, fontWeight: 500 }}>{log.predicted_class}</td>
@@ -212,11 +222,17 @@ export default React.memo(function LaporanView() {
                   <td className="mono" style={{ padding: "16px 24px", fontSize: 13 }}>{(log.confidence * 100).toFixed(1)}%</td>
                   <td style={{ padding: "16px 24px", fontSize: 13, color: "var(--text-muted)" }}>Bin-{log.bin_id || '01'}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={5} style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                    Belum ada log klasifikasi real.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
     </motion.div>
   );
-});
+});

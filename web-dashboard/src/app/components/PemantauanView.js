@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Video, Wifi, AlertTriangle, Clock3, VideoOff, RefreshCw, Settings2, Activity } from 'lucide-react';
-import { liveFeedSummary, liveFeedStreams as initialStreams, liveEventQueue } from '../dashboardData';
+import { useDashboardContext } from '../context/DashboardContext';
 import EmptyState from './shared/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
 const ICONS_MAP = {
@@ -17,17 +17,32 @@ const ICONS_MAP = {
 
 export default function PemantauanView() {
   const t = useTranslations('monitoring');
-  const locale = useLocale();
-  const [streams, setStreams] = useState(initialStreams);
+  const { alerts = [], unreadCount = 0 } = useDashboardContext();
   const [streamUrl, setStreamUrl] = useState(APP_CONFIG.cameraStreamUrl);
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempUrl, setTempUrl] = useState(streamUrl);
 
+  const streams = streamUrl
+    ? [{ id: 'CAM-01', zone: 'Raspberry Pi Camera', fps: 30, latency: 'live', status: 'online' }]
+    : [];
   const activeStreams = streams.filter(s => s.status !== 'offline');
   const allOffline = activeStreams.length === 0;
+  const liveFeedSummary = [
+    { label: 'Stream Aktif', value: String(activeStreams.length).padStart(2, '0'), tone: '#10B981', note: streamUrl || 'Belum ada URL kamera' },
+    { label: 'Uptime Jaringan', value: allOffline ? '0%' : 'Live', tone: '#22d3ee', note: allOffline ? t('allOffline') : 'Menggunakan konfigurasi kamera aktif' },
+    { label: 'Peringatan Kritis', value: String(unreadCount).padStart(2, '0'), tone: '#f59e0b', note: unreadCount ? 'Alert belum dibaca' : t('allNormal') },
+  ];
+  const liveEventQueue = alerts.map((alert) => ({
+    id: alert.id,
+    type: alert.alert_type,
+    source: alert.bin_name || alert.bin_id,
+    severity: alert.severity || 'info',
+    age: new Date(alert.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+  }));
 
   const handleReconnect = () => {
-    setStreams(initialStreams);
+    setTempUrl(APP_CONFIG.cameraStreamUrl);
+    setStreamUrl(APP_CONFIG.cameraStreamUrl);
   };
 
   const handleSaveConfig = () => {
@@ -35,7 +50,6 @@ export default function PemantauanView() {
     setIsConfiguring(false);
   };
 
-  // Helper to translate summary labels from dashboardData
   const getTranslatedLabel = (label) => {
     if (label === 'Stream Aktif') return t('activeStreams');
     if (label === 'Uptime Jaringan') return t('uptime');

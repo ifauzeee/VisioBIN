@@ -4,56 +4,38 @@ import React from "react";
 import { Cpu, Wifi, AlertTriangle, MapPin, Activity } from "lucide-react";
 import { useBins } from "../hooks/useBins";
 import { useAuth } from "../hooks/useAuth";
+import { useDashboardContext } from "../context/DashboardContext";
 import { SkeletonCard, SkeletonTable } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { getBinLevelColor } from "../utils/formatters";
-import { dataSensor } from "../dashboardData";
 import { motion } from "framer-motion";
 
 export default function PerangkatView() {
   const { token } = useAuth();
-  const { bins, loading, error } = useBins(token);
+  const { bins, loading } = useBins(token);
+  const { bins: dashboardBins = [] } = useDashboardContext();
+  const latestByBinId = new Map(dashboardBins.map((bin) => [bin.bin_id, bin]));
 
-  // Merge real bins data with simulated sensor data for enriched view
-  const hasBins = bins.length > 0;
-  const aktif = hasBins
-    ? bins.filter((b) => b.status === "active").length
-    : dataSensor.filter((s) => s.status === "aktif").length;
-  const peringatan = hasBins
-    ? bins.filter((b) => b.status !== "active").length
-    : dataSensor.filter((s) => s.status === "peringatan").length;
-  const totalDevices = hasBins ? bins.length : dataSensor.length;
+  const aktif = bins.filter((b) => b.status === "active").length;
+  const peringatan = bins.filter((b) => b.status !== "active").length;
+  const totalDevices = bins.length;
 
-  // Build sensor data from real bins or fallback
-  const sensorData = hasBins
-    ? bins.map((bin) => {
+  const sensorData = bins.map((bin) => {
         const r = bin.latest_reading;
+        const status = latestByBinId.get(bin.id);
         return {
           id: bin.id.slice(0, 8).toUpperCase(),
           name: bin.name,
           lokasi: bin.location || "—",
           status: bin.status === "active" ? "aktif" : "peringatan",
-          volOrganik: r?.volume_organic_pct ?? 0,
-          volAnorganik: r?.volume_inorganic_pct ?? 0,
-          gas: r?.gas_amonia_ppm ?? 0,
+          volOrganik: r?.volume_organic_pct ?? status?.volume_organic_pct ?? 0,
+          volAnorganik: r?.volume_inorganic_pct ?? status?.volume_inorganic_pct ?? 0,
+          gas: r?.gas_amonia_ppm ?? status?.gas_amonia_ppm ?? 0,
           weightOrg: r?.weight_organic_kg ?? 0,
           weightInorg: r?.weight_inorganic_kg ?? 0,
           updatedAt: r?.recorded_at,
         };
-      })
-    : dataSensor.map((s) => ({
-        id: s.id,
-        name: s.tipe,
-        lokasi: s.lokasi,
-        status: s.status,
-        volOrganik: 0,
-        volAnorganik: 0,
-        gas: 0,
-        weightOrg: 0,
-        weightInorg: 0,
-        baterai: s.baterai,
-        suhu: s.suhu,
-      }));
+      });
 
   return (
     <motion.div

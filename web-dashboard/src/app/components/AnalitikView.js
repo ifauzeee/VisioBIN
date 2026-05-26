@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText, ShieldCheck } from "lucide-react";
+import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText, Timer } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -12,10 +12,7 @@ import { listClassifications } from "../services/api";
 import { APP_CONFIG } from "../config/appConfig";
 import { SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
-import {
-  analyticsTrend as defaultTrend,
-  dataTrenAkurasiHarian as defaultAccuracy,
-} from "../dashboardData";
+import { groupClassificationsByDay } from "../utils/realDataTransforms.mjs";
 
 export default React.memo(function AnalitikView() {
   const { token } = useAuth();
@@ -39,6 +36,10 @@ export default React.memo(function AnalitikView() {
 
         setData({
           trend,
+          accuracyDaily: groupClassificationsByDay(logs).map((row) => ({
+            day: row.tgl,
+            acc: row.avgAccuracy,
+          })),
           summary: {
             total: logs.length,
             organic: totalOrg,
@@ -64,14 +65,15 @@ export default React.memo(function AnalitikView() {
   if (loading && !data) return <div style={{ padding: 40 }}><SkeletonChart /></div>;
   if (!data) return <EmptyState title="Belum ada data analitik" />;
 
-  const trendData = data.trend.length ? data.trend : defaultTrend;
+  const trendData = data.trend;
+  const accuracyData = data.accuracyDaily;
   const s = data.summary;
   
   const kpi = [
     { label: "Total Sampler", value: s.total, icon: <Database size={18} />, color: "var(--brand-organic)" },
     { label: "Akurasi Rata-rata", value: `${s.avg_confidence}%`, icon: <Zap size={18} />, color: "#f59e0b" },
-    { label: "Throughput", value: "2.4 item/s", icon: <TrendingUp size={18} />, color: "#8B5CF6" },
-    { label: "Data Integrity", value: "100%", icon: <ShieldCheck size={18} />, color: "#22d3ee" },
+    { label: "Rata-rata Inference", value: `${s.avg_inference}ms`, icon: <Timer size={18} />, color: "#22d3ee" },
+    { label: "Rasio O/A", value: s.inorganic > 0 ? `${(s.organic / s.inorganic).toFixed(2)}:1` : "0:0", icon: <TrendingUp size={18} />, color: "#8B5CF6" },
   ];
 
   const orgC = s.organic;
@@ -146,42 +148,48 @@ export default React.memo(function AnalitikView() {
             <div className="card-title"><TrendingUp size={16} /> Tren Throughput & Kepercayaan</div>
           </div>
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorConf" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} 
-                  itemStyle={{ fontSize: 12 }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="confidence" 
-                  stroke="#10B981" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorConf)" 
-                  name="Akurasi (%)" 
-                  isAnimationActive={false}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="ms" 
-                  stroke="#22d3ee" 
-                  strokeWidth={2} 
-                  fill="none" 
-                  name="Inference (ms)" 
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {trendData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorConf" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                  <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }}
+                    itemStyle={{ fontSize: 12 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="confidence"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorConf)"
+                    name="Akurasi (%)"
+                    isAnimationActive={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="ms"
+                    stroke="#22d3ee"
+                    strokeWidth={2}
+                    fill="none"
+                    name="Inference (ms)"
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: "100%", display: "grid", placeItems: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                Belum ada data klasifikasi.
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -236,23 +244,29 @@ export default React.memo(function AnalitikView() {
         >
           <div className="card-title"><FileText size={16} /> Tren Akurasi Harian</div>
           <div style={{ height: 220, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={defaultAccuracy}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis domain={[90, 100]} stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} />
-                <Area 
-                  type="monotone" 
-                  dataKey="acc" 
-                  stroke="#f59e0b" 
-                  fill="rgba(245,158,11,0.05)" 
-                  strokeWidth={2} 
-                  name="Akurasi Avg (%)" 
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {accuracyData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={accuracyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                  <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis domain={[0, 100]} stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12 }} />
+                  <Area
+                    type="monotone"
+                    dataKey="acc"
+                    stroke="#f59e0b"
+                    fill="rgba(245,158,11,0.05)"
+                    strokeWidth={2}
+                    name="Akurasi Avg (%)"
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: "100%", display: "grid", placeItems: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                Belum ada tren akurasi harian.
+              </div>
+            )}
           </div>
         </motion.div>
 
