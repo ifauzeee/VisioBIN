@@ -51,6 +51,8 @@ type SensorReading struct {
 	GasAmoniaPpm        *float64  `json:"gas_amonia_ppm"`
 	VolumeOrganicPct    *float64  `json:"volume_organic_pct"`
 	VolumeInorganicPct  *float64  `json:"volume_inorganic_pct"`
+	BatteryPct          *int      `json:"battery_pct"`
+	WifiRssiDbm         *int      `json:"wifi_rssi_dbm"`
 	RecordedAt          time.Time `json:"recorded_at"`
 	BinName             string    `json:"bin_name,omitempty"`
 }
@@ -62,6 +64,8 @@ type TelemetryRequest struct {
 	WeightOrganicKg     float64 `json:"weight_organic_kg"`
 	WeightInorganicKg   float64 `json:"weight_inorganic_kg"`
 	GasAmoniaPpm        float64 `json:"gas_amonia_ppm"`
+	BatteryPct          int     `json:"battery_pct"`
+	WifiRssiDbm         int     `json:"wifi_rssi_dbm"`
 }
 
 // --- Classification Models ---
@@ -194,6 +198,8 @@ type BinStatusSummary struct {
 	VolumeOrganicPct   *float64 `json:"volume_organic_pct"`
 	VolumeInorganicPct *float64 `json:"volume_inorganic_pct"`
 	GasAmoniaPpm       *float64 `json:"gas_amonia_ppm"`
+	BatteryPct         *int     `json:"battery_pct"`
+	WifiRssiDbm        *int     `json:"wifi_rssi_dbm"`
 }
 
 // --- Maintenance Log Models ---

@@ -34,24 +34,24 @@ func (r *TelemetryRepository) InsertReading(ctx context.Context, req *models.Tel
 		INSERT INTO sensor_readings (
 			bin_id, distance_organic_cm, distance_inorganic_cm,
 			weight_organic_kg, weight_inorganic_kg, gas_amonia_ppm,
-			volume_organic_pct, volume_inorganic_pct
+			volume_organic_pct, volume_inorganic_pct, battery_pct, wifi_rssi_dbm
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING 
 			id, bin_id, distance_organic_cm, distance_inorganic_cm,
 			weight_organic_kg, weight_inorganic_kg, gas_amonia_ppm,
-			volume_organic_pct, volume_inorganic_pct, recorded_at
+			volume_organic_pct, volume_inorganic_pct, battery_pct, wifi_rssi_dbm, recorded_at
 	`
 
 	var sr models.SensorReading
 	err = r.pool.QueryRow(ctx, query,
 		req.BinID, req.DistanceOrganicCm, req.DistanceInorganicCm,
 		req.WeightOrganicKg, req.WeightInorganicKg, req.GasAmoniaPpm,
-		volOrganicPct, volInorganicPct,
+		volOrganicPct, volInorganicPct, req.BatteryPct, req.WifiRssiDbm,
 	).Scan(
 		&sr.ID, &sr.BinID, &sr.DistanceOrganicCm, &sr.DistanceInorganicCm,
 		&sr.WeightOrganicKg, &sr.WeightInorganicKg, &sr.GasAmoniaPpm,
-		&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.RecordedAt,
+		&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.BatteryPct, &sr.WifiRssiDbm, &sr.RecordedAt,
 	)
 
 	if err != nil {

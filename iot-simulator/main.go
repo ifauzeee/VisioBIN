@@ -18,6 +18,8 @@ type TelemetryPayload struct {
 	WeightOrganicKg     float64 `json:"weight_organic_kg"`
 	WeightInorganicKg   float64 `json:"weight_inorganic_kg"`
 	GasAmoniaPpm        float64 `json:"gas_amonia_ppm"`
+	BatteryPct          int     `json:"battery_pct"`
+	WifiRssiDbm         int     `json:"wifi_rssi_dbm"`
 }
 
 type ClassificationPayload struct {
@@ -96,6 +98,12 @@ func (s *BinSimulator) simulateCollection() {
 }
 
 func (s *BinSimulator) GetTelemetry() TelemetryPayload {
+	battery := 100 - (s.CycleCount/10)%91
+	if battery < 10 {
+		battery = 10
+	}
+	rssi := -30 - rand.Intn(45)
+
 	return TelemetryPayload{
 		BinID:               s.BinID,
 		DistanceOrganicCm:   s.DistanceOrganic,
@@ -103,6 +111,8 @@ func (s *BinSimulator) GetTelemetry() TelemetryPayload {
 		WeightOrganicKg:     s.WeightOrganic,
 		WeightInorganicKg:   s.WeightInorganic,
 		GasAmoniaPpm:        s.GasAmonia,
+		BatteryPct:          battery,
+		WifiRssiDbm:         rssi,
 	}
 }
 

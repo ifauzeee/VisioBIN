@@ -150,7 +150,7 @@ func (r *BinRepository) getLatestReading(ctx context.Context, binID string) (*mo
 		SELECT 
 			id, bin_id, distance_organic_cm, distance_inorganic_cm,
 			weight_organic_kg, weight_inorganic_kg, gas_amonia_ppm,
-			volume_organic_pct, volume_inorganic_pct, recorded_at
+			volume_organic_pct, volume_inorganic_pct, battery_pct, wifi_rssi_dbm, recorded_at
 		FROM sensor_readings 
 		WHERE bin_id = $1
 		ORDER BY recorded_at DESC 
@@ -161,7 +161,7 @@ func (r *BinRepository) getLatestReading(ctx context.Context, binID string) (*mo
 	err := r.pool.QueryRow(ctx, query, binID).Scan(
 		&sr.ID, &sr.BinID, &sr.DistanceOrganicCm, &sr.DistanceInorganicCm,
 		&sr.WeightOrganicKg, &sr.WeightInorganicKg, &sr.GasAmoniaPpm,
-		&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.RecordedAt,
+		&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.BatteryPct, &sr.WifiRssiDbm, &sr.RecordedAt,
 	)
 
 	if err != nil {
@@ -176,7 +176,7 @@ func (r *BinRepository) GetSensorHistory(ctx context.Context, binID string, from
 		SELECT 
 			id, bin_id, distance_organic_cm, distance_inorganic_cm,
 			weight_organic_kg, weight_inorganic_kg, gas_amonia_ppm,
-			volume_organic_pct, volume_inorganic_pct, recorded_at
+			volume_organic_pct, volume_inorganic_pct, battery_pct, wifi_rssi_dbm, recorded_at
 		FROM sensor_readings
 		WHERE bin_id = $1 AND recorded_at BETWEEN $2 AND $3
 		ORDER BY recorded_at DESC 
@@ -195,7 +195,7 @@ func (r *BinRepository) GetSensorHistory(ctx context.Context, binID string, from
 		err := rows.Scan(
 			&sr.ID, &sr.BinID, &sr.DistanceOrganicCm, &sr.DistanceInorganicCm,
 			&sr.WeightOrganicKg, &sr.WeightInorganicKg, &sr.GasAmoniaPpm,
-			&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.RecordedAt,
+			&sr.VolumeOrganicPct, &sr.VolumeInorganicPct, &sr.BatteryPct, &sr.WifiRssiDbm, &sr.RecordedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan sensor reading: %w", err)

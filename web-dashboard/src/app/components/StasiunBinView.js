@@ -15,20 +15,29 @@ import { useAuth } from "../hooks/useAuth";
 import { SkeletonCard, SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { formatHoursRemaining, getBinLevelColor, getBinLevelStatus, formatTime } from "../utils/formatters";
+import { useDashboardContext } from "../context/DashboardContext";
 
 export default function StasiunBinView() {
   const { token } = useAuth();
+  const { searchQuery } = useDashboardContext();
   const {
     bins, selectedBin, sensorHistory, forecast,
     loading, detailLoading, error, selectBin
   } = useBins(token);
 
+  const filteredBins = React.useMemo(() => {
+    return bins.filter(bin => 
+      bin.name?.toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+      bin.location?.toLowerCase().includes((searchQuery || "").toLowerCase())
+    );
+  }, [bins, searchQuery]);
+
   // Auto-select first bin
   useEffect(() => {
-    if (bins.length > 0 && !selectedBin) {
-      selectBin(bins[0].id);
+    if (filteredBins.length > 0 && !selectedBin) {
+      selectBin(filteredBins[0].id);
     }
-  }, [bins, selectedBin, selectBin]);
+  }, [filteredBins, selectedBin, selectBin]);
 
   if (loading) {
     return (
@@ -48,6 +57,18 @@ export default function StasiunBinView() {
           icon={Box}
           title="Belum Ada Stasiun Bin"
           description="Belum ada unit tempat sampah VisioBin yang terdaftar. Tambahkan melalui API atau hubungi administrator."
+        />
+      </motion.div>
+    );
+  }
+
+  if (filteredBins.length === 0) {
+    return (
+      <motion.div className="card" whileHover={{ scale: 1.02 }}>
+        <EmptyState
+          icon={Box}
+          title="Pencarian Tidak Ditemukan"
+          description={`Tidak ada stasiun bin yang cocok dengan pencarian "${searchQuery}". Silakan coba kata kunci lain.`}
         />
       </motion.div>
     );
@@ -79,7 +100,7 @@ export default function StasiunBinView() {
           marginBottom: 24,
         }}
       >
-        {bins.map((bin) => {
+        {filteredBins.map((bin) => {
           const isActive = selectedBin?.id === bin.id;
           const reading = bin.latest_reading;
           const vO = reading?.volume_organic_pct ?? 0;

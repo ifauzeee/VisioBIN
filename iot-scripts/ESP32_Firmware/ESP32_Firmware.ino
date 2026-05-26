@@ -316,6 +316,13 @@ void sendTelemetry() {
   ppm = voltage * 20.0;
   if(ppm < 0) ppm = 0;
 
+  // ESP32 telemetry additions: battery level (uptime-based discharge simulator)
+  int battery_pct = 100 - (millis() / 600000); // drops 1% every 10 mins
+  if (battery_pct < 10) battery_pct = 10;
+  
+  // WiFi RSSI: simulate minor fluctuations around -50 dBm
+  int wifi_rssi = -50 - ((millis() / 5000) % 15); // fluctuates between -50 and -64 dBm
+
   // Susun JSON
   doc["dist_org"] = round(distOrg * 100) / 100.0;
   doc["dist_inorg"] = round(distInorg * 100) / 100.0;
@@ -326,6 +333,8 @@ void sendTelemetry() {
   doc["weight_inorg"] = round(weight * 0.6 * 1000) / 1000.0; // Mock split
   
   doc["gas_ppm"] = round(ppm * 100) / 100.0;
+  doc["battery_pct"] = battery_pct;
+  doc["wifi_rssi_dbm"] = wifi_rssi;
 
   serializeJson(doc, Serial);
   Serial.println(); // Newline penting untuk parser di Pi!

@@ -27,7 +27,13 @@
     "real_data_active": "Real Data Active",
     "telemetry": "Telemetry",
     "storage": "Storage",
-    "guest_access": "Guest Access"
+    "guest_access": "Guest Access",
+    "soon": "Soon",
+    "good": "Good",
+    "weak": "Weak",
+    "noSignal": "No Signal",
+    "switchToLight": "Light Mode",
+    "switchToDark": "Dark Mode"
   },
   "dashboard": {
     "title": "VisioBIN Monitoring",

@@ -27,7 +27,13 @@
     "real_data_active": "Data Real Aktif",
     "telemetry": "Telemetri",
     "storage": "Penyimpanan",
-    "guest_access": "Akses Tamu"
+    "guest_access": "Akses Tamu",
+    "soon": "Segera",
+    "good": "Sedang",
+    "weak": "Lemah",
+    "noSignal": "Tidak Ada Sinyal",
+    "switchToLight": "Mode Terang",
+    "switchToDark": "Mode Gelap"
   },
   "dashboard": {
     "title": "Monitoring VisioBIN",

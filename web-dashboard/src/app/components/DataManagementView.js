@@ -17,6 +17,7 @@ import { useAuth } from "../hooks/useAuth";
 import { formatFullDateTime } from "../utils/formatters";
 import { SkeletonTable } from "./shared/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocale } from "next-intl";
 
 const TABLES = [
   { id: 'users', label: 'Users', icon: Users, api: listUsers, structure: [
@@ -81,6 +82,8 @@ const TABLES = [
 
 export default function DataManagementView() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isID = locale === 'id';
   const [activeTable, setActiveTable] = useState(TABLES[0]);
   const [activeTab, setActiveTab] = useState('browse'); 
   const [data, setData] = useState([]);
@@ -158,7 +161,7 @@ export default function DataManagementView() {
   }, [data, sortConfig]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    if (!window.confirm(isID ? "Apakah Anda yakin ingin menghapus data ini?" : "Are you sure you want to delete this record?")) return;
     
     let apiCall = null;
     const tableId = activeTable.id;
@@ -167,7 +170,7 @@ export default function DataManagementView() {
     else if (tableId === 'users') apiCall = deleteUser;
 
     if (!apiCall) {
-        alert(`Delete operation is not implemented for ${activeTable.label}`);
+        alert(isID ? `Operasi hapus belum diterapkan untuk ${activeTable.label}` : `Delete operation is not implemented for ${activeTable.label}`);
         return;
     }
 
@@ -201,7 +204,7 @@ export default function DataManagementView() {
     else if (activeTable.id === 'users' && !editData) apiCall = (tok, pay) => registerUser(pay);
 
     if (!apiCall) {
-        alert("Operation not yet implemented for this table via UI.");
+        alert(isID ? "Operasi belum diterapkan untuk tabel ini melalui UI." : "Operation not yet implemented for this table via UI.");
         return;
     }
 
@@ -226,17 +229,27 @@ export default function DataManagementView() {
       {/* Top Header & Table Selector */}
       <div className="explorer-header">
         <div className="selector-bar">
-          {TABLES.map(table => (
-            <button 
-              key={table.id}
-              className={`selector-item ${activeTable.id === table.id ? 'active' : ''}`}
-              onClick={() => setActiveTable(table)}
-            >
-              <table.icon size={14} />
-              <span>{table.label}</span>
-              {activeTable.id === table.id && <motion.div layoutId="active-pill" className="active-pill" />}
-            </button>
-          ))}
+          {TABLES.map(table => {
+            const labelMap = {
+              users: isID ? "Pengguna" : "Users",
+              bins: isID ? "Stasiun Bin" : "Bins",
+              sensor_readings: isID ? "Telemetri" : "Telemetry",
+              classification_logs: isID ? "Log AI" : "AI Logs",
+              maintenance_logs: isID ? "Pemeliharaan" : "Maintenance",
+              alerts: isID ? "Peringatan" : "Alerts",
+            };
+            return (
+              <button 
+                key={table.id}
+                className={`selector-item ${activeTable.id === table.id ? 'active' : ''}`}
+                onClick={() => setActiveTable(table)}
+              >
+                <table.icon size={14} />
+                <span>{labelMap[table.id] || table.label}</span>
+                {activeTable.id === table.id && <motion.div layoutId="active-pill" className="active-pill" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -244,22 +257,22 @@ export default function DataManagementView() {
       <div className="control-bar">
         <div className="tab-group">
           <button className={activeTab === 'browse' ? 'active' : ''} onClick={() => setActiveTab('browse')}>
-            <List size={14} /> Browse
+            <List size={14} /> {isID ? "Lihat Data" : "Browse"}
           </button>
           <button className={activeTab === 'structure' ? 'active' : ''} onClick={() => setActiveTab('structure')}>
-            <Info size={14} /> Structure
+            <Info size={14} /> {isID ? "Struktur" : "Structure"}
           </button>
         </div>
 
         <div className="action-group">
           <button className="create-btn" onClick={() => handleOpenModal()}>
-            <Plus size={14} /> Add Row
+            <Plus size={14} /> {isID ? "Tambah Baris" : "Add Row"}
           </button>
-          <button className="icon-btn" onClick={fetchData} title="Refresh">
+          <button className="icon-btn" onClick={fetchData} title={isID ? "Segarkan" : "Refresh"}>
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
           </button>
           <button className="export-btn">
-            <Download size={14} /> Export
+            <Download size={14} /> {isID ? "Ekspor" : "Export"}
           </button>
         </div>
       </div>
@@ -285,7 +298,7 @@ export default function DataManagementView() {
                                 </div>
                             </th>
                         ))}
-                        <th width="80" style={{ textAlign: 'center' }}>Actions</th>
+                        <th width="80" style={{ textAlign: 'center' }}>{isID ? "Aksi" : "Actions"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -313,7 +326,7 @@ export default function DataManagementView() {
                                <div className="action-btns">
                                   <button className="a-btn edit" onClick={() => handleOpenModal(row)}><Edit3 size={12} /></button>
                                   <button className="a-btn delete" onClick={() => handleDelete(row.id)}><Trash2 size={12} /></button>
-                               </div>
+                                </div>
                             </td>
                           </motion.tr>
                         ))}
@@ -324,7 +337,11 @@ export default function DataManagementView() {
               </div>
               <div className="stage-footer">
                 <div className="footer-stats">
-                  Showing <b>{data.length}</b> of <b>{total}</b> records
+                  {isID ? (
+                    <span>Menampilkan <b>{data.length}</b> dari <b>{total}</b> data</span>
+                  ) : (
+                    <span>Showing <b>{data.length}</b> of <b>{total}</b> records</span>
+                  )}
                 </div>
                 <div className="pagination">
                   <button 
@@ -333,11 +350,11 @@ export default function DataManagementView() {
                     onClick={() => setPage(p => p - 1)}
                   >
                     <ChevronLeft size={16} />
-                    <span>Prev</span>
+                    <span>{isID ? "Sebelumnya" : "Prev"}</span>
                   </button>
                   
                   <div className="page-info">
-                    <span>Page</span>
+                    <span>{isID ? "Halaman" : "Page"}</span>
                     <span className="current-page">{page}</span>
                     <span className="separator">/</span>
                     <span className="total-pages">{Math.ceil(total / limit) || 1}</span>
@@ -348,7 +365,7 @@ export default function DataManagementView() {
                     disabled={page >= Math.ceil(total / limit)} 
                     onClick={() => setPage(p => p + 1)}
                   >
-                    <span>Next</span>
+                    <span>{isID ? "Berikutnya" : "Next"}</span>
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -359,7 +376,12 @@ export default function DataManagementView() {
               <div className="table-container">
                 <table className="pro-grid structure">
                   <thead>
-                    <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+                    <tr>
+                      <th>{isID ? "Kolom" : "Column"}</th>
+                      <th>{isID ? "Tipe" : "Type"}</th>
+                      <th>{isID ? "Batasan" : "Constraint"}</th>
+                      <th>{isID ? "Keterangan" : "Description"}</th>
+                    </tr>
                   </thead>
                   <tbody>
                     <AnimatePresence initial={false}>
@@ -397,7 +419,7 @@ export default function DataManagementView() {
                 onClick={e => e.stopPropagation()}
             >
                 <div className="modal-header">
-                    <h3>{editData ? 'Edit Record' : 'Add New Record'}</h3>
+                    <h3>{editData ? (isID ? 'Edit Data' : 'Edit Record') : (isID ? 'Tambah Data Baru' : 'Add New Record')}</h3>
                     <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSave} className="modal-form">
@@ -408,14 +430,14 @@ export default function DataManagementView() {
                                 
                                 {col.name === 'bin_id' ? (
                                     <select name={col.name} defaultValue={editData ? editData[col.name] : ''}>
-                                        <option value="">-- Select Bin --</option>
+                                        <option value="">{isID ? "-- Pilih Bin --" : "-- Select Bin --"}</option>
                                         {refData.bins.map(bin => (
                                             <option key={bin.id} value={bin.id}>{bin.name}</option>
                                         ))}
                                     </select>
                                 ) : col.name === 'performed_by' ? (
                                     <select name={col.name} defaultValue={editData ? editData[col.name] : ''}>
-                                        <option value="">-- Select User --</option>
+                                        <option value="">{isID ? "-- Pilih Pengguna --" : "-- Select User --"}</option>
                                         {refData.users.map(u => (
                                             <option key={u.id} value={u.id}>{u.full_name || u.username}</option>
                                         ))}
@@ -434,9 +456,9 @@ export default function DataManagementView() {
                         ))}
                     </div>
                     <div className="form-footer">
-                        <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>{isID ? "Batal" : "Cancel"}</button>
                         <button type="submit" className="btn-save">
-                            <Save size={16} /> {editData ? 'Update Record' : 'Insert Data'}
+                            <Save size={16} /> {editData ? (isID ? 'Perbarui Data' : 'Update Record') : (isID ? 'Masukkan Data' : 'Insert Data')}
                         </button>
                     </div>
                 </form>

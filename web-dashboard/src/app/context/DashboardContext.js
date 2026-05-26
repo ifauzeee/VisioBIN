@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { useDashboard } from "../hooks/useDashboard";
 import { useAlerts } from "../hooks/useAlerts";
 import { useAuth } from "../hooks/useAuth";
@@ -13,8 +13,10 @@ export function DashboardProvider({ children }) {
   const dashboardState = useDashboard(isAuthenticated ? token : null);
   const alertData = useAlerts(isAuthenticated ? token : null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
-    <DashboardContext.Provider value={{ ...dashboardState, ...alertData }}>
+    <DashboardContext.Provider value={{ ...dashboardState, ...alertData, searchQuery, setSearchQuery }}>
       {children}
     </DashboardContext.Provider>
   );

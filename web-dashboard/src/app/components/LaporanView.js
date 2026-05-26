@@ -12,12 +12,13 @@ import { getDashboardSummary, listClassifications } from "../services/api";
 import { SkeletonChart } from "./shared/Skeleton";
 import EmptyState from "./shared/EmptyState";
 import { formatDate } from "../utils/formatters";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { averageConfidence, groupClassificationsByDay } from "../utils/realDataTransforms.mjs";
 
 export default React.memo(function LaporanView() {
   const t = useTranslations('reports');
   const d = useTranslations('dashboard');
+  const locale = useLocale();
   const { token } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,7 @@ export default React.memo(function LaporanView() {
   }, [fetchReports]);
 
   if (loading && !data) return <div style={{ padding: 40 }}><SkeletonChart /></div>;
-  if (!data) return <EmptyState title="No report data available" />;
+  if (!data) return <EmptyState title={locale === 'id' ? "Data laporan tidak tersedia" : "No report data available"} />;
 
   const dailyData = data.daily;
   const logs = data.logs;

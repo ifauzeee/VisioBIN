@@ -291,6 +291,8 @@ class UARTBridge:
             "weight_organic_kg":    data.get("weight_org",  0.0),
             "weight_inorganic_kg":  data.get("weight_inorg", 0.0),
             "gas_amonia_ppm":       data.get("gas_ppm",     0.0),
+            "battery_pct":          int(data.get("battery_pct", 100)),
+            "wifi_rssi_dbm":        int(data.get("wifi_rssi_dbm", -50)),
         }
 
         if self._send_to_backend("telemetry", payload):
@@ -421,6 +423,9 @@ class UARTBridge:
             weight_inorg = min(20.0, weight_inorg + random.uniform(0.01, 0.08))
             gas_ppm    = min(200.0, gas_ppm + random.uniform(-0.5, 2.0))
 
+            battery_pct = max(10, 100 - (cycle // 5) % 91)
+            wifi_rssi_dbm = random.randint(-75, -30)
+
             simulated_msg = json.dumps({
                 "type":       "telemetry",
                 "dist_org":   round(dist_org, 2),
@@ -428,6 +433,8 @@ class UARTBridge:
                 "weight_org": round(weight_org, 3),
                 "weight_inorg": round(weight_inorg, 3),
                 "gas_ppm":    round(max(1.0, gas_ppm), 2),
+                "battery_pct": battery_pct,
+                "wifi_rssi_dbm": wifi_rssi_dbm,
             })
 
             log.info(f"[SIM] Cycle #{cycle}: {simulated_msg[:80]}")

@@ -5,15 +5,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Battery, Zap, Trash2, Search, MapPin, Activity, AlertTriangle, X, Navigation } from "lucide-react";
 import { getBinLevelColor } from "../utils/formatters";
 import { useTranslations } from 'next-intl';
+import { useDashboardContext } from "../context/DashboardContext";
 
 export default function PetaView({ bins }) {
   const t = useTranslations('map');
+  const { searchQuery, setSearchQuery } = useDashboardContext();
   const [activeBin, setActiveBin] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [LeafletComponents, setLeafletComponents] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [isDarkMode, setIsDarkMode] = useState(true);
+
+  const getSignalStatus = (rssi) => {
+    if (rssi === undefined || rssi === null) return t('noSignal') || 'Tidak Ada Sinyal';
+    if (rssi >= -50) return t('strong') || 'Kuat';
+    if (rssi >= -70) return t('good') || 'Sedang';
+    return t('weak') || 'Lemah';
+  };
 
   useEffect(() => {
     setIsDarkMode(!document.body.classList.contains("light-mode"));
@@ -393,7 +401,7 @@ export default function PetaView({ bins }) {
                           </div>
                           <div>
                             <div className="map-popup-stat-label">{t('battery')}</div>
-                            <div className="map-popup-stat-value">88%</div>
+                            <div className="map-popup-stat-value">{bin.battery_pct ?? bin.latest_reading?.battery_pct ?? 100}%</div>
                           </div>
                         </div>
                         <div className="map-popup-stat-row">
@@ -402,7 +410,12 @@ export default function PetaView({ bins }) {
                           </div>
                           <div>
                             <div className="map-popup-stat-label">{t('signal')}</div>
-                            <div className="map-popup-stat-value">{t('strong')}</div>
+                            <div className="map-popup-stat-value">
+                              {getSignalStatus(bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm)}
+                              <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 4 }}>
+                                ({bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm ?? -50} dBm)
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -473,11 +486,18 @@ export default function PetaView({ bins }) {
                 <div className="map-detail-grid">
                   <div className="map-detail-metric">
                     <div className="map-detail-metric-label">{t('battery')}</div>
-                    <div className="map-detail-metric-value" style={{ color: '#f59e0b' }}>88%</div>
+                    <div className="map-detail-metric-value" style={{ color: '#f59e0b' }}>
+                      {activeBin.battery_pct ?? activeBin.latest_reading?.battery_pct ?? 100}%
+                    </div>
                   </div>
                   <div className="map-detail-metric">
                     <div className="map-detail-metric-label">{t('signal')}</div>
-                    <div className="map-detail-metric-value" style={{ color: '#22d3ee' }}>{t('strong')}</div>
+                    <div className="map-detail-metric-value" style={{ color: '#22d3ee' }}>
+                      {getSignalStatus(activeBin.wifi_rssi_dbm ?? activeBin.latest_reading?.wifi_rssi_dbm)}
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: 4 }}>
+                        ({activeBin.wifi_rssi_dbm ?? activeBin.latest_reading?.wifi_rssi_dbm ?? -50} dBm)
+                      </span>
+                    </div>
                   </div>
                 </div>
 

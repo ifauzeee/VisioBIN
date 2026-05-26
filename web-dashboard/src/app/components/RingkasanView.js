@@ -16,7 +16,7 @@ import {
   mapDailyStats,
   mapVolumeHistory,
 } from '../utils/realDataTransforms.mjs';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
 // A simple rolling number counter using Framer Motion animate
@@ -181,7 +181,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     return <RingkasanSkeleton />;
   }
   const t = useTranslations('dashboard');
+  const locale = useLocale();
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
+  const [analysisDetailOpen, setAnalysisDetailOpen] = React.useState(false);
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
 
   const handleBrushChange = React.useCallback((range) => {
@@ -303,15 +305,18 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             {insight.text}
           </div>
         </div>
-        <button style={{ 
-          background: "transparent", 
-          border: "1px solid var(--border-color)", 
-          padding: "8px 16px", 
-          borderRadius: 8,
-          fontSize: 12,
-          color: "var(--text-main)",
-          cursor: "pointer"
-        }}>
+        <button 
+          onClick={() => setAnalysisDetailOpen(true)}
+          style={{ 
+            background: "transparent", 
+            border: "1px solid var(--border-color)", 
+            padding: "8px 16px", 
+            borderRadius: 8,
+            fontSize: 12,
+            color: "var(--text-main)",
+            cursor: "pointer"
+          }}
+        >
           {t('analysis_detail')}
         </button>
       </motion.div>
@@ -449,7 +454,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             <Clock size={16} color="var(--brand-organic)" /> 
             {t('est_full')}
             {wsActive && (
-              <div className="pulse-dot-green" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-organic)', marginLeft: 'auto' }} title="Live Connection Active" />
+              <div className="pulse-dot-green" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-organic)', marginLeft: 'auto' }} title={locale === 'id' ? "Koneksi Live Aktif" : "Live Connection Active"} />
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12 }}>
@@ -766,6 +771,116 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
         </motion.div>
       </div>
+
+      {/* Analysis Detail Modal */}
+      <AnimatePresence>
+        {analysisDetailOpen && (
+          <div className="modal-overlay" onClick={() => setAnalysisDetailOpen(false)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="modal-box"
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: "rgba(10, 10, 10, 0.8)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid var(--border-color)",
+                maxWidth: "500px",
+                padding: "24px",
+                position: "relative"
+              }}
+            >
+              <div className="modal-header" style={{ padding: "0 0 16px 0", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", background: "transparent" }}>
+                <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: "18px", fontWeight: 700, color: "var(--text-main)" }}>
+                  <Sparkles size={18} color="var(--brand-organic)" /> {t('analysis_detail')}
+                </h3>
+                <button 
+                  onClick={() => setAnalysisDetailOpen(false)}
+                  style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {logs && logs.length > 0 ? (
+                <div>
+                  {/* Camera Snap Frame */}
+                  <div style={{ position: 'relative', height: '240px', borderRadius: '12px', overflow: 'hidden', marginBottom: '20px', border: "1px solid var(--border-color)", background: "#000" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={APP_CONFIG.cameraStreamUrl}
+                      alt="Tangkapan Kamera"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                    
+                    {/* Vision bounding box overlays */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '20%',
+                      left: '25%',
+                      width: '50%',
+                      height: '60%',
+                      border: `3px solid ${logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)'}`,
+                      borderRadius: '8px',
+                      boxShadow: `0 0 15px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.4)'}`,
+                      pointerEvents: 'none'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        top: '-25px',
+                        left: '-1px',
+                        background: logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)',
+                        color: '#fff',
+                        fontSize: '10px',
+                        fontWeight: '700',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {logs[0].item === 'organic' ? t('organic') : t('inorganic')} ({logs[0].prob}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Metadata Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status / Hasil</div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)', textTransform: 'capitalize' }}>
+                        {logs[0].item === 'organic' ? t('organic') : t('inorganic')}
+                      </div>
+                    </div>
+                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Kepercayaan (Confidence)</div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
+                        {logs[0].prob}%
+                      </div>
+                    </div>
+                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Latensi Inferensi</div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
+                        {logs[0].inference_ms} ms
+                      </div>
+                    </div>
+                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Waktu Klasifikasi</div>
+                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
+                        {logs[0].time}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Belum ada data analisis AI terbaru dari unit stasiun.
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 });

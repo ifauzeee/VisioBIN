@@ -17,7 +17,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
   const t = useTranslations('common');
   const td = useTranslations('dashboard');
   const pathname = usePathname();
-  const { summary, logs, dashError, unreadCount, binLevel } = useDashboardContext();
+  const { summary, logs, dashError, unreadCount, binLevel, searchQuery, setSearchQuery } = useDashboardContext();
   const role = user?.role || "guest";
   const isAdmin = role === "admin";
   const isOperator = role === "operator";
@@ -148,7 +148,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
             justifyContent: "center",
             transition: "all 0.2s ease",
           }}
-          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={theme === "dark" ? t('switchToLight') : t('switchToDark')}
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -163,6 +163,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         <input
           type="text"
           placeholder={t('search')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: "100%",
             padding: "8px 12px 8px 32px",
@@ -216,7 +218,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                     )}
                     {isDisabled && (
                       <span style={{ fontSize: 9, color: "var(--text-muted)", fontStyle: "italic" }}>
-                        soon
+                        {t('soon')}
                       </span>
                     )}
                   </motion.div>
