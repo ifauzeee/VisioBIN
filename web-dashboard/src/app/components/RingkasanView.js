@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
-  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock 
+  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X 
 } from "lucide-react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import {
