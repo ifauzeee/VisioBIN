@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	crypto_rand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -78,10 +80,11 @@ func (r *BinRepository) GetByID(ctx context.Context, id string) (*models.Bin, er
 }
 
 func (r *BinRepository) Create(ctx context.Context, req *models.CreateBinRequest) (*models.Bin, error) {
-	apiKey := fmt.Sprintf("vbin-%d%g", time.Now().UnixNano(), req.MaxVolumeCm) // Simple unique key
-	if len(apiKey) > 32 {
-		apiKey = apiKey[:32]
+	randBytes := make([]byte, 32)
+	if _, err := crypto_rand.Read(randBytes); err != nil {
+		return nil, fmt.Errorf("generate api key: %w", err)
 	}
+	apiKey := "vbin-" + hex.EncodeToString(randBytes)[:59]
 
 	query := `
 		INSERT INTO bins (name, location, latitude, longitude, max_volume_cm, max_weight_kg, api_key)

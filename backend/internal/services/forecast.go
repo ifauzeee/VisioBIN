@@ -167,7 +167,12 @@ func (s *ForecastService) checkVolume(ctx context.Context, alertRepo *repository
 }
 
 func (s *ForecastService) createAlert(ctx context.Context, alertRepo *repository.AlertRepository, binID, alertType, message, severity string) {
+	// Deduplicate: skip if same alert type for same bin exists unread within 15 minutes
+	if exists, err := alertRepo.HasRecentUnread(ctx, binID, alertType, 15); err == nil && exists {
+		return
+	}
 	if _, err := alertRepo.Create(ctx, binID, alertType, message, severity); err != nil {
 		log.Printf("Alert Error [%s]: %v", alertType, err)
 	}
 }
+

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ifauze/visiobin/internal/middleware"
 	"github.com/ifauze/visiobin/internal/models"
 	"github.com/ifauze/visiobin/internal/repository"
 )
@@ -34,8 +35,11 @@ func (h *MaintenanceHandler) CreateLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user ID from JWT context
-	userID, _ := r.Context().Value("user_id").(string)
+	// Get user ID from JWT claims (set by JWTAuth middleware)
+	var userID string
+	if claims := middleware.GetUserClaims(r); claims != nil {
+		userID = claims.UserID
+	}
 
 	log, err := h.maintRepo.Create(r.Context(), &req, userID)
 	if err != nil {

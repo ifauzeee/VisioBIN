@@ -59,6 +59,20 @@ func (db *DB) RunMigrations() error {
 		migrationDir = "../../migrations"
 	}
 
+	ctx := context.Background()
+
+	// Create migration tracking table if not exists
+	_, err := db.Pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			version    TEXT PRIMARY KEY,
+			applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("create schema_migrations table: %w", err)
+	}
+
+	// Read migration files
 	files, err := os.ReadDir(migrationDir)
 	if err != nil {
 		return fmt.Errorf("read migrations: %w", err)
@@ -72,19 +86,60 @@ func (db *DB) RunMigrations() error {
 	}
 	sort.Strings(sqlFiles)
 
+	applied := 0
+	skipped := 0
 	for _, f := range sqlFiles {
-		log.Printf("📂 Running migration: %s", filepath.Base(f))
+		version := filepath.Base(f)
+
+		// Check if migration already applied
+		var exists bool
+		err := db.Pool.QueryRow(ctx,
+			"SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version = $1)",
+			version,
+		).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("check migration %s: %w", version, err)
+		}
+		if exists {
+			skipped++
+			continue
+		}
+
+		// Read and execute migration in a transaction
 		content, err := os.ReadFile(f)
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", f, err)
 		}
 
-		if _, err := db.Pool.Exec(context.Background(), string(content)); err != nil {
-			// Ignore "already exists" errors to keep it simple for now
-			log.Printf("   ℹ️ Migration %s info: %v", filepath.Base(f), err)
-		} else {
-			log.Printf("   ✅ Migration %s applied", filepath.Base(f))
+		tx, err := db.Pool.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("begin tx for %s: %w", version, err)
 		}
+
+		if _, err := tx.Exec(ctx, string(content)); err != nil {
+			tx.Rollback(ctx)
+			return fmt.Errorf("apply migration %s: %w", version, err)
+		}
+
+		if _, err := tx.Exec(ctx,
+			"INSERT INTO schema_migrations (version) VALUES ($1)", version,
+		); err != nil {
+			tx.Rollback(ctx)
+			return fmt.Errorf("record migration %s: %w", version, err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			return fmt.Errorf("commit migration %s: %w", version, err)
+		}
+
+		log.Printf("   ✅ Migration %s applied", version)
+		applied++
+	}
+
+	if applied > 0 {
+		log.Printf("📂 Migrations: %d applied, %d skipped", applied, skipped)
+	} else {
+		log.Printf("📂 Migrations: all %d already applied", skipped)
 	}
 
 	return nil

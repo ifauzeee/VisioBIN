@@ -89,6 +89,24 @@ func (r *AlertRepository) CountUnread(ctx context.Context) (int, error) {
 	return count, err
 }
 
+// HasRecentUnread checks if there's an unread alert of the same type for the same bin
+// created within the specified number of minutes. Used for alert deduplication.
+func (r *AlertRepository) HasRecentUnread(ctx context.Context, binID, alertType string, withinMinutes int) (bool, error) {
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM alerts 
+			WHERE bin_id = $1 
+			  AND alert_type = $2 
+			  AND is_read = FALSE 
+			  AND created_at > NOW() - ($3 || ' minutes')::interval
+		)
+	`
+	var exists bool
+	err := r.pool.QueryRow(ctx, query, binID, alertType, withinMinutes).Scan(&exists)
+	return exists, err
+}
+
+
 func (r *AlertRepository) GetRecent(ctx context.Context, limit int) ([]models.Alert, error) {
 	query := `
 		SELECT a.id, a.bin_id, a.alert_type, a.message, a.severity, a.is_read, a.created_at, b.name

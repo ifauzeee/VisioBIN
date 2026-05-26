@@ -48,6 +48,7 @@ func main() {
 	forecastSvc := services.NewForecastService(telemetryRepo, binRepo, userRepo, notifSvc)
 	dashboardSvc := services.NewDashboardService(db.Pool)
 	broadcaster := services.NewBroadcaster()
+	broadcaster.SetJWTSecret(cfg.JWTSecret)
 	go broadcaster.Run()
 
 	slog.Info("Service layer initialized")

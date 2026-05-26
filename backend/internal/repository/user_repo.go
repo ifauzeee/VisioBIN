@@ -176,3 +176,16 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *UserRepository) UpdateRole(ctx context.Context, userID, role string) error {
+	query := "UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2"
+	tag, err := r.pool.Exec(ctx, query, role, userID)
+	if err != nil {
+		return fmt.Errorf("update role: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
+}
+

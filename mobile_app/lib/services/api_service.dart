@@ -12,29 +12,37 @@ class ApiService {
 
   final String baseUrl;
   String? _token;
+  String? _refreshToken;
   Map<String, dynamic>? _user;
+  bool _isRefreshing = false;
 
   ApiService({String? baseUrl}) : baseUrl = baseUrl ?? _defaultBaseUrl;
 
   /// Set auth token dan user data, simpan ke local storage
-  Future<void> setToken(String token, [Map<String, dynamic>? userData]) async {
+  Future<void> setToken(String token, [Map<String, dynamic>? userData, String? refreshToken]) async {
     _token = token;
     _user = userData;
+    if (refreshToken != null) _refreshToken = refreshToken;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     if (userData != null) {
       await prefs.setString('user_data', jsonEncode(userData));
     }
+    if (refreshToken != null) {
+      await prefs.setString('refresh_token', refreshToken);
+    }
   }
 
   /// Clear auth token saat logout dari memory dan local storage
   Future<void> clearToken() async {
     _token = null;
+    _refreshToken = null;
     _user = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
+    await prefs.remove('refresh_token');
   }
 
   /// Load session dari local storage (Auto-login)
@@ -43,9 +51,11 @@ class ApiService {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
       final userJson = prefs.getString('user_data');
+      final refreshToken = prefs.getString('refresh_token');
 
       if (token != null && token.isNotEmpty) {
         _token = token;
+        _refreshToken = refreshToken;
         if (userJson != null) {
           _user = jsonDecode(userJson);
         }
@@ -84,7 +94,8 @@ class ApiService {
 
       if (res.statusCode == 200 && data['success'] == true) {
         final token = data['data']['token'] as String;
-        await setToken(token, data['data']['user']);
+        final refreshToken = data['data']['refresh_token'] as String?;
+        await setToken(token, data['data']['user'], refreshToken);
         return ApiResponse(success: true, data: data['data']);
       }
 
@@ -116,7 +127,7 @@ class ApiService {
   Future<ApiResponse> guestLogin() async {
     try {
       final res = await http.post(
-        Uri.parse('$baseUrl/auth/guest'),
+        Uri.parse('$baseUrl/auth/guest-login'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -165,7 +176,8 @@ class ApiService {
 
       if (res.statusCode == 201 && data['success'] == true) {
         final token = data['data']['token'] as String;
-        await setToken(token, data['data']['user']);
+        final refreshToken = data['data']['refresh_token'] as String?;
+        await setToken(token, data['data']['user'], refreshToken);
         return ApiResponse(success: true, data: data['data']);
       }
 
@@ -414,8 +426,19 @@ class ApiService {
         );
       }
 
-      // Handle 401 Unauthorized
+      // Handle 401 Unauthorized — try refresh token
       if (res.statusCode == 401) {
+        // Try auto-refresh before giving up
+        if (_refreshToken != null && !_isRefreshing) {
+          final refreshed = await _tryRefreshToken();
+          if (refreshed) {
+            return ApiResponse(
+              success: false,
+              message: 'Token refreshed, please retry',
+              statusCode: 401,
+            );
+          }
+        }
         await clearToken();
         return ApiResponse(
           success: false,
@@ -435,6 +458,36 @@ class ApiService {
         message: 'Gagal memproses respons server',
       );
     }
+  }
+
+  /// Try to refresh the access token using the stored refresh token
+  Future<bool> _tryRefreshToken() async {
+    if (_refreshToken == null || _isRefreshing) return false;
+    _isRefreshing = true;
+
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/auth/refresh'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': _refreshToken}),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['success'] == true) {
+          final newToken = data['data']['token'] as String;
+          final newRefreshToken = data['data']['refresh_token'] as String?;
+          await setToken(newToken, data['data']['user'], newRefreshToken);
+          debugPrint('[API] Token refreshed successfully');
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint('[API] Token refresh failed: $e');
+    } finally {
+      _isRefreshing = false;
+    }
+    return false;
   }
 }
 

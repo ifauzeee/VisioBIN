@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem("visiobin_auth", "true");
         localStorage.setItem("visiobin_token", t);
         localStorage.setItem("visiobin_user", JSON.stringify(u));
+        if (res.data.refresh_token) localStorage.setItem("refresh_token", res.data.refresh_token);
         setToken(t);
         setUser(u);
         setIsAuthenticated(true);
@@ -82,6 +83,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("visiobin_auth");
     localStorage.removeItem("visiobin_token");
     localStorage.removeItem("visiobin_user");
+    localStorage.removeItem("refresh_token");
     setIsAuthenticated(false);
     setToken("");
     setUser(null);

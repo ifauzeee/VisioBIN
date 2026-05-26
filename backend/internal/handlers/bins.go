@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -170,10 +171,17 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Input validation: clamp sensor values to valid ranges
+	req.DistanceOrganicCm = clampFloat(req.DistanceOrganicCm, 0, 500)
+	req.DistanceInorganicCm = clampFloat(req.DistanceInorganicCm, 0, 500)
+	req.WeightOrganicKg = clampFloat(req.WeightOrganicKg, 0, 100)
+	req.WeightInorganicKg = clampFloat(req.WeightInorganicKg, 0, 100)
+	req.GasAmoniaPpm = clampFloat(req.GasAmoniaPpm, 0, 1000)
+
 	reading, err := h.telemetryRepo.InsertReading(r.Context(), &req)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, models.APIResponse{
-			Success: false, Message: "Failed to store telemetry: " + err.Error(),
+			Success: false, Message: "Failed to store telemetry",
 		})
 		return
 	}
@@ -285,6 +293,20 @@ func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 			Success: false, Message: "bin_id and predicted_class are required",
 		})
 		return
+	}
+
+	// Input validation: normalize predicted_class and clamp confidence
+	req.PredictedClass = strings.ToLower(req.PredictedClass)
+	if req.PredictedClass != "organic" && req.PredictedClass != "inorganic" &&
+		req.PredictedClass != "organik" && req.PredictedClass != "anorganik" {
+		writeJSON(w, http.StatusBadRequest, models.APIResponse{
+			Success: false, Message: "predicted_class must be 'organic' or 'inorganic'",
+		})
+		return
+	}
+	req.Confidence = clampFloat(req.Confidence, 0, 1.0)
+	if req.InferenceTimeMs < 0 {
+		req.InferenceTimeMs = 0
 	}
 
 	log, err := h.telemetryRepo.InsertClassification(r.Context(), &req)

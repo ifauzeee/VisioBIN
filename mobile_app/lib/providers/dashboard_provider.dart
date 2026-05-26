@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -6,6 +7,8 @@ import '../services/api_service.dart';
 /// Uses ChangeNotifier pattern for simplicity (can migrate to Riverpod later).
 class DashboardProvider extends ChangeNotifier {
   final ApiService _api;
+  Timer? _refreshTimer;
+  static const _refreshInterval = Duration(seconds: 10);
 
   DashboardProvider(this._api);
 
@@ -71,6 +74,7 @@ class DashboardProvider extends ChangeNotifier {
 
       // Start loading dashboard data
       fetchAllData();
+      _startAutoRefresh();
     } else {
       _loginError = res.message ?? 'Login gagal';
       _isAuthenticated = false;
@@ -96,6 +100,7 @@ class DashboardProvider extends ChangeNotifier {
 
       // Start loading dashboard data
       fetchAllData();
+      _startAutoRefresh();
     } else {
       _loginError = res.message ?? 'Login tamu gagal';
       _isAuthenticated = false;
@@ -107,6 +112,7 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _stopAutoRefresh();
     await _api.clearToken();
     _isAuthenticated = false;
     _currentUser = null;
@@ -127,6 +133,7 @@ class DashboardProvider extends ChangeNotifier {
         _currentUser = AppUser.fromJson(userData);
       }
       fetchAllData();
+      _startAutoRefresh();
       notifyListeners();
     }
   }
@@ -239,5 +246,30 @@ class DashboardProvider extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  // ── Auto-Refresh ───────────────────────────────────────
+
+  /// Start periodic data refresh (every 10 seconds)
+  void _startAutoRefresh() {
+    _stopAutoRefresh();
+    _refreshTimer = Timer.periodic(_refreshInterval, (_) {
+      if (_isAuthenticated && !_isLoading) {
+        refreshSummary();
+      }
+    });
+    debugPrint('[Provider] Auto-refresh started (${_refreshInterval.inSeconds}s)');
+  }
+
+  /// Stop periodic data refresh
+  void _stopAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _stopAutoRefresh();
+    super.dispose();
   }
 }

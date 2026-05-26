@@ -37,6 +37,38 @@ func GenerateToken(user *models.User, secret string, expiryHours int) (string, e
 	return token.SignedString([]byte(secret))
 }
 
+// GenerateRefreshToken creates a long-lived refresh token (7 days)
+func GenerateRefreshToken(userID, secret string) (string, error) {
+	claims := jwt.RegisteredClaims{
+		Subject:   userID,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Issuer:    "visiobin-refresh",
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+// ValidateRefreshToken checks if a refresh token is valid and returns the user ID
+func ValidateRefreshToken(tokenString, secret string) (string, error) {
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", err
+	}
+	if claims.Issuer != "visiobin-refresh" {
+		return "", jwt.ErrTokenInvalidIssuer
+	}
+	return claims.Subject, nil
+}
+
 func JWTAuth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

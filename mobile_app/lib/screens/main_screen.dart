@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/chat_provider.dart';
 import 'dashboard_screen.dart';
+import 'map_screen.dart';
 import 'history_screen.dart';
 import 'maintenance_screen.dart';
 import 'chat_screen.dart';
@@ -39,6 +40,7 @@ class _MainScreenState extends State<MainScreen> {
   List<Widget> _getScreens(bool isGuest) {
     return [
       const DashboardScreen(),
+      const MapScreen(),
       const HistoryScreen(),
       const MaintenanceScreen(),
       const ChatScreen(),
@@ -92,23 +94,30 @@ class _MainScreenState extends State<MainScreen> {
                   primaryColor,
                 ),
                 _buildNavItem(
+                  LucideIcons.map,
+                  l10n.map,
+                  1,
+                  isDark,
+                  primaryColor,
+                ),
+                _buildNavItem(
                   LucideIcons.history,
                   l10n.history,
-                  1,
+                  2,
                   isDark,
                   primaryColor,
                 ),
                 _buildNavItem(
                   LucideIcons.wrench,
                   l10n.repair,
-                  2,
+                  3,
                   isDark,
                   primaryColor,
                 ),
                 _buildNavItem(
                   LucideIcons.messageSquare,
                   l10n.chat,
-                  3,
+                  4,
                   isDark,
                   primaryColor,
                 ),
@@ -116,7 +125,7 @@ class _MainScreenState extends State<MainScreen> {
                   _buildNavItem(
                     LucideIcons.settings,
                     l10n.settings,
-                    4,
+                    5,
                     isDark,
                     primaryColor,
                   ),

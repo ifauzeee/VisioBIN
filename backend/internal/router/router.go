@@ -26,7 +26,7 @@ func Setup(
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With", "X-API-Key"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -39,7 +39,8 @@ func Setup(
 		// Auth Public
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/guest", authHandler.GuestLogin)
+		r.Post("/auth/guest-login", authHandler.GuestLogin)
+		r.Post("/auth/refresh", authHandler.RefreshToken)
 
 		// Telemetry Ingest (IoT Key)
 		r.Group(func(r chi.Router) {
@@ -63,6 +64,7 @@ func Setup(
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireRole("admin"))
 				r.Delete("/auth/users/{id}", authHandler.DeleteUser)
+				r.Put("/auth/users/{id}/role", authHandler.UpdateUserRole)
 			})
 
 			// Chat System (All authenticated roles)

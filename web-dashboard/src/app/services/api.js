@@ -6,6 +6,7 @@ export const WS_BASE = API_BASE.replace("http", "ws").split("/api")[0] + "/ws";
 
 /**
  * Centralized API fetch with auth token injection.
+ * Auto-retries once with refresh token on 401.
  */
 export async function apiFetch(endpoint, token, options = {}) {
   const headers = {
@@ -25,6 +26,13 @@ export async function apiFetch(endpoint, token, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
+    // Auto-refresh on 401 if we have a refresh token
+    if (res.status === 401 && !options._retried) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        return apiFetch(endpoint, refreshed, { ...options, _retried: true });
+      }
+    }
     const error = new Error(data.message || `API Error ${res.status}`);
     error.status = res.status;
     error.data = data;
@@ -51,9 +59,37 @@ export async function registerUser(payload) {
 }
 
 export async function loginGuest() {
-  return apiFetch("/auth/guest", null, {
+  return apiFetch("/auth/guest-login", null, {
     method: "POST",
   });
+}
+
+/**
+ * Refresh the access token using stored refresh token.
+ * Returns the new access token string or null on failure.
+ */
+export async function tryRefreshToken() {
+  const rt = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+  if (!rt) return null;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: rt }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const newToken = data.data.token;
+      const newRefresh = data.data.refresh_token;
+      localStorage.setItem('token', newToken);
+      if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+      return newToken;
+    }
+  } catch (e) {
+    console.error('[API] Refresh token failed:', e);
+  }
+  return null;
 }
 
 export async function updateProfile(token, payload) {

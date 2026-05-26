@@ -39,3 +39,15 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 		"go_version": runtime.Version(),
 	})
 }
+
+// clampFloat limits a value to the range [min, max]
+func clampFloat(val, min, max float64) float64 {
+	if val < min {
+		return min
+	}
+	if val > max {
+		return max
+	}
+	return val
+}
+

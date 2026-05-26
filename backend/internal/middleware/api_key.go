@@ -8,6 +8,9 @@ import (
 	"github.com/ifauze/visiobin/internal/repository"
 )
 
+// BinContextKey is the typed context key for authenticated IoT bins
+const BinContextKey contextKey = "authenticated_bin"
+
 // APIKeyAuth is a middleware that requires a valid X-API-Key header for IoT devices
 func APIKeyAuth(repo *repository.BinRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -32,8 +35,7 @@ func APIKeyAuth(repo *repository.BinRepository) func(http.Handler) http.Handler 
 				return
 			}
 
-			// Optional: Store bin in context if handlers need it
-			ctx := context.WithValue(r.Context(), "authenticated_bin", bin)
+			ctx := context.WithValue(r.Context(), BinContextKey, bin)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
