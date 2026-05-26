@@ -5,6 +5,7 @@ import DataFreshness from "./DataFreshness";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { formatFullDateTime } from "../../utils/formatters";
 import { useDashboardContext } from "../../context/DashboardContext";
+import { deriveSystemState, hasClassificationData, hasTelemetryData } from "../../utils/realDataTransforms.mjs";
 import { usePathname } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import {
@@ -28,11 +29,32 @@ const LiveClock = () => {
 export default function Header({ setSidebarOpen }) {
   const t = useTranslations('common');
   const td = useTranslations('dashboard');
-  const { alerts, unreadCount, markAsRead, markAllRead, lastUpdated, dashError } = useDashboardContext();
+  const {
+    alerts,
+    unreadCount,
+    markAsRead,
+    markAllRead,
+    lastUpdated,
+    dashError,
+    summary,
+    logs,
+  } = useDashboardContext();
   const pathname = usePathname();
+  const systemState = deriveSystemState({
+    hasError: Boolean(dashError),
+    unreadCount,
+    hasTelemetry: hasTelemetryData(summary),
+    hasClassifications: hasClassificationData(summary, logs),
+  });
+  const systemColors = {
+    ok: "var(--brand-organic)",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    muted: "var(--text-muted)",
+  };
   
   const viewMeta = {
-    ringkasan: { title: td('title'), subtitle: td('overview'), badge: "Semua Sistem Normal", color: "var(--brand-organic)", icon: ShieldCheck },
+    ringkasan: { title: td('title'), subtitle: td('overview'), badge: t(systemState.messageKey), color: systemColors[systemState.tone], icon: ShieldCheck },
     pemantauan: { title: "Pemantauan Langsung", subtitle: "Monitoring stream kamera untuk validasi UI.", badge: "1 Stream Aktif", color: "#22d3ee", icon: Video },
     map: { title: t('map'), subtitle: "Monitoring persebaran unit stasiun bin secara geografis.", badge: "Live View", color: "#ef4444", icon: MapPin },
     analitik: { title: "Analitik", subtitle: "Evaluasi performa model dan throughput harian.", badge: "Model Stabil", color: "#f59e0b", icon: TrendingUp },
@@ -138,4 +160,3 @@ export default function Header({ setSidebarOpen }) {
     </>
   );
 }
-

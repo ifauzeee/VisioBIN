@@ -10,19 +10,35 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDashboardContext } from "../../context/DashboardContext";
+import { deriveSystemState, hasClassificationData, hasTelemetryData } from "../../utils/realDataTransforms.mjs";
 import { useTranslations } from 'next-intl';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleTheme, user, logout }) {
   const t = useTranslations('common');
   const td = useTranslations('dashboard');
   const pathname = usePathname();
-  const { summary } = useDashboardContext();
+  const { summary, logs, dashError, unreadCount, binLevel } = useDashboardContext();
   const role = user?.role || "guest";
   const isAdmin = role === "admin";
   const isOperator = role === "operator";
   const isManager = role === "manager";
   const isTechnician = role === "technician";
   const isGuest = role === "guest";
+  const hasTelemetry = hasTelemetryData(summary);
+  const hasClassifications = hasClassificationData(summary, logs);
+  const systemState = deriveSystemState({
+    hasError: Boolean(dashError),
+    unreadCount,
+    hasTelemetry,
+    hasClassifications,
+  });
+  const statusColors = {
+    ok: "var(--brand-organic)",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    muted: "var(--text-muted)",
+  };
+  const statusColor = statusColors[systemState.tone];
 
   const navItems = [
     {
@@ -238,14 +254,17 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
             <span style={{ color: "var(--text-muted)" }}>{t('ai_vision')}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--brand-organic)", fontWeight: 500 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand-organic)" }} />
-              {t('online')}
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: hasClassifications ? "var(--brand-organic)" : "var(--text-muted)", fontWeight: 500 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: hasClassifications ? "var(--brand-organic)" : "var(--text-muted)" }} />
+              {hasClassifications ? t('online') : t('waiting_real_data')}
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-            <span style={{ color: "var(--text-muted)" }}>{t('storage')}</span>
-            <span style={{ color: "var(--text-main)", fontWeight: 500 }}>45%</span>
+            <span style={{ color: "var(--text-muted)" }}>{t('telemetry')}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: statusColor, fontWeight: 500 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor }} />
+              {hasTelemetry ? `${binLevel}%` : t(systemState.messageKey)}
+            </span>
           </div>
         </div>
 
@@ -319,4 +338,3 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
     </aside>
   );
 }
-

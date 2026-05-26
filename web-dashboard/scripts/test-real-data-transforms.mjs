@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import {
   averageConfidence,
   averageInferenceMs,
+  deriveSystemState,
   groupClassificationsByDay,
+  hasClassificationData,
+  hasTelemetryData,
   mapDailyStats,
   mapProcessingHistory,
   mapVolumeHistory,
@@ -64,5 +67,18 @@ assert.deepEqual(groupClassificationsByDay(logs), [
   { tgl: "25/05/2026", organik: 1, anorganik: 0, total: 1, avgAccuracy: 78 },
   { tgl: "26/05/2026", organik: 1, anorganik: 1, total: 2, avgAccuracy: 86 },
 ]);
+
+assert.equal(hasClassificationData({ distribution: [{ name: "Organik", value: 0 }] }, []), false);
+assert.equal(hasClassificationData({ distribution: [{ name: "Organik", value: 1 }] }, []), true);
+assert.equal(hasClassificationData({}, logs), true);
+
+assert.equal(hasTelemetryData({ bin_statuses: [] }), false);
+assert.equal(hasTelemetryData({ volume_history: [{ hour: "10:00", volume: 0 }] }), true);
+assert.equal(hasTelemetryData({ bin_statuses: [{ volume_organic_pct: 12, volume_inorganic_pct: 0 }] }), true);
+
+assert.deepEqual(deriveSystemState({ hasError: true }), { tone: "error", messageKey: "offline" });
+assert.deepEqual(deriveSystemState({ hasError: false, unreadCount: 2 }), { tone: "warning", messageKey: "needs_attention" });
+assert.deepEqual(deriveSystemState({ hasError: false, hasTelemetry: false, hasClassifications: false }), { tone: "muted", messageKey: "waiting_real_data" });
+assert.deepEqual(deriveSystemState({ hasError: false, hasTelemetry: true, hasClassifications: true }), { tone: "ok", messageKey: "real_data_active" });
 
 console.log("realDataTransforms checks passed");

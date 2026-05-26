@@ -83,3 +83,35 @@ export function groupClassificationsByDay(logs = []) {
       avgAccuracy: item.total ? +((confidenceTotal / item.total) * 100).toFixed(1) : 0,
     }));
 }
+
+export function hasClassificationData(summary = {}, logs = []) {
+  if (logs.length > 0) return true;
+  if (toNumber(summary.organic_count_today) + toNumber(summary.inorganic_count_today) > 0) return true;
+  if ((summary.daily_stats || []).some((point) => toNumber(point.organic) + toNumber(point.inorganic) > 0)) return true;
+  return (summary.distribution || []).some((item) => toNumber(item.value) > 0);
+}
+
+export function hasTelemetryData(summary = {}) {
+  if ((summary.volume_history || []).length > 0) return true;
+  if ((summary.processing_history || []).length > 0) return true;
+  return (summary.bin_statuses || []).some(
+    (bin) =>
+      toNumber(bin.volume_pct) > 0 ||
+      toNumber(bin.volume_total_pct) > 0 ||
+      toNumber(bin.volume_organic_pct) > 0 ||
+      toNumber(bin.volume_inorganic_pct) > 0 ||
+      toNumber(bin.gas_amonia_ppm) > 0,
+  );
+}
+
+export function deriveSystemState({
+  hasError = false,
+  unreadCount = 0,
+  hasTelemetry = false,
+  hasClassifications = false,
+} = {}) {
+  if (hasError) return { tone: "error", messageKey: "offline" };
+  if (unreadCount > 0) return { tone: "warning", messageKey: "needs_attention" };
+  if (!hasTelemetry && !hasClassifications) return { tone: "muted", messageKey: "waiting_real_data" };
+  return { tone: "ok", messageKey: "real_data_active" };
+}

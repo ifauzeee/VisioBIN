@@ -32,9 +32,9 @@ export function useDashboard(token) {
   const [binLevelInorg, setBinLevelInorg] = useState(0);
   const [vision, setVision] = useState({
     state: "scanning",
-    label: "terdeteksi",
+    label: "",
     prob: 0,
-    box: { top: 20, left: 20, w: 60, h: 60 },
+    box: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,7 +130,7 @@ export function useDashboard(token) {
             state: "locked",
             label: latest.item,
             prob: latest.prob,
-            box: { top: 30, left: 30, w: 40, h: 40 },
+            box: latest.box || null,
           });
 
           // Clear previous timeout
@@ -198,12 +198,7 @@ export function useDashboard(token) {
             state: "locked",
             label: data.predicted_class,
             prob: +(data.confidence * 100).toFixed(1),
-            box: {
-              top: 25 + Math.random() * 10,
-              left: 25 + Math.random() * 10,
-              w: 40,
-              h: 40,
-            },
+            box: data.bounding_box || null,
           });
 
           if (visionTimeoutRef.current) clearTimeout(visionTimeoutRef.current);

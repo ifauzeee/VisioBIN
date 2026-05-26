@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  hasClassificationData,
   mapDailyStats,
   mapVolumeHistory,
 } from '../utils/realDataTransforms.mjs';
@@ -40,7 +41,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
   const dailyStats = mapDailyStats(summary.daily_stats || []);
 
-  const distributionData = summary.distribution?.length > 0
+  const hasClassifications = hasClassificationData(summary, logs);
+
+  const distributionData = hasClassifications && summary.distribution?.length > 0
     ? summary.distribution
     : [];
 
@@ -56,6 +59,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     const total = summary.total_processed || 0;
     const co2 = summary.co2 || 0;
     const trend = 12;
+
+    if (!hasClassifications && !rawGraphData.length) {
+      return {
+        text: t.rich('insight_waiting', {
+          b: (chunks) => <b>{chunks}</b>
+        }),
+        type: 'muted',
+        icon: <Activity size={16} />
+      };
+    }
     
     if (total > 500) {
       return {
@@ -109,11 +122,15 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           width: 40, 
           height: 40, 
           borderRadius: 12, 
-          background: insight.type === 'success' ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+          background: insight.type === 'success'
+            ? "rgba(16,185,129,0.1)"
+            : insight.type === 'warning'
+              ? "rgba(245,158,11,0.1)"
+              : "rgba(148,163,184,0.1)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: insight.type === 'success' ? "var(--brand-organic)" : "#f59e0b"
+          color: insight.type === 'success' ? "var(--brand-organic)" : insight.type === 'warning' ? "#f59e0b" : "var(--text-muted)"
         }}>
           {insight.icon}
         </div>
@@ -317,7 +334,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             />
             {vision.state === 'scanning' && <div className="scan-laser" />}
             <AnimatePresence>
-              {vision.state === 'locked' && (
+              {vision.state === 'locked' && vision.box && (
                 <motion.div
                   key="bounding-box"
                   initial={{ opacity: 0, scale: 0.8 }}

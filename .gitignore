@@ -30,6 +30,7 @@ desktop.ini
 # Database
 *.db
 *.sqlite
+/backups/
 
 # Node (web-dashboard)
 /web-dashboard/node_modules/
