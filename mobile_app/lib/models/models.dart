@@ -1,5 +1,5 @@
-/// Data models mirroring the backend Go models.
-/// Matches `backend/internal/models/models.go`.
+// Data models mirroring the backend Go models.
+// Matches `backend/internal/models/models.go`.
 
 class DashboardSummary {
   final int totalBins;
@@ -9,7 +9,13 @@ class DashboardSummary {
   final int totalClassificationsToday;
   final int organicCountToday;
   final int inorganicCountToday;
+  final double totalCO2;
+  final double totalCompost;
   final List<BinStatusSummary> binStatuses;
+  final List<VolumeHistoryPoint> volumeHistory;
+  final List<DailyStatPoint> dailyStats;
+  final List<ClassificationDist> distribution;
+  final List<ProcessingHistoryPoint> processingHistory;
 
   DashboardSummary({
     this.totalBins = 0,
@@ -19,11 +25,17 @@ class DashboardSummary {
     this.totalClassificationsToday = 0,
     this.organicCountToday = 0,
     this.inorganicCountToday = 0,
+    this.totalCO2 = 0,
+    this.totalCompost = 0,
     this.binStatuses = const [],
+    this.volumeHistory = const [],
+    this.dailyStats = const [],
+    this.distribution = const [],
+    this.processingHistory = const [],
   });
 
   int get totalProcessed => organicCountToday + inorganicCountToday;
-  double get co2Reduced => (organicCountToday * 0.05 + inorganicCountToday * 0.02);
+  double get co2Reduced => totalCO2;
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     return DashboardSummary(
@@ -34,10 +46,96 @@ class DashboardSummary {
       totalClassificationsToday: json['total_classifications_today'] ?? 0,
       organicCountToday: json['organic_count_today'] ?? 0,
       inorganicCountToday: json['inorganic_count_today'] ?? 0,
+      totalCO2: (json['total_co2'] as num?)?.toDouble() ?? 0,
+      totalCompost: (json['total_compost'] as num?)?.toDouble() ?? 0,
       binStatuses: (json['bin_statuses'] as List<dynamic>?)
               ?.map((b) => BinStatusSummary.fromJson(b))
               .toList() ??
           [],
+      volumeHistory: (json['volume_history'] as List<dynamic>?)
+              ?.map((p) => VolumeHistoryPoint.fromJson(p))
+              .toList() ??
+          [],
+      dailyStats: (json['daily_stats'] as List<dynamic>?)
+              ?.map((p) => DailyStatPoint.fromJson(p))
+              .toList() ??
+          [],
+      distribution: (json['distribution'] as List<dynamic>?)
+              ?.map((p) => ClassificationDist.fromJson(p))
+              .toList() ??
+          [],
+      processingHistory: (json['processing_history'] as List<dynamic>?)
+              ?.map((p) => ProcessingHistoryPoint.fromJson(p))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class VolumeHistoryPoint {
+  final String hour;
+  final double volume;
+
+  VolumeHistoryPoint({required this.hour, this.volume = 0});
+
+  factory VolumeHistoryPoint.fromJson(Map<String, dynamic> json) {
+    return VolumeHistoryPoint(
+      hour: json['hour'] ?? '',
+      volume: (json['volume'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class DailyStatPoint {
+  final String day;
+  final int organic;
+  final int inorganic;
+
+  DailyStatPoint({
+    required this.day,
+    this.organic = 0,
+    this.inorganic = 0,
+  });
+
+  factory DailyStatPoint.fromJson(Map<String, dynamic> json) {
+    return DailyStatPoint(
+      day: json['day'] ?? '',
+      organic: json['organic'] ?? 0,
+      inorganic: json['inorganic'] ?? 0,
+    );
+  }
+}
+
+class ClassificationDist {
+  final String name;
+  final int value;
+  final String color;
+
+  ClassificationDist({
+    required this.name,
+    this.value = 0,
+    this.color = '',
+  });
+
+  factory ClassificationDist.fromJson(Map<String, dynamic> json) {
+    return ClassificationDist(
+      name: json['name'] ?? '',
+      value: json['value'] ?? 0,
+      color: json['color'] ?? '',
+    );
+  }
+}
+
+class ProcessingHistoryPoint {
+  final String hour;
+  final int items;
+
+  ProcessingHistoryPoint({required this.hour, this.items = 0});
+
+  factory ProcessingHistoryPoint.fromJson(Map<String, dynamic> json) {
+    return ProcessingHistoryPoint(
+      hour: json['hour'] ?? '',
+      items: json['items'] ?? 0,
     );
   }
 }

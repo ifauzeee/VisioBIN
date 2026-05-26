@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+
+import '../models/models.dart';
+import '../providers/dashboard_provider.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -7,6 +11,8 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final classifications =
+        context.watch<DashboardProvider>().recentClassifications;
 
     return Scaffold(
       appBar: AppBar(
@@ -17,9 +23,15 @@ class HistoryScreen extends StatelessWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: _dummyData.length,
+        itemCount: classifications.isEmpty ? 1 : classifications.length,
         itemBuilder: (context, index) {
-          final item = _dummyData[index];
+          if (classifications.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 64),
+              child: Center(child: Text('Belum ada riwayat klasifikasi real')),
+            );
+          }
+          final item = classifications[index];
           return _HistoryCard(item: item, isDark: isDark);
         },
       ),
@@ -27,34 +39,17 @@ class HistoryScreen extends StatelessWidget {
   }
 }
 
-class _HistoryItem {
-  final String title;
-  final String time;
-  final String type;
-  final double confidence;
-
-  _HistoryItem(this.title, this.time, this.type, this.confidence);
-}
-
-final List<_HistoryItem> _dummyData = [
-  _HistoryItem('Banana Peel', '10:42 AM', 'Organic', 0.98),
-  _HistoryItem('Plastic Bottle', '09:15 AM', 'Non-Organic', 0.95),
-  _HistoryItem('Apple Core', 'Yesterday', 'Organic', 0.99),
-  _HistoryItem('Soda Can', 'Yesterday', 'Non-Organic', 0.92),
-  _HistoryItem('Cardboard Box', 'Yesterday', 'Non-Organic', 0.88),
-  _HistoryItem('Coffee Grounds', '2 Days Ago', 'Organic', 0.97),
-];
-
 class _HistoryCard extends StatelessWidget {
-  final _HistoryItem item;
+  final ClassificationLog item;
   final bool isDark;
 
   const _HistoryCard({required this.item, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final isOrganic = item.type == 'Organic';
+    final isOrganic = item.isOrganic;
     final typeColor = isOrganic ? const Color(0xFF10b981) : const Color(0xFFf59e0b);
+    final typeLabel = isOrganic ? 'Organic' : 'Non-Organic';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -64,7 +59,7 @@ class _HistoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -75,7 +70,7 @@ class _HistoryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.1),
+              color: typeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -89,7 +84,7 @@ class _HistoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  item.predictedClass.toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -99,7 +94,7 @@ class _HistoryCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      item.time,
+                      _formatTime(item.classifiedAt),
                       style: TextStyle(
                         color: isDark ? Colors.white54 : Colors.black54,
                         fontSize: 12,
@@ -109,11 +104,11 @@ class _HistoryCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.1),
+                        color: typeColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        item.type,
+                        typeLabel,
                         style: TextStyle(
                           color: typeColor,
                           fontSize: 10,
@@ -148,5 +143,11 @@ class _HistoryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

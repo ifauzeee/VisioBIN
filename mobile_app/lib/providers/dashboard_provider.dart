@@ -41,14 +41,14 @@ class DashboardProvider extends ChangeNotifier {
   int get unreadAlertCount => _alerts.where((a) => !a.isRead).length;
 
   double get averageAccuracy {
-    if (_recentClassifications.isEmpty) return 97.8;
+    if (_recentClassifications.isEmpty) return 0;
     final total = _recentClassifications.fold<double>(
         0.0, (acc, c) => acc + c.confidence);
     return (total / _recentClassifications.length) * 100;
   }
 
   int get averageInferenceMs {
-    if (_recentClassifications.isEmpty) return 14;
+    if (_recentClassifications.isEmpty) return 0;
     final total = _recentClassifications.fold<int>(
         0, (acc, c) => acc + c.inferenceTimeMs);
     return total ~/ _recentClassifications.length;

@@ -281,7 +281,7 @@ class DashboardScreen extends StatelessWidget {
             value: '${provider.averageAccuracy.toStringAsFixed(1)}%',
             trend: provider.recentClassifications.isNotEmpty
                 ? 'Live Data'
-                : 'Default',
+                : 'Belum ada data',
             icon: LucideIcons.target,
             color: const Color(0xFF10b981),
             isDark: isDark,
@@ -481,6 +481,8 @@ class DashboardScreen extends StatelessWidget {
     bool isDark,
     DashboardProvider provider,
   ) {
+    final dailyStats = provider.summary.dailyStats;
+
     return Container(
       height: 300,
       padding: const EdgeInsets.all(24),
@@ -514,71 +516,58 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Expanded(
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: 100,
-                barTouchData: BarTouchData(enabled: false),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const style = TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        );
-                        String text;
-                        switch (value.toInt()) {
-                          case 0:
-                            text = 'Mon';
-                            break;
-                          case 1:
-                            text = 'Tue';
-                            break;
-                          case 2:
-                            text = 'Wed';
-                            break;
-                          case 3:
-                            text = 'Thu';
-                            break;
-                          case 4:
-                            text = 'Fri';
-                            break;
-                          case 5:
-                            text = 'Sat';
-                            break;
-                          case 6:
-                            text = 'Sun';
-                            break;
-                          default:
-                            text = '';
-                            break;
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(text, style: style),
-                        );
-                      },
+            child: dailyStats.isEmpty
+                ? Center(
+                    child: Text(
+                      'Belum ada data klasifikasi harian',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                  )
+                : BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: _maxDailyStatY(provider),
+                      barTouchData: BarTouchData(enabled: false),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              const style = TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              );
+                              final index = value.toInt();
+                              final text = index >= 0 && index < dailyStats.length
+                                  ? dailyStats[index].day
+                                  : '';
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(text, style: style),
+                              );
+                            },
+                          ),
+                        ),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      barGroups: _buildBarGroups(provider),
                     ),
                   ),
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barGroups: _buildBarGroups(provider),
-              ),
-            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -595,38 +584,23 @@ class DashboardScreen extends StatelessWidget {
   }
 
   List<BarChartGroupData> _buildBarGroups(DashboardProvider provider) {
-    // Use daily_stats from summary if available
-    // Fallback to sample data for visual consistency
-    final stats = provider.summary.binStatuses;
-    if (stats.isEmpty) {
-      // Default sample data
-      return [
-        _makeGroupData(0, 45, 30),
-        _makeGroupData(1, 60, 40),
-        _makeGroupData(2, 55, 35),
-        _makeGroupData(3, 70, 50),
-        _makeGroupData(4, 85, 60),
-        _makeGroupData(5, 40, 25),
-        _makeGroupData(6, 50, 45),
-      ];
-    }
+    return provider.summary.dailyStats.asMap().entries.map((entry) {
+      final stat = entry.value;
+      return _makeGroupData(
+        entry.key,
+        stat.organic.toDouble(),
+        stat.inorganic.toDouble(),
+      );
+    }).toList();
+  }
 
-    // Use real counts scaled to percentages
-    final org = provider.summary.organicCountToday.toDouble();
-    final inorg = provider.summary.inorganicCountToday.toDouble();
-    final total = org + inorg;
-    final orgPct = total > 0 ? (org / total) * 100 : 50.0;
-    final inorgPct = total > 0 ? (inorg / total) * 100 : 50.0;
-
-    return [
-      _makeGroupData(0, orgPct * 0.7, inorgPct * 0.5),
-      _makeGroupData(1, orgPct * 0.9, inorgPct * 0.7),
-      _makeGroupData(2, orgPct * 0.8, inorgPct * 0.6),
-      _makeGroupData(3, orgPct, inorgPct * 0.8),
-      _makeGroupData(4, orgPct * 1.1, inorgPct),
-      _makeGroupData(5, orgPct * 0.6, inorgPct * 0.4),
-      _makeGroupData(6, orgPct * 0.75, inorgPct * 0.7),
-    ];
+  double _maxDailyStatY(DashboardProvider provider) {
+    final values = provider.summary.dailyStats
+        .expand((stat) => [stat.organic, stat.inorganic])
+        .toList();
+    if (values.isEmpty) return 1;
+    final maxValue = values.reduce((a, b) => a > b ? a : b).toDouble();
+    return maxValue <= 0 ? 1 : maxValue * 1.2;
   }
 
   Widget _buildLegendItem(String title, Color color) {
@@ -1098,7 +1072,7 @@ class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -1131,13 +1105,13 @@ class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.05),
+                            color: primaryColor.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             LucideIcons.bellOff,
                             size: 48,
-                            color: primaryColor.withOpacity(0.4),
+                            color: primaryColor.withValues(alpha: 0.4),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -1163,7 +1137,7 @@ class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
                       vertical: 16,
                     ),
                     itemCount: provider.alerts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final alert = provider.alerts[index];
                       Color severityColor = const Color(0xFF3b82f6);
@@ -1194,7 +1168,7 @@ class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
                             border: Border.all(
                               color: alert.isRead
                                   ? Colors.transparent
-                                  : severityColor.withOpacity(0.3),
+                                  : severityColor.withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),
@@ -1204,7 +1178,7 @@ class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: severityColor.withOpacity(0.1),
+                                  color: severityColor.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
