@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
-  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X 
+  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X, Percent, Tag 
 } from "lucide-react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import {
@@ -775,105 +775,350 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
       {/* Analysis Detail Modal */}
       <AnimatePresence>
         {analysisDetailOpen && (
-          <div className="modal-overlay" onClick={() => setAnalysisDetailOpen(false)}>
+          <div className="modal-overlay" style={{ background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", display: "flex", justifyContent: "center", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }} onClick={() => setAnalysisDetailOpen(false)}>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
               className="modal-box"
               onClick={e => e.stopPropagation()}
               style={{
-                background: "rgba(10, 10, 10, 0.8)",
+                background: "linear-gradient(135deg, rgba(24, 24, 28, 0.9) 0%, rgba(14, 14, 18, 0.95) 100%)",
                 backdropFilter: "blur(20px)",
-                border: "1px solid var(--border-color)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "20px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
                 maxWidth: "500px",
-                padding: "24px",
-                position: "relative"
+                width: "90%",
+                padding: "28px",
+                position: "relative",
+                overflow: "hidden"
               }}
             >
-              <div className="modal-header" style={{ padding: "0 0 16px 0", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", background: "transparent" }}>
-                <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: "18px", fontWeight: 700, color: "var(--text-main)" }}>
-                  <Sparkles size={18} color="var(--brand-organic)" /> {t('analysis_detail')}
+              {/* Decorative radial glows */}
+              <div style={{
+                position: "absolute",
+                top: "-10%",
+                right: "-10%",
+                width: "150px",
+                height: "150px",
+                background: logs && logs.length > 0 && logs[0].item === 'organic' ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
+                filter: "blur(40px)",
+                borderRadius: "50%",
+                pointerEvents: "none"
+              }} />
+
+              {/* Header */}
+              <div style={{ 
+                paddingBottom: "16px", 
+                marginBottom: "24px", 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center", 
+                borderBottom: "1px solid rgba(255, 255, 255, 0.08)"
+              }}>
+                <h3 style={{ 
+                  margin: 0, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 10, 
+                  fontSize: "20px", 
+                  fontWeight: 800, 
+                  color: "#fff",
+                  letterSpacing: "-0.02em"
+                }}>
+                  <Sparkles size={20} color={logs && logs.length > 0 && logs[0].item === 'organic' ? "#10b981" : "#3b82f6"} /> 
+                  {t('analysis_detail')}
                 </h3>
                 <button 
                   onClick={() => setAnalysisDetailOpen(false)}
-                  style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                  style={{ 
+                    background: "rgba(255, 255, 255, 0.04)", 
+                    border: "1px solid rgba(255, 255, 255, 0.08)", 
+                    borderRadius: "50%", 
+                    color: "rgba(255, 255, 255, 0.6)", 
+                    cursor: "pointer", 
+                    display: "flex", 
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "32px",
+                    height: "32px",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)"; }}
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
               </div>
 
               {logs && logs.length > 0 ? (
                 <div>
-                  {/* Camera Snap Frame */}
-                  <div style={{ position: 'relative', height: '240px', borderRadius: '12px', overflow: 'hidden', marginBottom: '20px', border: "1px solid var(--border-color)", background: "#000" }}>
+                  {/* Camera Snap Frame (HUD Viewfinder) */}
+                  <div style={{ 
+                    position: 'relative', 
+                    height: '240px', 
+                    borderRadius: '16px', 
+                    overflow: 'hidden', 
+                    marginBottom: '24px', 
+                    border: "1px solid rgba(255, 255, 255, 0.08)", 
+                    background: "#08080a",
+                    boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)"
+                  }}>
+                    {/* Grid Overlay for high-tech HUD look */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                      backgroundSize: "20px 20px",
+                      pointerEvents: "none",
+                      zIndex: 2
+                    }} />
+
+                    {/* Scanner horizontal line animation */}
+                    <motion.div 
+                      animate={{ top: ["0%", "100%", "0%"] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        width: '100%',
+                        height: '2px',
+                        background: logs[0].item === 'organic' 
+                          ? "linear-gradient(90deg, transparent, #10b981, transparent)" 
+                          : "linear-gradient(90deg, transparent, #3b82f6, transparent)",
+                        boxShadow: logs[0].item === 'organic' 
+                          ? "0 0 8px #10b981" 
+                          : "0 0 8px #3b82f6",
+                        pointerEvents: 'none',
+                        zIndex: 3
+                      }}
+                    />
+
+                    {/* Camera snapshot */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={APP_CONFIG.cameraStreamUrl}
                       alt="Tangkapan Kamera"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, opacity: 0.85 }}
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                     
-                    {/* Vision bounding box overlays */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '20%',
-                      left: '25%',
-                      width: '50%',
-                      height: '60%',
-                      border: `3px solid ${logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)'}`,
-                      borderRadius: '8px',
-                      boxShadow: `0 0 15px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.4)'}`,
-                      pointerEvents: 'none'
+                    {/* Viewfinder corner brackets */}
+                    <div style={{ position: 'absolute', top: 12, left: 12, width: 10, height: 10, borderTop: '2px solid rgba(255,255,255,0.4)', borderLeft: '2px solid rgba(255,255,255,0.4)', zIndex: 2 }} />
+                    <div style={{ position: 'absolute', top: 12, right: 12, width: 10, height: 10, borderTop: '2px solid rgba(255,255,255,0.4)', borderRight: '2px solid rgba(255,255,255,0.4)', zIndex: 2 }} />
+                    <div style={{ position: 'absolute', bottom: 12, left: 12, width: 10, height: 10, borderBottom: '2px solid rgba(255,255,255,0.4)', borderLeft: '2px solid rgba(255,255,255,0.4)', zIndex: 2 }} />
+                    <div style={{ position: 'absolute', bottom: 12, right: 12, width: 10, height: 10, borderBottom: '2px solid rgba(255,255,255,0.4)', borderRight: '2px solid rgba(255,255,255,0.4)', zIndex: 2 }} />
+
+                    {/* Blinking Live Indicator */}
+                    <div style={{ 
+                      position: 'absolute', 
+                      top: 12, 
+                      left: 12, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 6, 
+                      background: 'rgba(0,0,0,0.6)', 
+                      padding: '4px 8px', 
+                      borderRadius: 4, 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      color: 'rgba(255,255,255,0.8)',
+                      letterSpacing: '0.05em',
+                      zIndex: 4
                     }}>
+                      <motion.span 
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} 
+                      />
+                      CAM01 LIVE
+                    </div>
+
+                    {/* Vision bounding box overlays */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                      style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: '25%',
+                        width: '50%',
+                        height: '60%',
+                        border: `2px solid ${logs[0].item === 'organic' ? '#10b981' : '#3b82f6'}`,
+                        borderRadius: '8px',
+                        boxShadow: `0 0 20px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)'}, inset 0 0 10px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)'}`,
+                        pointerEvents: 'none',
+                        zIndex: 4
+                      }}
+                    >
                       <span style={{
                         position: 'absolute',
-                        top: '-25px',
-                        left: '-1px',
-                        background: logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)',
+                        top: '-24px',
+                        left: '-2px',
+                        background: logs[0].item === 'organic' ? '#10b981' : '#3b82f6',
                         color: '#fff',
                         fontSize: '10px',
-                        fontWeight: '700',
+                        fontWeight: '800',
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        textTransform: 'uppercase'
+                        textTransform: 'uppercase',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+                        letterSpacing: '0.02em',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}>
                         {logs[0].item === 'organic' ? t('organic') : t('inorganic')} ({logs[0].prob}%)
                       </span>
-                    </div>
+                    </motion.div>
                   </div>
 
                   {/* Metadata Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status / Hasil</div>
-                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: logs[0].item === 'organic' ? 'var(--brand-organic)' : 'var(--brand-inorganic)', textTransform: 'capitalize' }}>
-                        {logs[0].item === 'organic' ? t('organic') : t('inorganic')}
+                    
+                    {/* Item 1: Status */}
+                    <motion.div 
+                      whileHover={{ y: -2, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)' }}
+                      style={{ 
+                        padding: '16px', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        background: logs[0].item === 'organic' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
+                        borderRadius: '8px', 
+                        padding: '8px',
+                        color: logs[0].item === 'organic' ? '#10b981' : '#3b82f6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Tag size={16} />
                       </div>
-                    </div>
-                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Kepercayaan (Confidence)</div>
-                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
-                        {logs[0].prob}%
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Hasil / Status</div>
+                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: logs[0].item === 'organic' ? '#10b981' : '#3b82f6', textTransform: 'capitalize' }}>
+                          {logs[0].item === 'organic' ? t('organic') : t('inorganic')}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Latensi Inferensi</div>
-                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
-                        {logs[0].inference_ms} ms
+                    </motion.div>
+
+                    {/* Item 2: Confidence */}
+                    <motion.div 
+                      whileHover={{ y: -2, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)' }}
+                      style={{ 
+                        padding: '16px', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        background: 'rgba(235, 166, 11, 0.1)', 
+                        borderRadius: '8px', 
+                        padding: '8px',
+                        color: '#eb7e0b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Percent size={16} />
                       </div>
-                    </div>
-                    <div style={{ padding: '12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Waktu Klasifikasi</div>
-                      <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '4px', color: 'var(--text-main)' }}>
-                        {logs[0].time}
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Kepercayaan (Confidence)</div>
+                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
+                          {logs[0].prob}%
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
+
+                    {/* Item 3: Latency */}
+                    <motion.div 
+                      whileHover={{ y: -2, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)' }}
+                      style={{ 
+                        padding: '16px', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        background: 'rgba(139, 92, 246, 0.1)', 
+                        borderRadius: '8px', 
+                        padding: '8px',
+                        color: '#a78bfa',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Cpu size={16} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Latensi Inferensi</div>
+                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
+                          {logs[0].inference_ms} ms
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Item 4: Time */}
+                    <motion.div 
+                      whileHover={{ y: -2, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)' }}
+                      style={{ 
+                        padding: '16px', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ 
+                        background: 'rgba(6, 182, 212, 0.1)', 
+                        borderRadius: '8px', 
+                        padding: '8px',
+                        color: '#22d3ee',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Waktu Klasifikasi</div>
+                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
+                          {logs[0].time}
+                        </div>
+                      </div>
+                    </motion.div>
+
                   </div>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                <div style={{ textAlign: 'center', padding: '32px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
                   Belum ada data analisis AI terbaru dari unit stasiun.
                 </div>
               )}
