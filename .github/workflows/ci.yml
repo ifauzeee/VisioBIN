@@ -54,8 +54,13 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Next.js
-        run: npm run build
+      - name: Prepare Build Environment
+        run: |
+          echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}" >> "$GITHUB_ENV"
+          echo "CAMERA_STREAM_URL=${CAMERA_STREAM_URL:-http://192.168.1.10:8000/stream}" >> "$GITHUB_ENV"
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           CAMERA_STREAM_URL: ${{ vars.CAMERA_STREAM_URL }}
+
+      - name: Build Next.js
+        run: npm run build
