@@ -12,6 +12,12 @@ Simulator perangkat IoT untuk menguji integrasi backend dan aplikasi mobile tanp
 
 Pastikan backend sedang berjalan sebelum menjalankan simulator.
 
+Jika memakai Docker Compose, simulator sengaja dibuat opt-in supaya `docker compose up -d` tidak terus mengisi database dengan data simulasi.
+
+```bash
+docker compose --profile simulator up -d simulator
+```
+
 ### Menjalankan Simulator
 ```bash
 go run main.go -user <username> -pass <password>

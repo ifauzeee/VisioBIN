@@ -23,7 +23,7 @@
 | `web-dashboard/` | Next.js | Admin monitoring dashboard |
 | `mobile-app/` | Flutter | Notifikasi petugas |
 | `ai-model/` | Python, YOLOv5n | Training & export model AI |
-| `iot-simulator/` | Python | Simulasi data sensor |
+| `iot-simulator/` | Go | Simulasi data sensor |
 
 ## Quick Start (Backend)
 
@@ -46,6 +46,20 @@ Dashboard web, Docker, AI stream, simulator, dan mobile mengambil nilai dari roo
 
 ```powershell
 .\scripts\flutter_run_from_env.ps1
+```
+
+## Docker
+
+Perintah default menjalankan backend, dashboard, database, dan Adminer tanpa simulator:
+
+```bash
+docker compose up -d
+```
+
+Simulator IoT tidak otomatis aktif agar data dashboard tidak terus terisi oleh telemetry simulasi. Jalankan simulator hanya saat ingin uji data sensor:
+
+```bash
+docker compose --profile simulator up -d simulator
 ```
 
 ## Uji Coba Sistem (End-to-End)

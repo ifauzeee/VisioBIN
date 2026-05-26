@@ -80,8 +80,8 @@ func (s *BinSimulator) Update() {
 	s.WeightInorganic = clamp(s.WeightInorganic, 0.0, 20.0)
 	s.GasAmonia = clamp(s.GasAmonia, 1.0, 200.0)
 
-	volOrganic := ((50.0 - s.DistanceOrganic) / 50.0) * 100
-	if volOrganic > 90 && rand.Float64() > 0.6 {
+	volOrganic, volInorganic := s.GetVolumePcts()
+	if shouldCollect(volOrganic, volInorganic, rand.Float64()) {
 		s.simulateCollection()
 	}
 }
@@ -127,6 +127,10 @@ func max(a, b float64) float64 {
 		return a
 	}
 	return b
+}
+
+func shouldCollect(volOrganic, volInorganic, roll float64) bool {
+	return (volOrganic > 90 || volInorganic > 90) && roll > 0.6
 }
 
 func main() {

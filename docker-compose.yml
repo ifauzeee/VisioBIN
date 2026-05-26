@@ -63,6 +63,8 @@ services:
       - backend
 
   simulator:
+    profiles:
+      - simulator
     build:
       context: ./iot-simulator
       dockerfile: Dockerfile
