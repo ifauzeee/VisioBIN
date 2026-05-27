@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../config/route_transitions.dart';
 import '../providers/chat_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../models/models.dart';
@@ -193,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ChatDetailScreen()),
+      FadeSlidePageRoute(child: const ChatDetailScreen()),
     );
   }
 }

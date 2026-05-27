@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/dashboard_provider.dart';
 
+import '../widgets/empty_state.dart';
+
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
@@ -21,20 +23,20 @@ class HistoryScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: classifications.isEmpty ? 1 : classifications.length,
-        itemBuilder: (context, index) {
-          if (classifications.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 64),
-              child: Center(child: Text('Belum ada riwayat klasifikasi real')),
-            );
-          }
-          final item = classifications[index];
-          return _HistoryCard(item: item, isDark: isDark);
-        },
-      ),
+      body: classifications.isEmpty
+          ? const EmptyState(
+              icon: LucideIcons.history,
+              title: 'Belum ada riwayat',
+              description: 'Riwayat klasifikasi AI real akan muncul di sini.',
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: classifications.length,
+              itemBuilder: (context, index) {
+                final item = classifications[index];
+                return _HistoryCard(item: item, isDark: isDark);
+              },
+            ),
     );
   }
 }

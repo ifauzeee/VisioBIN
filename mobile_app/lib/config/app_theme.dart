@@ -25,11 +25,11 @@ class AppColors {
   static const lightBorder = Color(0xFFE5E7EB);
   
   // Dark Theme Neutrals
-  static const darkBg = Color(0xFF111827);
-  static const darkSurface = Color(0xFF1F2937);
+  static const darkBg = Color(0xFF030712); // Sleek AMOLED Gray-950
+  static const darkSurface = Color(0xFF0B0F19); // Rich Slate-900 surface cards
   static const darkTextPrimary = Colors.white;
-  static const darkTextSecondary = Color(0xFF9CA3AF);
-  static const darkBorder = Color(0xFF374151);
+  static const darkTextSecondary = Color(0xFF94A3B8); // Slate-400
+  static const darkBorder = Color(0xFF1E293B); // Slate-800 border
 }
 
 class AppSpacing {
@@ -85,6 +85,7 @@ class AppTheme {
       ),
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.darkBg,
+      cardColor: AppColors.darkSurface,
       textTheme: GoogleFonts.plusJakartaSansTextTheme(
         ThemeData.dark().textTheme,
       ).copyWith(

@@ -13,6 +13,7 @@ class ChatProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _fetchingHistory = false;
   WebSocketChannel? _channel;
+  bool _isWsConnected = false;
   AppUser? _selectedRecipient;
   String? _currentUserId;
   String? _wsUrl;
@@ -31,6 +32,7 @@ class ChatProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get fetchingHistory => _fetchingHistory;
   AppUser? get selectedRecipient => _selectedRecipient;
+  bool get isWsConnected => _isWsConnected;
 
   void setCurrentUserId(String? id) {
     _currentUserId = id;
@@ -87,6 +89,8 @@ class ChatProvider extends ChangeNotifier {
     
     try {
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      _isWsConnected = true;
+      notifyListeners();
       _channel!.stream.listen(
         (message) {
           debugPrint('[ChatProvider] WS Message Received: $message');
@@ -132,15 +136,21 @@ class ChatProvider extends ChangeNotifier {
         },
         onError: (err) {
           debugPrint('[ChatProvider] WS Error: $err');
+          _isWsConnected = false;
+          notifyListeners();
           _scheduleReconnect();
         },
         onDone: () {
           debugPrint('[ChatProvider] WS Connection Closed');
+          _isWsConnected = false;
+          notifyListeners();
           _scheduleReconnect();
         },
       );
     } catch (e) {
       debugPrint('[ChatProvider] WS Connect Exception: $e');
+      _isWsConnected = false;
+      notifyListeners();
       _scheduleReconnect();
     }
   }

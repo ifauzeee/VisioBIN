@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-page: #030712; /* Deep slate background */
+  --bg-card: #0B0F19; /* Rich dark slate card */
+  --bg-hover: #151D30; /* Elevated slate hover */
+  --border-color: #1E293B; /* Slate-800 border */
+  --border-hover: #334155; /* Slate-700 hover border */
+  --text-main: #F8FAFC; /* Slate-50 bright text */
+  --text-muted: #94A3B8; /* Slate-400 muted text */
+  --brand-organic: #10B981;
+  --brand-inorganic: #3B82F6;
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --glass-bg: rgba(11, 15, 25, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.09);
+
+  /* Stream & Camera Overlay Themes */
+  --stream-overlay-bg-top: rgba(3, 7, 18, 0.85);
+  --stream-overlay-bg-bottom: linear-gradient(to top, rgba(3, 7, 18, 0.95) 0%, rgba(3, 7, 18, 0.4) 50%, transparent 100%);
+  --stream-text: #ffffff;
+  --stream-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --stream-btn-bg: rgba(255, 255, 255, 0.08);
+  --stream-btn-text: #ffffff;
+  --stream-btn-border: rgba(255, 255, 255, 0.1);
+  --stream-tile-bg: #030712;
+  --stream-offline-bg: rgba(3, 7, 18, 0.4);
+  --stream-offline-icon: rgba(255, 255, 255, 0.25);
+  --stream-offline-text: rgba(255, 255, 255, 0.35);
+}
+
+.light-mode {
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F1F5F9;
+  --border-color: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --brand-organic: #047857; /* Emerald 700 for better WCAG contrast */
+  --brand-inorganic: #1D4ED8; /* Blue 700 for better WCAG contrast */
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
+
+  /* Stream & Camera Overlay Themes */
+  --stream-overlay-bg-top: rgba(255, 255, 255, 0.95);
+  --stream-overlay-bg-bottom: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  --stream-text: var(--text-main);
+  --stream-text-shadow: none;
+  --stream-btn-bg: rgba(0, 0, 0, 0.05);
+  --stream-btn-text: var(--text-main);
+  --stream-btn-border: var(--border-color);
+  --stream-tile-bg: var(--bg-hover);
+  --stream-offline-bg: rgba(0, 0, 0, 0.03);
+  --stream-offline-icon: var(--text-muted);
+  --stream-offline-text: var(--text-muted);
+}

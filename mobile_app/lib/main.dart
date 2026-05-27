@@ -13,6 +13,7 @@ import 'screens/login_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'config/app_theme.dart';
+import 'widgets/error_boundary.dart';
 
 
 
@@ -278,16 +279,22 @@ class _VisioBinAppState extends State<VisioBinApp> {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
-        home: _isCheckingAuth
-            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-            : Consumer<DashboardProvider>(
-                builder: (context, provider, _) {
-                  if (provider.isAuthenticated) {
-                    return const MainScreen();
-                  }
-                  return const LoginScreen();
-                },
-              ),
+        home: AppErrorBoundary(
+          onRetry: () {
+            _checkAuth();
+            _dashboardProvider.fetchAllData();
+          },
+          child: _isCheckingAuth
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : Consumer<DashboardProvider>(
+                  builder: (context, provider, _) {
+                    if (provider.isAuthenticated) {
+                      return const MainScreen();
+                    }
+                    return const LoginScreen();
+                  },
+                ),
+        ),
           );
 
         },

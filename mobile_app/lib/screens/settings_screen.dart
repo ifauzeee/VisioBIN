@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/locale_provider.dart';
 import 'edit_profile_screen.dart';
+import '../config/route_transitions.dart';
 import '../l10n/app_localizations.dart';
 
 
@@ -193,7 +194,7 @@ class SettingsScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                  FadeSlidePageRoute(child: const EditProfileScreen()),
                 );
               },
               borderRadius: BorderRadius.circular(20),

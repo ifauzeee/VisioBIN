@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/maintenance_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../models/models.dart';
+import '../widgets/empty_state.dart';
 
 class MaintenanceScreen extends StatefulWidget {
   const MaintenanceScreen({super.key});
@@ -112,33 +113,12 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           }
 
           if (provider.logs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.clipboardList, 
-                    size: 80, 
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Belum Ada Log',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Catatan perawatan akan tampil di sini.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
+            return EmptyState(
+              icon: LucideIcons.clipboardList,
+              title: 'Belum Ada Log',
+              description: 'Catatan perawatan akan tampil di sini.',
+              actionLabel: 'Segarkan',
+              onAction: () => provider.fetchLogs(),
             );
           }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/chat_provider.dart';
 import '../widgets/dashboard/status_card.dart';
 import '../widgets/dashboard/capacity_indicators.dart';
 import '../widgets/dashboard/live_camera_card.dart';
@@ -10,6 +11,7 @@ import '../widgets/dashboard/quick_actions.dart';
 import '../widgets/dashboard/recent_activity_list.dart';
 import '../widgets/dashboard/alerts_bottom_sheet.dart';
 import '../widgets/dashboard/skeleton_loader.dart';
+import '../config/route_transitions.dart';
 import 'live_camera_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -60,8 +62,8 @@ class DashboardScreen extends StatelessWidget {
                           ),
                           TextButton.icon(
                             onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const LiveCameraScreen(),
+                              FadeSlidePageRoute(
+                                child: const LiveCameraScreen(),
                               ),
                             ),
                             icon: const Icon(LucideIcons.maximize2, size: 16),
@@ -153,17 +155,40 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, DashboardProvider provider) {
+    final chatProvider = context.watch<ChatProvider>();
+    final isConnected = chatProvider.isWsConnected;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Dashboard',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+            Row(
+              children: [
+                Text(
+                  'Dashboard',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: isConnected ? const Color(0xFF10b981) : const Color(0xFFef4444),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isConnected ? const Color(0xFF10b981) : const Color(0xFFef4444)).withOpacity(0.4),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

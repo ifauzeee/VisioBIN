@@ -310,9 +310,9 @@ export default function DataManagementView() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.02 }}
                           >
-                            <td className="row-num">{(page - 1) * limit + i + 1}</td>
+                            <td className="row-num" data-label="#">{(page - 1) * limit + i + 1}</td>
                             {columns.map(col => (
-                              <td key={col} className={col === 'id' || col.includes('_id') ? 'mono' : ''}>
+                              <td key={col} data-label={col.replace(/_/g, ' ')} className={col === 'id' || col.includes('_id') ? 'mono' : ''}>
                                 {col.includes('at') || col === 'recorded_at' || col === 'timestamp' ? (
                                   <span className="time-val">{formatFullDateTime(row[col])}</span>
                                 ) : row[col] === null ? (
@@ -322,7 +322,7 @@ export default function DataManagementView() {
                                 )}
                               </td>
                             ))}
-                            <td className="actions-cell">
+                            <td className="actions-cell" data-label={isID ? "Aksi" : "Actions"}>
                                <div className="action-btns">
                                   <button className="a-btn edit" onClick={() => handleOpenModal(row)}><Edit3 size={12} /></button>
                                   <button className="a-btn delete" onClick={() => handleDelete(row.id)}><Trash2 size={12} /></button>
@@ -392,10 +392,10 @@ export default function DataManagementView() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.03 }}
                         >
-                          <td className="bold">{col.name}</td>
-                          <td className="type-col">{col.type}</td>
-                          <td className="extra-col">{col.extra}</td>
-                          <td className="comment-col">{col.comment || '—'}</td>
+                          <td className="bold" data-label={isID ? "Kolom" : "Column"}>{col.name}</td>
+                          <td className="type-col" data-label={isID ? "Tipe" : "Type"}>{col.type}</td>
+                          <td className="extra-col" data-label={isID ? "Batasan" : "Constraint"}>{col.extra}</td>
+                          <td className="comment-col" data-label={isID ? "Keterangan" : "Description"}>{col.comment || '—'}</td>
                         </motion.tr>
                       ))}
                     </AnimatePresence>

@@ -15,6 +15,7 @@ export default function PetaView({ bins }) {
   const [LeafletComponents, setLeafletComponents] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [zoom, setZoom] = useState(15);
 
   const getSignalStatus = (rssi) => {
     if (rssi === undefined || rssi === null) return t('noSignal') || 'Tidak Ada Sinyal';
@@ -43,9 +44,9 @@ export default function PetaView({ bins }) {
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const { MapContainer, TileLayer, Marker, Popup, useMap } = await import("react-leaflet");
+      const { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } = await import("react-leaflet");
 
-      setLeafletComponents({ L, MapContainer, TileLayer, Marker, Popup, useMap });
+      setLeafletComponents({ L, MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents });
       setIsMounted(true);
     };
 
@@ -91,6 +92,120 @@ export default function PetaView({ bins }) {
     return result;
   }, [enrichedBins, searchQuery, activeFilter]);
 
+  const getGridSize = (zoomLevel) => {
+    if (zoomLevel >= 17) return 0; // No clustering at very high zoom
+    if (zoomLevel === 16) return 0.0015;
+    if (zoomLevel === 15) return 0.003;
+    if (zoomLevel === 14) return 0.006;
+    if (zoomLevel === 13) return 0.012;
+    return 0.024; // lower zooms
+  };
+
+  const getClusterAverageLevel = (clusterBins) => {
+    if (clusterBins.length === 0) return 0;
+    const sum = clusterBins.reduce((acc, bin) => acc + getBinLevel(bin), 0);
+    return Math.round(sum / clusterBins.length);
+  };
+
+  const createClusterIcon = (binsInCluster) => {
+    const { L } = LeafletComponents;
+    const avgLevel = getClusterAverageLevel(binsInCluster);
+    const color = getBinLevelColor(avgLevel);
+    const count = binsInCluster.length;
+    
+    return L.divIcon({
+      className: "custom-cluster-marker",
+      html: `
+        <div style="
+          width: 42px;
+          height: 42px;
+          background: var(--bg-card);
+          border: 3px double ${color};
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+          position: relative;
+        ">
+          <span style="
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+          ">${count}</span>
+          <span style="
+            font-size: 8px;
+            font-weight: 600;
+            color: ${color};
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            margin-top: 2px;
+          ">${avgLevel}%</span>
+        </div>
+      `,
+      iconSize: [42, 42],
+      iconAnchor: [21, 21],
+    });
+  };
+
+  const clusteredItems = useMemo(() => {
+    const gridSize = getGridSize(zoom);
+    if (gridSize === 0) {
+      return filteredBins.map(bin => ({
+        isCluster: false,
+        bin,
+        latitude: bin.latitude,
+        longitude: bin.longitude
+      }));
+    }
+
+    const clusters = [];
+    filteredBins.forEach(bin => {
+      let foundCluster = null;
+      for (const cluster of clusters) {
+        const latDiff = Math.abs(cluster.latitude - bin.latitude);
+        const lngDiff = Math.abs(cluster.longitude - bin.longitude);
+        if (latDiff < gridSize && lngDiff < gridSize) {
+          foundCluster = cluster;
+          break;
+        }
+      }
+
+      if (foundCluster) {
+        foundCluster.bins.push(bin);
+        foundCluster.latitude = foundCluster.bins.reduce((sum, b) => sum + b.latitude, 0) / foundCluster.bins.length;
+        foundCluster.longitude = foundCluster.bins.reduce((sum, b) => sum + b.longitude, 0) / foundCluster.bins.length;
+      } else {
+        clusters.push({
+          isCluster: true,
+          bins: [bin],
+          latitude: bin.latitude,
+          longitude: bin.longitude
+        });
+      }
+    });
+
+    return clusters.map((c, i) => {
+      if (c.bins.length === 1) {
+        return {
+          isCluster: false,
+          bin: c.bins[0],
+          latitude: c.latitude,
+          longitude: c.longitude
+        };
+      }
+      return {
+        isCluster: true,
+        id: `cluster-${c.bins[0].id ?? i}`,
+        bins: c.bins,
+        latitude: c.latitude,
+        longitude: c.longitude
+      };
+    });
+  }, [filteredBins, zoom]);
+
   // KPI calculations
   const kpiStats = useMemo(() => {
     const total = enrichedBins.length;
@@ -106,6 +221,15 @@ export default function PetaView({ bins }) {
     useEffect(() => {
       map.flyTo(center, zoom, { duration: 0.8 });
     }, [center, zoom, map]);
+    return null;
+  };
+
+  const MapEventsController = () => {
+    LeafletComponents.useMapEvents({
+      zoomend: (e) => {
+        setZoom(e.target.getZoom());
+      },
+    });
     return null;
   };
 
@@ -366,8 +490,28 @@ export default function PetaView({ bins }) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ChangeView center={mapCenter} zoom={activeBin ? 17 : 15} />
+            <MapEventsController />
 
-            {filteredBins.map((bin, index) => {
+            {clusteredItems.map((item, index) => {
+              if (item.isCluster) {
+                return (
+                  <Marker
+                    key={item.id ?? `cluster-${index}`}
+                    position={[item.latitude, item.longitude]}
+                    icon={createClusterIcon(item.bins)}
+                    eventHandlers={{
+                      click: (e) => {
+                        const map = e.target._map;
+                        if (map) {
+                          map.flyTo([item.latitude, item.longitude], Math.min(map.getZoom() + 2, 18), { duration: 0.6 });
+                        }
+                      }
+                    }}
+                  />
+                );
+              }
+
+              const { bin } = item;
               const level = getBinLevel(bin);
               return (
                 <Marker

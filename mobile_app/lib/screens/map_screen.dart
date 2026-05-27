@@ -16,13 +16,90 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
+class Cluster {
+  final List<Bin> bins;
+  double latitude;
+  double longitude;
+
+  Cluster({
+    required this.bins,
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Bin? _selectedBin;
+  double _currentZoom = _defaultZoom;
 
   // Default center (Indonesia)
   static const _defaultCenter = LatLng(-6.2, 106.8);
   static const _defaultZoom = 13.0;
+
+  double _getGridSize(double zoom) {
+    if (zoom >= 16.0) return 0.0; // No clustering at high zoom
+    if (zoom >= 15.0) return 0.002;
+    if (zoom >= 14.0) return 0.004;
+    if (zoom >= 13.0) return 0.008;
+    if (zoom >= 12.0) return 0.016;
+    return 0.032;
+  }
+
+  Marker _buildClusterMarker(Cluster cluster) {
+    final avgVolume = cluster.bins.map((b) => b.latestReading?.averageVolume ?? 0).reduce((a, b) => a + b) ~/ cluster.bins.length;
+    final color = _getVolumeColor(avgVolume.toDouble());
+    final count = cluster.bins.length;
+
+    return Marker(
+      point: LatLng(cluster.latitude, cluster.longitude),
+      width: 48,
+      height: 48,
+      child: GestureDetector(
+        onTap: () {
+          final newZoom = (_currentZoom + 2.0).clamp(1.0, 18.0);
+          _mapController.move(LatLng(cluster.latitude, cluster.longitude), newZoom);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: color,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                '$avgVolume%',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 8,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +119,46 @@ class _MapScreenState extends State<MapScreen> {
             binsWithCoords.map((b) => b.longitude!).reduce((a, b) => a + b) / binsWithCoords.length,
           )
         : _defaultCenter;
+
+    final double gridSize = _getGridSize(_currentZoom);
+    final List<Marker> mapMarkers = [];
+
+    if (gridSize == 0.0) {
+      mapMarkers.addAll(binsWithCoords.map((bin) => _buildMarker(bin)));
+    } else {
+      final List<Cluster> clusters = [];
+      for (final bin in binsWithCoords) {
+        Cluster? foundCluster;
+        for (final cluster in clusters) {
+          final latDiff = (cluster.latitude - bin.latitude!).abs();
+          final lngDiff = (cluster.longitude - bin.longitude!).abs();
+          if (latDiff < gridSize && lngDiff < gridSize) {
+            foundCluster = cluster;
+            break;
+          }
+        }
+
+        if (foundCluster != null) {
+          foundCluster.bins.add(bin);
+          foundCluster.latitude = foundCluster.bins.map((b) => b.latitude!).reduce((a, b) => a + b) / foundCluster.bins.length;
+          foundCluster.longitude = foundCluster.bins.map((b) => b.longitude!).reduce((a, b) => a + b) / foundCluster.bins.length;
+        } else {
+          clusters.add(Cluster(
+            bins: [bin],
+            latitude: bin.latitude!,
+            longitude: bin.longitude!,
+          ));
+        }
+      }
+
+      for (final cluster in clusters) {
+        if (cluster.bins.length == 1) {
+          mapMarkers.add(_buildMarker(cluster.bins[0]));
+        } else {
+          mapMarkers.add(_buildClusterMarker(cluster));
+        }
+      }
+    }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
@@ -73,6 +190,13 @@ class _MapScreenState extends State<MapScreen> {
                     onTap: (_, __) {
                       setState(() => _selectedBin = null);
                     },
+                    onPositionChanged: (position, hasGesture) {
+                      if (position.zoom != _currentZoom) {
+                        setState(() {
+                          _currentZoom = position.zoom;
+                        });
+                      }
+                    },
                   ),
                   children: [
                     TileLayer(
@@ -83,7 +207,7 @@ class _MapScreenState extends State<MapScreen> {
                       userAgentPackageName: 'com.visiobin.app',
                     ),
                     MarkerLayer(
-                      markers: binsWithCoords.map((bin) => _buildMarker(bin)).toList(),
+                      markers: mapMarkers,
                     ),
                   ],
                 ),

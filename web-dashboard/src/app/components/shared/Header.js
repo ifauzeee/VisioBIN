@@ -38,6 +38,7 @@ export default function Header({ setSidebarOpen }) {
     dashError,
     summary,
     logs,
+    wsActive,
   } = useDashboardContext();
   const pathname = usePathname();
   const systemState = deriveSystemState({
@@ -131,6 +132,35 @@ export default function Header({ setSidebarOpen }) {
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <LanguageSwitcher />
           <LiveClock />
+
+          {/* WebSocket Status Indicator */}
+          <div
+            className="card"
+            style={{
+              padding: "8px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              border: wsActive ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(239, 68, 68, 0.2)",
+              background: wsActive ? "rgba(16, 185, 129, 0.02)" : "rgba(239, 68, 68, 0.02)",
+              boxShadow: "none",
+            }}
+            title={wsActive ? "Live Sync Active" : "Disconnected - Reconnecting"}
+          >
+            <span 
+              className={`status-dot ${wsActive ? "aktif" : "mati"}`} 
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: wsActive ? "#10B981" : "#EF4444",
+                boxShadow: wsActive ? "0 0 8px rgba(16, 185, 129, 0.6)" : "0 0 8px rgba(239, 68, 68, 0.6)"
+              }}
+            />
+            <span style={{ fontSize: 11, fontWeight: 700, color: wsActive ? "var(--brand-organic)" : "#EF4444", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {wsActive ? "Live" : "Offline"}
+            </span>
+          </div>
 
           <div
             className="card"

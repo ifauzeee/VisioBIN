@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../config/route_transitions.dart';
 import '../../screens/live_camera_screen.dart';
 import '../live_camera_stream.dart';
 
@@ -13,7 +14,7 @@ class LiveCameraCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(
         context,
-      ).push(MaterialPageRoute(builder: (_) => const LiveCameraScreen())),
+      ).push(FadeSlidePageRoute(child: const LiveCameraScreen())),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1F2937) : Colors.white,
