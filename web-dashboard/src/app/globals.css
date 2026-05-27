@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
@@ -37,8 +37,8 @@
   --border-hover: #CBD5E1;
   --text-main: #0F172A;
   --text-muted: #64748B;
-  --brand-organic: #059669;
-  --brand-inorganic: #2563EB;
+  --brand-organic: #047857; /* Emerald 700 for better WCAG contrast */
+  --brand-inorganic: #1D4ED8; /* Blue 700 for better WCAG contrast */
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.05);
@@ -66,7 +66,7 @@
 body {
   background-color: var(--bg-page);
   color: var(--text-main);
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }

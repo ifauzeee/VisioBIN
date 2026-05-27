@@ -1,11 +1,11 @@
-import { Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./hooks/useAuth";
 import { ToastProvider } from "./components/shared/Toast";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
-const outfit = Outfit({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"]
 });
 
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang={locale}>
-      <body className={outfit.className}>
+      <body className={plusJakartaSans.className}>
         <NextIntlClientProvider messages={messages}>
           <ToastProvider>
             <AuthProvider>

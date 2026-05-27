@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
-import '../widgets/live_camera_stream.dart';
+import '../widgets/dashboard/status_card.dart';
+import '../widgets/dashboard/capacity_indicators.dart';
+import '../widgets/dashboard/live_camera_card.dart';
+import '../widgets/dashboard/analytics_chart.dart';
+import '../widgets/dashboard/quick_actions.dart';
+import '../widgets/dashboard/recent_activity_list.dart';
+import '../widgets/dashboard/alerts_bottom_sheet.dart';
+import '../widgets/dashboard/skeleton_loader.dart';
 import 'live_camera_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -65,28 +70,28 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildLiveCameraCard(context, isDark),
+                      const LiveCameraCard(),
                       const SizedBox(height: 32),
                       Text(
                         'Real-time Capacity',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
-                      _buildCapacityIndicators(context, isDark, provider),
+                      CapacityIndicators(provider: provider),
                       const SizedBox(height: 32),
                       Text(
                         'Weekly Scan Analytics',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
-                      _buildAnalyticsChart(context, isDark, provider),
+                      AnalyticsChart(provider: provider),
                       const SizedBox(height: 32),
                       Text(
                         'Quick Actions',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
-                      _buildQuickActions(context, isDark),
+                      const QuickActions(),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,7 +107,7 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildRecentActivityList(isDark, provider),
+                      RecentActivityList(provider: provider),
                     ],
                     const SizedBox(height: 100), // padding for bottom nav
                   ]),
@@ -116,21 +121,7 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 80),
-        child: Column(
-          children: [
-            CircularProgressIndicator(color: Color(0xFF10b981)),
-            SizedBox(height: 16),
-            Text(
-              'Memuat data dashboard...',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const DashboardSkeletonLoader();
   }
 
   Widget _buildErrorState(DashboardProvider provider) {
@@ -264,7 +255,7 @@ class DashboardScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _StatusCard(
+          child: StatusCard(
             title: 'Total Scans',
             value: provider.summary.totalProcessed.toString(),
             trend:
@@ -276,7 +267,7 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _StatusCard(
+          child: StatusCard(
             title: 'Avg. Accuracy',
             value: '${provider.averageAccuracy.toStringAsFixed(1)}%',
             trend: provider.recentClassifications.isNotEmpty
@@ -291,463 +282,11 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCapacityIndicators(
-    BuildContext context,
-    bool isDark,
-    DashboardProvider provider,
-  ) {
-    // Use first bin's data if available
-    double volOrganic = 0;
-    double volInorganic = 0;
-    String warningText = '';
-
-    if (provider.summary.binStatuses.isNotEmpty) {
-      final firstBin = provider.summary.binStatuses.first;
-      volOrganic = (firstBin.volumeOrganicPct ?? 0) / 100;
-      volInorganic = (firstBin.volumeInorganicPct ?? 0) / 100;
-
-      if (volInorganic > 0.8) {
-        warningText = '${firstBin.binName}: Anorganik perlu dikosongkan!';
-      } else if (volOrganic > 0.8) {
-        warningText = '${firstBin.binName}: Organik perlu dikosongkan!';
-      } else {
-        warningText = '${firstBin.binName}: Kapasitas normal ✓';
-      }
-    } else {
-      warningText = 'Belum ada data bin tersedia';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _CapacityCircle(
-                title: 'Organic',
-                percentage: volOrganic.clamp(0.0, 1.0),
-                color: const Color(0xFF10b981),
-                isDark: isDark,
-              ),
-              Container(
-                height: 80,
-                width: 1,
-                color: isDark ? Colors.white12 : Colors.grey[200],
-              ),
-              _CapacityCircle(
-                title: 'Non-Organic',
-                percentage: volInorganic.clamp(0.0, 1.0),
-                color: const Color(0xFFf59e0b),
-                isDark: isDark,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: (volOrganic > 0.8 || volInorganic > 0.8)
-                  ? const Color(0xFFf59e0b).withValues(alpha: 0.1)
-                  : const Color(0xFF10b981).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: (volOrganic > 0.8 || volInorganic > 0.8)
-                    ? const Color(0xFFf59e0b).withValues(alpha: 0.2)
-                    : const Color(0xFF10b981).withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  (volOrganic > 0.8 || volInorganic > 0.8)
-                      ? LucideIcons.alertTriangle
-                      : LucideIcons.checkCircle,
-                  color: (volOrganic > 0.8 || volInorganic > 0.8)
-                      ? const Color(0xFFf59e0b)
-                      : const Color(0xFF10b981),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    warningText,
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black87,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLiveCameraCard(BuildContext context, bool isDark) {
-    return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const LiveCameraScreen())),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F2937) : Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(32),
-              ),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: const LiveCameraStream(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10b981).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      LucideIcons.video,
-                      color: Color(0xFF10b981),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Raspberry Pi Camera',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          defaultPiCameraStreamUrl,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(LucideIcons.chevronRight, color: Colors.grey),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnalyticsChart(
-    BuildContext context,
-    bool isDark,
-    DashboardProvider provider,
-  ) {
-    final dailyStats = provider.summary.dailyStats;
-
-    return Container(
-      height: 300,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.activity,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Organic vs Non-Organic',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: dailyStats.isEmpty
-                ? Center(
-                    child: Text(
-                      'Belum ada data klasifikasi harian',
-                      style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.black54,
-                        fontSize: 13,
-                      ),
-                    ),
-                  )
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: _maxDailyStatY(provider),
-                      barTouchData: BarTouchData(enabled: false),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              const style = TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              );
-                              final index = value.toInt();
-                              final text = index >= 0 && index < dailyStats.length
-                                  ? dailyStats[index].day
-                                  : '';
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(text, style: style),
-                              );
-                            },
-                          ),
-                        ),
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      barGroups: _buildBarGroups(provider),
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegendItem('Organic', const Color(0xFF10b981)),
-              const SizedBox(width: 24),
-              _buildLegendItem('Non-Organic', const Color(0xFFf59e0b)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<BarChartGroupData> _buildBarGroups(DashboardProvider provider) {
-    return provider.summary.dailyStats.asMap().entries.map((entry) {
-      final stat = entry.value;
-      return _makeGroupData(
-        entry.key,
-        stat.organic.toDouble(),
-        stat.inorganic.toDouble(),
-      );
-    }).toList();
-  }
-
-  double _maxDailyStatY(DashboardProvider provider) {
-    final values = provider.summary.dailyStats
-        .expand((stat) => [stat.organic, stat.inorganic])
-        .toList();
-    if (values.isEmpty) return 1;
-    final maxValue = values.reduce((a, b) => a > b ? a : b).toDouble();
-    return maxValue <= 0 ? 1 : maxValue * 1.2;
-  }
-
-  Widget _buildLegendItem(String title, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
-      ],
-    );
-  }
-
-  BarChartGroupData _makeGroupData(int x, double y1, double y2) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y1.clamp(0, 100),
-          color: const Color(0xFF10b981),
-          width: 12,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(6),
-            topRight: Radius.circular(6),
-          ),
-        ),
-        BarChartRodData(
-          toY: y2.clamp(0, 100),
-          color: const Color(0xFFf59e0b),
-          width: 12,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(6),
-            topRight: Radius.circular(6),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentActivityList(bool isDark, DashboardProvider provider) {
-    final classifications = provider.recentClassifications;
-
-    if (classifications.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F2937) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            Icon(LucideIcons.inbox, size: 40, color: Colors.grey.shade400),
-            const SizedBox(height: 12),
-            Text(
-              'Belum ada aktivitas klasifikasi',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: classifications.take(5).map((cls) {
-        final isOrganic = cls.isOrganic;
-        final color = isOrganic
-            ? const Color(0xFF10b981)
-            : const Color(0xFFf59e0b);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1F2937) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  isOrganic ? LucideIcons.leaf : LucideIcons.packageOpen,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      cls.predictedClass.toUpperCase(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(cls.confidence * 100).toStringAsFixed(1)}% confidence • ${cls.inferenceTimeMs}ms',
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                _formatTimeAgo(cls.classifiedAt),
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildSystemStatus(bool isDark, DashboardProvider provider) {
     return Row(
       children: [
         Expanded(
-          child: _StatusCard(
+          child: StatusCard(
             title: 'Active Bins',
             value:
                 '${provider.summary.activeBins}/${provider.summary.totalBins}',
@@ -761,7 +300,7 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _StatusCard(
+          child: StatusCard(
             title: 'Alerts',
             value: '${provider.unreadAlertCount}',
             trend: provider.unreadAlertCount == 0 ? 'All Clear' : 'Pending',
@@ -776,98 +315,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, bool isDark) {
-    return Row(
-      children: [
-        _buildActionBtn(
-          context,
-          'Empty Bin',
-          LucideIcons.trash2,
-          const Color(0xFFef4444),
-          isDark,
-        ),
-        const SizedBox(width: 16),
-        _buildActionBtn(
-          context,
-          'Calibrate',
-          LucideIcons.settings2,
-          const Color(0xFF3b82f6),
-          isDark,
-        ),
-        const SizedBox(width: 16),
-        _buildActionBtn(
-          context,
-          'Refresh',
-          LucideIcons.refreshCw,
-          const Color(0xFF8b5cf6),
-          isDark,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionBtn(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    bool isDark,
-  ) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (title == 'Refresh') {
-            context.read<DashboardProvider>().fetchAllData();
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1F2937) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   String _formatTime(DateTime dt) {
     return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
   }
 
   void _showAlertsBottomSheet(
@@ -878,408 +327,7 @@ class DashboardScreen extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _AlertsBottomSheet(provider: provider),
+      builder: (context) => AlertsBottomSheet(provider: provider),
     );
-  }
-}
-
-class _StatusCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String trend;
-  final IconData icon;
-  final Color color;
-  final bool isDark;
-
-  const _StatusCard({
-    required this.title,
-    required this.value,
-    required this.trend,
-    required this.icon,
-    required this.color,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              Icon(
-                LucideIcons.moreHorizontal,
-                color: isDark ? Colors.white30 : Colors.black26,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: isDark ? Colors.white54 : Colors.black54,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              trend,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CapacityCircle extends StatelessWidget {
-  final String title;
-  final double percentage;
-  final Color color;
-  final bool isDark;
-
-  const _CapacityCircle({
-    required this.title,
-    required this.percentage,
-    required this.color,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircularPercentIndicator(
-          radius: 55.0,
-          lineWidth: 12.0,
-          animation: true,
-          percent: percentage,
-          center: Text(
-            "${(percentage * 100).toInt()}%",
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22.0),
-          ),
-          circularStrokeCap: CircularStrokeCap.round,
-          progressColor: color,
-          backgroundColor: isDark
-              ? const Color(0xFF374151)
-              : Colors.grey.shade100,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-        ),
-      ],
-    );
-  }
-}
-
-class _AlertsBottomSheet extends StatefulWidget {
-  final DashboardProvider provider;
-
-  const _AlertsBottomSheet({required this.provider});
-
-  @override
-  State<_AlertsBottomSheet> createState() => _AlertsBottomSheetState();
-}
-
-class _AlertsBottomSheetState extends State<_AlertsBottomSheet> {
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<DashboardProvider>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom + 16,
-        top: 20,
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Notifikasi Sistem',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    if (provider.unreadAlertCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${provider.unreadAlertCount} Baru',
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(LucideIcons.x),
-                  onPressed: () => Navigator.of(context).pop(),
-                  color: isDark ? Colors.white60 : Colors.black54,
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: provider.alerts.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.05),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            LucideIcons.bellOff,
-                            size: 48,
-                            color: primaryColor.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Semua Bersih!',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Tidak ada notifikasi sistem saat ini.',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    itemCount: provider.alerts.length,
-                    separatorBuilder: (_, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final alert = provider.alerts[index];
-                      Color severityColor = const Color(0xFF3b82f6);
-                      IconData severityIcon = LucideIcons.info;
-
-                      if (alert.severity == 'critical') {
-                        severityColor = const Color(0xFFef4444);
-                        severityIcon = LucideIcons.alertTriangle;
-                      } else if (alert.severity == 'warning') {
-                        severityColor = const Color(0xFFf59e0b);
-                        severityIcon = LucideIcons.alertCircle;
-                      }
-
-                      return InkWell(
-                        onTap: () {
-                          if (!alert.isRead) {
-                            provider.markAlertRead(alert.id);
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF111827)
-                                : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: alert.isRead
-                                  ? Colors.transparent
-                                  : severityColor.withValues(alpha: 0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: severityColor.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  severityIcon,
-                                  color: severityColor,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          alert.alertType.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w800,
-                                            color: severityColor,
-                                            letterSpacing: 1.1,
-                                          ),
-                                        ),
-                                        Text(
-                                          _formatTimeAgo(alert.createdAt),
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      alert.message,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: alert.isRead
-                                            ? FontWeight.normal
-                                            : FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    if (alert.binName != null) ...[
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            LucideIcons.box,
-                                            size: 12,
-                                            color: isDark
-                                                ? Colors.white30
-                                                : Colors.black26,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            alert.binName!,
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              if (!alert.isRead) ...[
-                                const SizedBox(width: 12),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Baru saja';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m lalu';
-    if (diff.inHours < 24) return '${diff.inHours}j lalu';
-    return '${diff.inDays}h lalu';
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +12,7 @@ import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
+import 'config/app_theme.dart';
 
 
 
@@ -275,31 +275,8 @@ class _VisioBinAppState extends State<VisioBinApp> {
               Locale('en'),
               Locale('id'),
             ],
-            theme: ThemeData(
-
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF10b981), // Emerald green
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme).copyWith(
-            titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          scaffoldBackgroundColor: const Color(0xFFF3F4F6),
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF10b981),
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-          textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
-            titleLarge: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            headlineMedium: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          scaffoldBackgroundColor: const Color(0xFF111827),
-        ),
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
         home: _isCheckingAuth
             ? const Scaffold(body: Center(child: CircularProgressIndicator()))
