@@ -149,6 +149,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
             transition: "all 0.2s ease",
           }}
           title={theme === "dark" ? t('switchToLight') : t('switchToDark')}
+          aria-label={theme === "dark" ? t('switchToLight') : t('switchToDark')}
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -159,6 +160,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           size={14}
           color="#666"
           style={{ position: "absolute", left: 12, top: 9 }}
+          aria-hidden="true"
         />
         <input
           type="text"
@@ -175,6 +177,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
             fontSize: 13,
             outline: "none",
           }}
+          aria-label={t('search')}
         />
       </div>
 
@@ -323,6 +326,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
 
         <div
           onClick={logout}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { logout(); } }}
+          role="button"
+          tabIndex={0}
           className="nav-item"
           style={{
             marginLeft: -12,
@@ -330,8 +336,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
             color: "#ef4444",
             cursor: "pointer"
           }}
+          aria-label={t('logout')}
         >
-          <LogOut size={16} />
+          <LogOut size={16} aria-hidden="true" />
           <span style={{ fontSize: 13, fontWeight: 500 }}>
             {t('logout')}
           </span>

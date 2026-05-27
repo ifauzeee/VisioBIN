@@ -146,6 +146,9 @@ export default function Header({ setSidebarOpen }) {
               boxShadow: "none",
             }}
             title={wsActive ? "Live Sync Active" : "Disconnected - Reconnecting"}
+            role="status"
+            aria-live="polite"
+            aria-label={wsActive ? "Live Sync Active" : "Disconnected - Reconnecting"}
           >
             <span 
               className={`status-dot ${wsActive ? "aktif" : "mati"}`} 

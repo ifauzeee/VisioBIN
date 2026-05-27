@@ -72,6 +72,13 @@ export default React.memo(function LaporanView() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
+      {/* Print-Only Header */}
+      <div className="print-only-header">
+        <h1>VisioBIN Smart Waste Management</h1>
+        <p>Laporan Telemetri & Klasifikasi AI Real-Time</p>
+        <p>Tanggal Pembuatan: {new Date().toLocaleString(locale === 'id' ? 'id-ID' : 'en-US')}</p>
+      </div>
+
       {/* KPI */}
       <motion.div 
         className="kpi-grid" 
@@ -180,7 +187,7 @@ export default React.memo(function LaporanView() {
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="card page-break-before" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="card-title" style={{ margin: 0 }}>📋 {t('deepLog')}</div>
           <button 

@@ -8,9 +8,10 @@ import {
 } from "recharts";
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
-  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X, Percent, Tag 
+  ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X, Percent, Tag,
+  GripVertical, Eye, EyeOff, HelpCircle, Edit, Check
 } from "lucide-react";
-import { motion, AnimatePresence, animate } from "framer-motion";
+import { motion, AnimatePresence, animate, Reorder } from "framer-motion";
 import {
   hasClassificationData,
   mapDailyStats,
@@ -176,6 +177,64 @@ function RingkasanSkeleton() {
   );
 }
 
+function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
+  if (step < 0 || step >= steps.length) return null;
+  const current = steps[step];
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: 24,
+      right: 24,
+      zIndex: 2000,
+      width: 320,
+      background: "linear-gradient(135deg, rgba(20, 20, 24, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%)",
+      border: "1px solid var(--brand-organic)",
+      borderRadius: 16,
+      padding: 20,
+      boxShadow: "0 20px 40px rgba(0,0,0,0.8)",
+      color: "#fff",
+      backdropFilter: "blur(12px)"
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--brand-organic)" }}>
+          ✨ {current.title}
+        </h4>
+        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          {step + 1} / {steps.length}
+        </span>
+      </div>
+      <p style={{ margin: "0 0 16px 0", fontSize: 13, lineHeight: 1.5, color: "var(--text-muted)" }}>
+        {current.content}
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button 
+          onClick={onSkip} 
+          style={{ background: "transparent", border: "none", color: "var(--text-muted)", fontSize: 12, cursor: "pointer" }}
+        >
+          Lewati
+        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {step > 0 && (
+            <button 
+              onClick={onPrev} 
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff", padding: "6px 12px", fontSize: 12, cursor: "pointer" }}
+            >
+              Kembali
+            </button>
+          )}
+          <button 
+            onClick={onNext} 
+            style={{ background: "var(--brand-organic)", border: "none", borderRadius: 6, color: "#fff", padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+          >
+            {step === steps.length - 1 ? "Selesai" : "Lanjut"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading }) {
   if (loading) {
     return <RingkasanSkeleton />;
@@ -185,6 +244,95 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [analysisDetailOpen, setAnalysisDetailOpen] = React.useState(false);
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
+  const [widgetOrder, setWidgetOrder] = React.useState(['insight', 'kpi', 'vision_reservoir', 'history_distribution', 'daily_activity']);
+  const [visibleWidgets, setVisibleWidgets] = React.useState({
+    insight: true,
+    kpi: true,
+    vision_reservoir: true,
+    history_distribution: true,
+    daily_activity: true,
+  });
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [tourStep, setTourStep] = React.useState(-1);
+
+  React.useEffect(() => {
+    const savedOrder = localStorage.getItem("visiobin_widget_order");
+    const savedVisible = localStorage.getItem("visiobin_visible_widgets");
+    const hasSeenTour = localStorage.getItem("visiobin_onboarded");
+    if (savedOrder) {
+      try { setWidgetOrder(JSON.parse(savedOrder)); } catch (e) {}
+    }
+    if (savedVisible) {
+      try { setVisibleWidgets(JSON.parse(savedVisible)); } catch (e) {}
+    }
+    if (!hasSeenTour) {
+      setTourStep(0);
+    }
+  }, []);
+
+  const saveLayout = (newOrder, newVisible) => {
+    localStorage.setItem("visiobin_widget_order", JSON.stringify(newOrder));
+    localStorage.setItem("visiobin_visible_widgets", JSON.stringify(newVisible));
+  };
+
+  const tourSteps = [
+    {
+      target: ".sidebar",
+      title: locale === 'id' ? "Navigasi Menu Utama" : "Main Navigation",
+      content: locale === 'id' 
+        ? "Gunakan panel navigasi kiri untuk mengakses berbagai fitur seperti peta stasiun, chat komunitas, analitik, dan log maintenance."
+        : "Use the left navigation panel to access features like map stations, community chat, analytics, and maintenance logs.",
+    },
+    {
+      target: ".kpi-grid",
+      title: locale === 'id' ? "Metrik Ringkasan Utama" : "Core Metrics Overview",
+      content: locale === 'id'
+        ? "Di sini ditampilkan total scan hari ini, tingkat keterisian stasiun, CO2 tereduksi, latensi pemrosesan edge, akurasi AI, dan estimasi stasiun penuh."
+        : "This section shows today's scan volume, average fill levels, reduced CO2 emissions, edge latency, AI accuracy, and fill-up predictions.",
+    },
+    {
+      target: ".scanner-container",
+      title: locale === 'id' ? "AI Vision Engine Live" : "Live AI Vision Engine",
+      content: locale === 'id'
+        ? "Feed kamera real-time dari Raspberry Pi stasiun sampah. Kotak pembatas visual akan otomatis mendeteksi objek sampah organik/anorganik."
+        : "A real-time camera stream directly from the waste station. Custom bounding boxes dynamically outline detected organic and inorganic waste.",
+    },
+    {
+      target: ".recent-activity-panel",
+      title: locale === 'id' ? "Aktivitas Terbaru" : "Recent Scan Activity",
+      content: locale === 'id'
+        ? "Log riwayat pemrosesan deteksi sampah yang terjadi di seluruh stasiun secara langsung."
+        : "A scrolling log of incoming trash detection classifications from all sensor devices in real-time.",
+    }
+  ];
+
+  React.useEffect(() => {
+    if (tourStep < 0 || tourStep >= tourSteps.length) {
+      document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+      return;
+    }
+    document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+    const step = tourSteps[tourStep];
+    const el = document.querySelector(step.target);
+    if (el) {
+      el.classList.add("tour-highlight");
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [tourStep]);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setAnalysisDetailOpen(false);
+      }
+    };
+    if (analysisDetailOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [analysisDetailOpen]);
+
+
 
   const handleBrushChange = React.useCallback((range) => {
     if (range) {
@@ -256,15 +404,11 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
   const insight = generateInsight();
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      {/* AI Insight Narrative */}
-      <motion.div 
+  const renderWidget = (widgetId) => {
+    switch (widgetId) {
+      case 'insight':
+        return (
+          <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -320,8 +464,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           {t('analysis_detail')}
         </button>
       </motion.div>
-
-      <motion.div 
+        );
+      case 'kpi':
+        return (
+          <motion.div 
         className="kpi-grid"
         initial="hidden"
         animate="visible"
@@ -491,8 +637,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
         </motion.div>
       </motion.div>
-
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        );
+      case 'vision_reservoir':
+        return (
+          <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -591,8 +739,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
         </motion.div>
       </div>
-
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        );
+      case 'history_distribution':
+        return (
+          <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -704,13 +854,15 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
         </motion.div>
       </div>
-
-      <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
+        );
+      case 'daily_activity':
+        return (
+          <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="card" 
+          className="card recent-activity-panel" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
           <div className="card-title">📊 {t('daily_classification')}</div>
@@ -771,7 +923,190 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
         </motion.div>
       </div>
+        );
+      default:
+        return null;
+    }
+  };
 
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <style jsx global>{`
+        .tour-highlight {
+          position: relative !important;
+          z-index: 1500 !important;
+          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65), 0 0 15px 5px var(--brand-organic) !important;
+          transition: all 0.3s ease !important;
+          background: var(--bg-card) !important;
+          border-radius: 16px !important;
+        }
+      `}</style>
+
+      {/* Onboarding Tour Dialog */}
+      <OnboardingTour 
+        step={tourStep} 
+        steps={tourSteps} 
+        onNext={() => {
+          if (tourStep === tourSteps.length - 1) {
+            localStorage.setItem("visiobin_onboarded", "true");
+            setTourStep(-1);
+          } else {
+            setTourStep(tourStep + 1);
+          }
+        }} 
+        onPrev={() => setTourStep(tourStep - 1)} 
+        onSkip={() => {
+          localStorage.setItem("visiobin_onboarded", "true");
+          setTourStep(-1);
+        }} 
+      />
+
+      {/* Configuration Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+          {locale === 'id' ? 'Ringkasan Dashboard' : 'Dashboard Summary'}
+        </h2>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button 
+            onClick={() => setTourStep(0)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', 
+              borderRadius: 8, padding: '8px 14px', fontSize: 12, color: 'var(--text-main)', cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            aria-label={locale === 'id' ? 'Mulai panduan fitur' : 'Start onboarding tour'}
+          >
+            <HelpCircle size={14} color="var(--brand-organic)" />
+            {locale === 'id' ? 'Panduan Fitur' : 'Tour Guide'}
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (isEditMode) {
+                saveLayout(widgetOrder, visibleWidgets);
+              }
+              setIsEditMode(!isEditMode);
+            }}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: isEditMode ? 'var(--brand-organic)' : 'rgba(255,255,255,0.03)', 
+              border: isEditMode ? 'none' : '1px solid var(--border-color)', 
+              borderRadius: 8, padding: '8px 14px', fontSize: 12, color: '#fff', cursor: 'pointer',
+              fontWeight: 600, transition: 'all 0.2s'
+            }}
+            aria-label={isEditMode ? 'Selesai kustomisasi layout' : 'Kustomisasi layout dashboard'}
+          >
+            {isEditMode ? <Check size={14} /> : <Edit size={14} />}
+            {isEditMode ? (locale === 'id' ? 'Selesai' : 'Selesai') : (locale === 'id' ? 'Edit Layout' : 'Edit Layout')}
+          </button>
+        </div>
+      </div>
+
+      {/* Edit Mode Customization Controls Panel */}
+      <AnimatePresence>
+        {isEditMode && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ 
+              background: 'var(--bg-hover)', border: '1px dashed var(--border-hover)',
+              borderRadius: 16, padding: 20, marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12,
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              {locale === 'id' ? 'Tampilkan / Sembunyikan Widget' : 'Show / Hide Widgets'}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              {Object.keys(visibleWidgets).map(key => {
+                const labelMap = {
+                  insight: 'AI Insight Narrative',
+                  kpi: 'KPI Cards Grid',
+                  vision_reservoir: 'AI Video & Reservoir',
+                  history_distribution: 'Volume Trend & Distribution',
+                  daily_activity: 'Daily Charts & Recent Activity'
+                };
+                const isVis = visibleWidgets[key];
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      const updated = { ...visibleWidgets, [key]: !isVis };
+                      setVisibleWidgets(updated);
+                      saveLayout(widgetOrder, updated);
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: isVis ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
+                      border: '1px solid ' + (isVis ? 'rgba(16,185,129,0.3)' : 'var(--border-color)'),
+                      borderRadius: 8, padding: '6px 12px', fontSize: 12,
+                      color: isVis ? 'var(--brand-organic)' : 'var(--text-muted)',
+                      cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    aria-label={'Toggle ' + labelMap[key]}
+                  >
+                    {isVis ? <Eye size={14} /> : <EyeOff size={14} />}
+                    {labelMap[key]}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              💡 {locale === 'id' ? 'Seret / drag widget di bawah untuk mengurutkan tata letak sesuai keinginan.' : 'Drag widgets below to rearrange layout as desired.'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Reorder.Group 
+        axis="y" 
+        values={widgetOrder} 
+        onReorder={(newOrder) => {
+          setWidgetOrder(newOrder);
+          saveLayout(newOrder, visibleWidgets);
+        }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 24, listStyle: 'none', padding: 0, margin: 0 }}
+      >
+        {widgetOrder.map((widgetId) => {
+          if (!visibleWidgets[widgetId]) return null;
+          return (
+            <Reorder.Item 
+              key={widgetId} 
+              value={widgetId}
+              dragListener={isEditMode}
+              style={{ position: 'relative' }}
+            >
+              {isEditMode && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  border: '2px dashed var(--brand-organic)', borderRadius: 16,
+                  background: 'rgba(16,185,129,0.01)', pointerEvents: 'none', zIndex: 10
+                }} />
+              )}
+              {isEditMode && (
+                <div style={{
+                  position: 'absolute', top: -12, left: 16, background: 'var(--brand-organic)',
+                  color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                  display: 'flex', alignItems: 'center', gap: 4, zIndex: 11, cursor: 'grab'
+                }}>
+                  <GripVertical size={10} />
+                  {widgetId === 'insight' ? 'AI Insight Narrative' : widgetId === 'kpi' ? 'KPI Cards Grid' : widgetId === 'vision_reservoir' ? 'AI Video & Reservoir' : widgetId === 'history_distribution' ? 'Volume Trend & Distribution' : 'Daily Charts & Recent Activity'}
+                </div>
+              )}
+              <div style={{ opacity: isEditMode ? 0.7 : 1 }}>
+                {renderWidget(widgetId)}
+              </div>
+            </Reorder.Item>
+          );
+        })}
+      </Reorder.Group>
       {/* Analysis Detail Modal */}
       <AnimatePresence>
         {analysisDetailOpen && (

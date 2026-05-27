@@ -14,6 +14,7 @@ export default function PetaView({ bins }) {
   const [isMounted, setIsMounted] = useState(false);
   const [LeafletComponents, setLeafletComponents] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [zoom, setZoom] = useState(15);
 
@@ -44,9 +45,9 @@ export default function PetaView({ bins }) {
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } = await import("react-leaflet");
+      const { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } = await import("react-leaflet");
 
-      setLeafletComponents({ L, MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents });
+      setLeafletComponents({ L, MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents });
       setIsMounted(true);
     };
 
@@ -301,7 +302,7 @@ export default function PetaView({ bins }) {
     );
   }
 
-  const { MapContainer, TileLayer, Marker, Popup } = LeafletComponents;
+  const { MapContainer, TileLayer, Marker, Popup, Circle } = LeafletComponents;
 
   const filters = [
     { key: "all", label: t('filterAll'), activeClass: "active" },
@@ -387,13 +388,32 @@ export default function PetaView({ bins }) {
             </div>
           </div>
 
-          {/* Filter Chips */}
+          {/* Heatmap Toggle & Filter Chips */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
+              Filter
+            </span>
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              style={{
+                background: showHeatmap ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${showHeatmap ? 'rgba(139, 92, 246, 0.4)' : 'var(--border-color)'}`,
+                borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600,
+                color: showHeatmap ? '#a78bfa' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              aria-label="Toggle Heatmap View"
+            >
+              🔥 {showHeatmap ? 'Heatmap Aktif' : 'Tampilan Heatmap'}
+            </button>
+          </div>
+
           <div className="map-filter-chips">
             {filters.map(f => (
               <button
                 key={f.key}
                 className={`map-filter-chip ${activeFilter === f.key ? f.activeClass : ''}`}
                 onClick={() => setActiveFilter(f.key)}
+                aria-label={`Filter stasiun: ${f.label}`}
               >
                 {f.label}
               </button>
@@ -492,91 +512,111 @@ export default function PetaView({ bins }) {
             <ChangeView center={mapCenter} zoom={activeBin ? 17 : 15} />
             <MapEventsController />
 
-            {clusteredItems.map((item, index) => {
-              if (item.isCluster) {
+            {!showHeatmap ? (
+              clusteredItems.map((item, index) => {
+                if (item.isCluster) {
+                  return (
+                    <Marker
+                      key={item.id ?? `cluster-${index}`}
+                      position={[item.latitude, item.longitude]}
+                      icon={createClusterIcon(item.bins)}
+                      eventHandlers={{
+                        click: (e) => {
+                          const map = e.target._map;
+                          if (map) {
+                            map.flyTo([item.latitude, item.longitude], Math.min(map.getZoom() + 2, 18), { duration: 0.6 });
+                          }
+                        }
+                      }}
+                    />
+                  );
+                }
+
+                const { bin } = item;
+                const level = getBinLevel(bin);
                 return (
                   <Marker
-                    key={item.id ?? `cluster-${index}`}
-                    position={[item.latitude, item.longitude]}
-                    icon={createClusterIcon(item.bins)}
+                    key={bin.id ?? `marker-${index}`}
+                    position={[bin.latitude, bin.longitude]}
+                    icon={createCustomIcon(level)}
                     eventHandlers={{
-                      click: (e) => {
-                        const map = e.target._map;
-                        if (map) {
-                          map.flyTo([item.latitude, item.longitude], Math.min(map.getZoom() + 2, 18), { duration: 0.6 });
-                        }
-                      }
+                      click: () => handleBinClick(bin),
                     }}
-                  />
-                );
-              }
-
-              const { bin } = item;
-              const level = getBinLevel(bin);
-              return (
-                <Marker
-                  key={bin.id ?? `marker-${index}`}
-                  position={[bin.latitude, bin.longitude]}
-                  icon={createCustomIcon(level)}
-                  eventHandlers={{
-                    click: () => handleBinClick(bin),
-                  }}
-                >
-                  <Popup>
-                    <div className="map-popup-content">
-                      <div className="map-popup-title">{bin.name}</div>
-                      <div className="map-popup-location">
-                        <MapPin size={10} />
-                        {bin.location || t('noLocation')}
-                      </div>
-                      <div className="map-popup-stats">
-                        <div className="map-popup-stat-row">
-                          <div className="map-popup-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-                            <Trash2 size={14} color="var(--brand-organic)" />
-                          </div>
-                          <div>
-                            <div className="map-popup-stat-label">{t('capacity')}</div>
-                            <div className="map-popup-stat-value" style={{ color: getBinLevelColor(level) }}>{level}%</div>
-                          </div>
+                  >
+                    <Popup>
+                      <div className="map-popup-content">
+                        <div className="map-popup-title">{bin.name}</div>
+                        <div className="map-popup-location">
+                          <MapPin size={10} />
+                          {bin.location || t('noLocation')}
                         </div>
-                        <div className="map-popup-stat-row">
-                          <div className="map-popup-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-                            <Battery size={14} color="#f59e0b" />
+                        <div className="map-popup-stats">
+                          <div className="map-popup-stat-row">
+                            <div className="map-popup-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                              <Trash2 size={14} color="var(--brand-organic)" />
+                            </div>
+                            <div>
+                              <div className="map-popup-stat-label">{t('capacity')}</div>
+                              <div className="map-popup-stat-value" style={{ color: getBinLevelColor(level) }}>{level}%</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="map-popup-stat-label">{t('battery')}</div>
-                            <div className="map-popup-stat-value">{bin.battery_pct ?? bin.latest_reading?.battery_pct ?? 100}%</div>
+                          <div className="map-popup-stat-row">
+                            <div className="map-popup-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
+                              <Battery size={14} color="#f59e0b" />
+                            </div>
+                            <div>
+                              <div className="map-popup-stat-label">{t('battery')}</div>
+                              <div className="map-popup-stat-value">{bin.battery_pct ?? bin.latest_reading?.battery_pct ?? 100}%</div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="map-popup-stat-row">
-                          <div className="map-popup-stat-icon" style={{ background: 'rgba(34, 211, 238, 0.1)' }}>
-                            <Zap size={14} color="#22d3ee" />
-                          </div>
-                          <div>
-                            <div className="map-popup-stat-label">{t('signal')}</div>
-                            <div className="map-popup-stat-value">
-                              {getSignalStatus(bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm)}
-                              <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 4 }}>
-                                ({bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm ?? -50} dBm)
-                              </span>
+                          <div className="map-popup-stat-row">
+                            <div className="map-popup-stat-icon" style={{ background: 'rgba(34, 211, 238, 0.1)' }}>
+                              <Zap size={14} color="#22d3ee" />
+                            </div>
+                            <div>
+                              <div className="map-popup-stat-label">{t('signal')}</div>
+                              <div className="map-popup-stat-value">
+                                {getSignalStatus(bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm)}
+                                <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 4 }}>
+                                  ({bin.wifi_rssi_dbm ?? bin.latest_reading?.wifi_rssi_dbm ?? -50} dBm)
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="map-popup-bar">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-                          <span style={{ color: 'var(--text-muted)' }}>{t('level')}</span>
-                          <span style={{ fontWeight: 600, color: getBinLevelColor(level) }}>{level}%</span>
+                        <div className="map-popup-bar">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+                            <span style={{ color: 'var(--text-muted)' }}>{t('level')}</span>
+                            <span style={{ fontWeight: 600, color: getBinLevelColor(level) }}>{level}%</span>
+                          </div>
+                          <div className="map-popup-bar-track">
+                            <div className="map-popup-bar-fill" style={{ width: `${level}%`, background: getBinLevelColor(level) }} />
+                          </div>
                         </div>
-                        <div className="map-popup-bar-track">
-                          <div className="map-popup-bar-fill" style={{ width: `${level}%`, background: getBinLevelColor(level) }} />
-                        </div>
                       </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
+                    </Popup>
+                  </Marker>
+                );
+              })
+            ) : (
+              enrichedBins.map((bin, index) => {
+                const level = getBinLevel(bin);
+                const color = level > 80 ? '#ef4444' : level > 60 ? '#f59e0b' : 'var(--brand-organic)';
+                return (
+                  <Circle
+                    key={`heatmap-${bin.id ?? index}`}
+                    center={[bin.latitude, bin.longitude]}
+                    radius={180} // 180 meters radius
+                    pathOptions={{
+                      fillColor: color,
+                      fillOpacity: 0.45,
+                      color: 'transparent',
+                      weight: 0
+                    }}
+                  />
+                );
+              })
+            )}
           </MapContainer>
 
           {/* Legend Overlay */}
