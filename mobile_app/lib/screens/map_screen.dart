@@ -7,8 +7,6 @@ import '../models/models.dart';
 import '../providers/dashboard_provider.dart';
 import '../l10n/app_localizations.dart';
 
-/// Map screen showing all bin locations on an OpenStreetMap tile layer.
-/// Each bin is displayed as a colored marker based on its fill level.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -28,17 +26,83 @@ class Cluster {
   });
 }
 
+class PulsingUserLocationDot extends StatefulWidget {
+  const PulsingUserLocationDot({super.key});
+
+  @override
+  State<PulsingUserLocationDot> createState() => _PulsingUserLocationDotState();
+}
+
+class _PulsingUserLocationDotState extends State<PulsingUserLocationDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 14 + (18 * _controller.value),
+              height: 14 + (18 * _controller.value),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3b82f6).withOpacity(1.0 - _controller.value),
+                shape: BoxShape.circle,
+              ),
+            ),
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3b82f6),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3b82f6).withOpacity(0.5),
+                    blurRadius: 6,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Bin? _selectedBin;
   double _currentZoom = _defaultZoom;
+  LatLng? _userLocation;
+  List<LatLng>? _navigationRoute;
 
-  // Default center (Indonesia)
   static const _defaultCenter = LatLng(-6.2, 106.8);
   static const _defaultZoom = 13.0;
 
   double _getGridSize(double zoom) {
-    if (zoom >= 16.0) return 0.0; // No clustering at high zoom
+    if (zoom >= 16.0) return 0.0;
     if (zoom >= 15.0) return 0.002;
     if (zoom >= 14.0) return 0.004;
     if (zoom >= 13.0) return 0.008;
@@ -108,7 +172,6 @@ class _MapScreenState extends State<MapScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
-    // Compute center from bins with valid coordinates
     final binsWithCoords = bins.where((b) =>
         b.latitude != null && b.longitude != null &&
         b.latitude != 0 && b.longitude != 0).toList();
@@ -119,6 +182,10 @@ class _MapScreenState extends State<MapScreen> {
             binsWithCoords.map((b) => b.longitude!).reduce((a, b) => a + b) / binsWithCoords.length,
           )
         : _defaultCenter;
+
+    if (_userLocation == null && binsWithCoords.isNotEmpty) {
+      _userLocation = LatLng(center.latitude + 0.003, center.longitude + 0.003);
+    }
 
     final double gridSize = _getGridSize(_currentZoom);
     final List<Marker> mapMarkers = [];
@@ -160,6 +227,20 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
+    if (_userLocation != null) {
+      mapMarkers.add(
+        Marker(
+          point: _userLocation!,
+          width: 32,
+          height: 32,
+          child: Semantics(
+            label: 'Lokasi Anda saat ini',
+            child: const PulsingUserLocationDot(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
       appBar: AppBar(
@@ -169,12 +250,16 @@ class _MapScreenState extends State<MapScreen> {
         backgroundColor: Colors.transparent,
         actions: [
           if (binsWithCoords.isNotEmpty)
-            IconButton(
-              icon: const Icon(LucideIcons.locate),
-              tooltip: 'Center Map',
-              onPressed: () {
-                _mapController.move(center, _defaultZoom);
-              },
+            Semantics(
+              button: true,
+              label: 'Pusatkan Peta ke Lokasi Tempat Sampah',
+              child: IconButton(
+                icon: const Icon(LucideIcons.locate),
+                tooltip: 'Pusatkan Peta',
+                onPressed: () {
+                  _mapController.move(center, _defaultZoom);
+                },
+              ),
             ),
         ],
       ),
@@ -188,7 +273,10 @@ class _MapScreenState extends State<MapScreen> {
                     initialCenter: center,
                     initialZoom: _defaultZoom,
                     onTap: (_, __) {
-                      setState(() => _selectedBin = null);
+                      setState(() {
+                        _selectedBin = null;
+                        _navigationRoute = null;
+                      });
                     },
                     onPositionChanged: (position, hasGesture) {
                       if (position.zoom != _currentZoom) {
@@ -206,18 +294,26 @@ class _MapScreenState extends State<MapScreen> {
                       subdomains: isDark ? const ['a', 'b', 'c', 'd'] : const [],
                       userAgentPackageName: 'com.visiobin.app',
                     ),
+                    if (_navigationRoute != null)
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: _navigationRoute!,
+                            strokeWidth: 4.5,
+                            color: const Color(0xFF3b82f6),
+                          ),
+                        ],
+                      ),
                     MarkerLayer(
                       markers: mapMarkers,
                     ),
                   ],
                 ),
-                // Legend
                 Positioned(
                   top: 12,
                   right: 12,
                   child: _buildLegend(isDark),
                 ),
-                // Selected bin card
                 if (_selectedBin != null)
                   Positioned(
                     bottom: 24,
@@ -267,30 +363,37 @@ class _MapScreenState extends State<MapScreen> {
       point: LatLng(bin.latitude!, bin.longitude!),
       width: isSelected ? 56 : 44,
       height: isSelected ? 56 : 44,
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedBin = bin),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isSelected ? Colors.white : Colors.white70,
-              width: isSelected ? 3.5 : 2.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.5),
-                blurRadius: isSelected ? 16 : 8,
-                spreadRadius: isSelected ? 2 : 0,
+      child: Semantics(
+        button: true,
+        label: 'Stasiun Bin: ${bin.name}, Kapasitas ${volume.toStringAsFixed(0)} persen',
+        child: Tooltip(
+          message: bin.name,
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedBin = bin),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  width: isSelected ? 3.5 : 2.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.5),
+                    blurRadius: isSelected ? 16 : 8,
+                    spreadRadius: isSelected ? 2 : 0,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-              LucideIcons.trash2,
-              color: Colors.white,
-              size: isSelected ? 22 : 18,
+              child: Center(
+                child: Icon(
+                  LucideIcons.trash2,
+                  color: Colors.white,
+                  size: isSelected ? 22 : 18,
+                ),
+              ),
             ),
           ),
         ),
@@ -403,6 +506,51 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ],
           ),
+          if (_userLocation != null && bin.latitude != null && bin.longitude != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: Semantics(
+                button: true,
+                label: 'Mulai Navigasi Rute ke Stasiun ${bin.name}',
+                child: FilledButton.icon(
+                  onPressed: () {
+                    final p1 = _userLocation!;
+                    final p2 = LatLng(bin.latitude!, bin.longitude!);
+                    final midLat = (p1.latitude + p2.latitude) / 2;
+                    final midLng = (p1.longitude + p2.longitude) / 2;
+                    
+                    final route = [
+                      p1,
+                      LatLng(p1.latitude, midLng),
+                      LatLng(midLat, midLng),
+                      LatLng(midLat, p2.longitude),
+                      p2,
+                    ];
+                    
+                    setState(() {
+                      _navigationRoute = route;
+                    });
+
+                    _mapController.fitCamera(
+                      CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(route),
+                        padding: const EdgeInsets.all(50),
+                      ),
+                    );
+                  },
+                  icon: const Icon(LucideIcons.navigation, size: 16),
+                  label: const Text('Mulai Navigasi'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF3b82f6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

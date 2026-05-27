@@ -32,6 +32,8 @@ class DashboardProvider extends ChangeNotifier {
   String? _error;
   DateTime? _lastUpdated;
 
+  bool _isOfflineData = false;
+
   DashboardSummary get summary => _summary;
   List<Bin> get bins => _bins;
   List<ClassificationLog> get recentClassifications => _recentClassifications;
@@ -39,6 +41,7 @@ class DashboardProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   DateTime? get lastUpdated => _lastUpdated;
+  bool get isOfflineData => _isOfflineData;
 
   // ── Computed Values ─────────────────────────────────────
   int get unreadAlertCount => _alerts.where((a) => !a.isRead).length;
@@ -174,6 +177,8 @@ class DashboardProvider extends ChangeNotifier {
         _api.listAlerts(limit: 20),
       ]);
 
+      _isOfflineData = results.any((res) => res.isCached);
+
       // Dashboard summary
       final summaryRes = results[0];
       if (summaryRes.success && summaryRes.data != null) {
@@ -220,6 +225,7 @@ class DashboardProvider extends ChangeNotifier {
     final res = await _api.getDashboardSummary();
     if (res.success && res.data != null) {
       _summary = DashboardSummary.fromJson(res.data);
+      _isOfflineData = res.isCached;
       _lastUpdated = DateTime.now();
       notifyListeners();
     }

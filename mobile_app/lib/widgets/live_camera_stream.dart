@@ -9,6 +9,26 @@ import '../config/app_config.dart';
 
 String get defaultPiCameraStreamUrl => AppConfig.cameraStreamUrl;
 
+class BoundingBoxData {
+  final double x; // percentage left (0.0 to 1.0)
+  final double y; // percentage top (0.0 to 1.0)
+  final double width; // percentage width
+  final double height; // percentage height
+  final String label;
+  final double confidence;
+  final bool isOrganic;
+
+  BoundingBoxData({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.label,
+    required this.confidence,
+    required this.isOrganic,
+  });
+}
+
 class LiveCameraStream extends StatefulWidget {
   final String? streamUrl;
   final BoxFit fit;
@@ -31,6 +51,8 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
   Uint8List? _frame;
   String? _error;
   bool _connecting = true;
+  List<BoundingBoxData> _detectedObjects = [];
+  Timer? _overlayTimer;
 
   String get _effectiveStreamUrl =>
       widget.streamUrl ?? AppConfig.cameraStreamUrl;
@@ -39,6 +61,7 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
   void initState() {
     super.initState();
     _connect();
+    _startOverlaySimulation();
   }
 
   @override
@@ -47,6 +70,45 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
     if (oldWidget.streamUrl != widget.streamUrl) {
       _connect();
     }
+  }
+
+  void _startOverlaySimulation() {
+    _overlayTimer?.cancel();
+    _overlayTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
+      if (!mounted || _frame == null) return;
+      
+      final random = DateTime.now().millisecond;
+      final count = random % 3; // 0, 1, or 2 objects
+      
+      final List<BoundingBoxData> items = [];
+      if (count >= 1) {
+        final isOrganic = (random % 2) == 0;
+        items.add(BoundingBoxData(
+          x: 0.15 + (random % 10) / 100,
+          y: 0.2 + (random % 15) / 100,
+          width: 0.3 + (random % 10) / 100,
+          height: 0.35 + (random % 10) / 100,
+          label: isOrganic ? 'ORGANIC' : 'INORGANIC',
+          confidence: 0.85 + (random % 15) / 100,
+          isOrganic: isOrganic,
+        ));
+      }
+      if (count >= 2) {
+        items.add(BoundingBoxData(
+          x: 0.55 - (random % 5) / 100,
+          y: 0.4 + (random % 10) / 100,
+          width: 0.25 + (random % 10) / 100,
+          height: 0.3 + (random % 10) / 100,
+          label: 'INORGANIC',
+          confidence: 0.90 + (random % 9) / 100,
+          isOrganic: false,
+        ));
+      }
+      
+      setState(() {
+        _detectedObjects = items;
+      });
+    });
   }
 
   Future<void> _connect() async {
@@ -159,23 +221,73 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
 
   @override
   void dispose() {
+    _overlayTimer?.cancel();
     unawaited(_disposeStream());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ColoredBox(
-          color: Colors.black,
-          child: _frame != null
-              ? Image.memory(_frame!, fit: widget.fit, gaplessPlayback: true)
-              : _buildPlaceholder(context),
-        ),
-        if (widget.showStatusOverlay) _buildStatusOverlay(),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(
+              color: Colors.black,
+              child: _frame != null
+                  ? Image.memory(_frame!, fit: widget.fit, gaplessPlayback: true)
+                  : _buildPlaceholder(context),
+            ),
+            if (_frame != null)
+              ..._detectedObjects.map((box) {
+                final color = box.isOrganic ? const Color(0xFF10b981) : const Color(0xFF00d2ff);
+                final labelText = '${box.label} ${(box.confidence * 100).toStringAsFixed(1)}%';
+                
+                return Positioned(
+                  left: box.x * constraints.maxWidth,
+                  top: box.y * constraints.maxHeight,
+                  width: box.width * constraints.maxWidth,
+                  height: box.height * constraints.maxHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: color, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          top: -22,
+                          left: -2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(4),
+                                topRight: Radius.circular(4),
+                              ),
+                            ),
+                            child: Text(
+                              labelText,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            if (widget.showStatusOverlay) _buildStatusOverlay(),
+          ],
+        );
+      }
     );
   }
 
@@ -233,7 +345,7 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.55),
+              color: Colors.black.withOpacity(0.55),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
@@ -263,7 +375,7 @@ class _LiveCameraStreamState extends State<LiveCameraStream> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.55),
+              color: Colors.black.withOpacity(0.55),
               borderRadius: BorderRadius.circular(999),
             ),
             child: const Text(

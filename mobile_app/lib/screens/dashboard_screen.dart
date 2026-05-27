@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/chat_provider.dart';
 import '../widgets/dashboard/status_card.dart';
@@ -14,8 +15,48 @@ import '../widgets/dashboard/skeleton_loader.dart';
 import '../config/route_transitions.dart';
 import 'live_camera_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _showTutorial = false;
+  int _tutorialStep = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  Future<void> _checkTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    final onboarded = prefs.getBool('mobile_onboarded') ?? false;
+    if (!onboarded) {
+      setState(() {
+        _showTutorial = true;
+        _tutorialStep = 0;
+      });
+    }
+  }
+
+  Future<void> _completeTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('mobile_onboarded', true);
+    setState(() {
+      _showTutorial = false;
+    });
+  }
+
+  void _startTutorial() {
+    setState(() {
+      _showTutorial = true;
+      _tutorialStep = 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,98 +66,136 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () => provider.fetchAllData(),
-          color: const Color(0xFF10b981),
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(24.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildHeader(context, provider),
-                    const SizedBox(height: 32),
-                    if (provider.isLoading)
-                      _buildLoadingState()
-                    else if (provider.error != null)
-                      _buildErrorState(provider)
-                    else ...[
-                      _buildStatusCards(isDark, provider),
-                      const SizedBox(height: 32),
-                      Text(
-                        'System Status',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSystemStatus(isDark, provider),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Live Camera',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          TextButton.icon(
-                            onPressed: () => Navigator.of(context).push(
-                              FadeSlidePageRoute(
-                                child: const LiveCameraScreen(),
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: () => provider.fetchAllData(),
+              color: const Color(0xFF10b981),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(24.0),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _buildHeader(context, provider),
+                        if (provider.isOfflineData) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFf59e0b).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFf59e0b).withOpacity(0.3),
                               ),
                             ),
-                            icon: const Icon(LucideIcons.maximize2, size: 16),
-                            label: const Text('Open'),
+                            child: Row(
+                              children: [
+                                const Icon(LucideIcons.wifiOff, color: Color(0xFFf59e0b), size: 18),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Mode Offline — Menampilkan Data Terakhir',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.amber[200] : Colors.amber[900],
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                      const LiveCameraCard(),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Real-time Capacity',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      CapacityIndicators(provider: provider),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Weekly Scan Analytics',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      AnalyticsChart(provider: provider),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Quick Actions',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      const QuickActions(),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        const SizedBox(height: 32),
+                        if (provider.isLoading)
+                          _buildLoadingState()
+                        else if (provider.error != null)
+                          _buildErrorState(provider)
+                        else ...[
+                          _buildStatusCards(isDark, provider),
+                          const SizedBox(height: 32),
                           Text(
-                            'Recent Activity',
+                            'System Status',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text('View All'),
+                          const SizedBox(height: 16),
+                          _buildSystemStatus(isDark, provider),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Live Camera',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              Semantics(
+                                button: true,
+                                label: 'Buka Video Stream Penuh',
+                                child: TextButton.icon(
+                                  onPressed: () => Navigator.of(context).push(
+                                    FadeSlidePageRoute(
+                                      child: const LiveCameraScreen(),
+                                    ),
+                                  ),
+                                  icon: const Icon(LucideIcons.maximize2, size: 16),
+                                  label: const Text('Open'),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 16),
+                          const LiveCameraCard(),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Real-time Capacity',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 16),
+                          CapacityIndicators(provider: provider),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Weekly Scan Analytics',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 16),
+                          AnalyticsChart(provider: provider),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Quick Actions',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 16),
+                          const QuickActions(),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Recent Activity',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text('View All'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          RecentActivityList(provider: provider),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                      RecentActivityList(provider: provider),
-                    ],
-                    const SizedBox(height: 100), // padding for bottom nav
-                  ]),
-                ),
+                        const SizedBox(height: 100), // padding for bottom nav
+                      ]),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            if (_showTutorial) _buildTutorialOverlay(context),
+          ],
         ),
       ),
     );
@@ -207,67 +286,104 @@ class DashboardScreen extends StatelessWidget {
         ),
         Row(
           children: [
-            if (context.read<DashboardProvider>().currentUser?.role == 'guest')
-              Padding(
-                padding: const EdgeInsets.only(right: 12.0),
+            Semantics(
+              button: true,
+              label: 'Mulai Panduan Fitur',
+              child: Tooltip(
+                message: 'Panduan Fitur',
                 child: GestureDetector(
-                  onTap: () => context.read<DashboardProvider>().logout(),
+                  onTap: _startTutorial,
                   child: Container(
                     width: 50,
                     height: 50,
+                    margin: const EdgeInsets.only(right: 12.0),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
+                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.red.withValues(alpha: 0.2),
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                       ),
                     ),
-                    child: const Icon(LucideIcons.logOut, color: Colors.red),
+                    child: const Icon(LucideIcons.helpCircle, color: Color(0xFF10b981)),
                   ),
                 ),
               ),
-            GestureDetector(
-              onTap: () => _showAlertsBottomSheet(context, provider),
-              child: Stack(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      LucideIcons.bell,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+            if (context.read<DashboardProvider>().currentUser?.role == 'guest')
+              Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: Semantics(
+                  button: true,
+                  label: 'Logout Guest',
+                  child: Tooltip(
+                    message: 'Logout Guest',
+                    child: GestureDetector(
+                      onTap: () => context.read<DashboardProvider>().logout(),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: const Icon(LucideIcons.logOut, color: Colors.red),
+                      ),
                     ),
                   ),
-                  if (provider.unreadAlertCount > 0)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+                ),
+              ),
+            Semantics(
+              button: true,
+              label: 'Notifikasi Alerts',
+              child: Tooltip(
+                message: 'Lihat Alerts',
+                child: GestureDetector(
+                  onTap: () => _showAlertsBottomSheet(context, provider),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Center(
-                          child: Text(
-                            provider.unreadAlertCount > 9
-                                ? '9+'
-                                : provider.unreadAlertCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+                        child: Icon(
+                          LucideIcons.bell,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      if (provider.unreadAlertCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                provider.unreadAlertCount > 9
+                                    ? '9+'
+                                    : provider.unreadAlertCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -337,6 +453,122 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTutorialOverlay(BuildContext context) {
+    final steps = [
+      {
+        'title': 'Metrik Ringkasan Utama',
+        'desc': 'Di sini Anda dapat melihat total scan data telemetri, volume organik & anorganik harian, serta akurasi rata-rata deteksi AI.',
+      },
+      {
+        'title': 'Kamera Deteksi AI',
+        'desc': 'Viewport feed video real-time dari Raspberry Pi stasiun sampah dengan deteksi objek otomatis.',
+      },
+      {
+        'title': 'Kapasitas Real-time',
+        'desc': 'Menampilkan persentase keterisian stasiun tempat sampah VisioBIN secara real-time.',
+      },
+      {
+        'title': 'Grafik & Aktivitas Harian',
+        'desc': 'Visualisasi tren keterisian mingguan serta log aktivitas terbaru dari unit stasiun sampah.',
+      }
+    ];
+
+    final step = steps[_tutorialStep];
+
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.75),
+        child: Center(
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Color(0xFF10b981), width: 1.5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '✨ ${step['title']}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF10b981),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${_tutorialStep + 1}/${steps.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    step['desc']!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: _completeTutorial,
+                        child: const Text('Lewati'),
+                      ),
+                      Row(
+                        children: [
+                          if (_tutorialStep > 0)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                    _tutorialStep--;
+                                });
+                              },
+                              child: const Text('Kembali'),
+                            ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            onPressed: () {
+                              if (_tutorialStep < steps.length - 1) {
+                                setState(() {
+                                  _tutorialStep++;
+                                });
+                              } else {
+                                _completeTutorial();
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF10b981),
+                            ),
+                            child: Text(_tutorialStep == steps.length - 1 ? 'Selesai' : 'Lanjut'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

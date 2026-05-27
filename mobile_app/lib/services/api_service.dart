@@ -360,11 +360,36 @@ class ApiService {
       final res = await http.get(
         Uri.parse('$baseUrl$endpoint'),
         headers: _headers,
-      );
+      ).timeout(const Duration(seconds: 5));
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('api_cache_$endpoint', res.body);
+        } catch (cacheErr) {
+          debugPrint('[API] Cache Write Error for $endpoint: $cacheErr');
+        }
+      }
 
       return await _parseResponse(res);
     } catch (e) {
-      debugPrint('[API] GET $endpoint error: $e');
+      debugPrint('[API] GET $endpoint error: $e. Checking cache...');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedData = prefs.getString('api_cache_$endpoint');
+        if (cachedData != null) {
+          final data = jsonDecode(cachedData) as Map<String, dynamic>;
+          debugPrint('[API] Returning offline cached data for $endpoint');
+          return ApiResponse(
+            success: data['success'] ?? true,
+            data: data['data'],
+            message: data['message'],
+            isCached: true,
+          );
+        }
+      } catch (cacheErr) {
+        debugPrint('[API] Cache Read Error for $endpoint: $cacheErr');
+      }
       return ApiResponse(
         success: false,
         message: 'Gagal menghubungkan ke server. Silakan periksa koneksi Anda.',
@@ -497,11 +522,13 @@ class ApiResponse {
   final dynamic data;
   final String? message;
   final int? statusCode;
+  final bool isCached;
 
   ApiResponse({
     required this.success,
     this.data,
     this.message,
     this.statusCode,
+    this.isCached = false,
   });
 }
