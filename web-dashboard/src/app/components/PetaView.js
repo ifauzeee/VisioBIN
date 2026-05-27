@@ -286,13 +286,13 @@ export default function PetaView({ bins }) {
                 <div className="map-empty-state-title">{t('noData')}</div>
               </div>
             ) : (
-              filteredBins.map((bin) => {
+              filteredBins.map((bin, index) => {
                 const level = getBinLevel(bin);
                 const color = getBinLevelColor(level);
                 const isSelected = activeBin?.id === bin.id;
                 return (
                   <motion.div
-                    key={bin.id}
+                    key={bin.id ?? index}
                     className={`map-bin-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleBinClick(bin)}
                     whileTap={{ scale: 0.98 }}
@@ -367,11 +367,11 @@ export default function PetaView({ bins }) {
             />
             <ChangeView center={mapCenter} zoom={activeBin ? 17 : 15} />
 
-            {filteredBins.map((bin) => {
+            {filteredBins.map((bin, index) => {
               const level = getBinLevel(bin);
               return (
                 <Marker
-                  key={bin.id}
+                  key={bin.id ?? `marker-${index}`}
                   position={[bin.latitude, bin.longitude]}
                   icon={createCustomIcon(level)}
                   eventHandlers={{

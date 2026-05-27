@@ -104,6 +104,9 @@
   "map": {
     "title": "Geographic Map",
     "subtitle": "Monitoring the geographical distribution of VisioBin units.",
+    "good": "Good",
+    "weak": "Weak",
+    "noSignal": "No Signal",
     "unitList": "VisioBin Units",
     "unitsDetected": "units detected",
     "noLocation": "Location unavailable",

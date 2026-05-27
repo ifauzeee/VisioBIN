@@ -104,6 +104,9 @@
   "map": {
     "title": "Peta Geografis",
     "subtitle": "Monitoring persebaran unit stasiun bin secara geografis.",
+    "good": "Sedang",
+    "weak": "Lemah",
+    "noSignal": "Tidak Ada Sinyal",
     "unitList": "Unit VisioBin",
     "unitsDetected": "perangkat terdeteksi",
     "noLocation": "Lokasi tidak tersedia",
