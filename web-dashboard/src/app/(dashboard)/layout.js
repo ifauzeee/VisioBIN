@@ -6,7 +6,7 @@ import { DashboardProvider } from "../context/DashboardContext";
 import Sidebar from "../components/shared/Sidebar";
 import Header from "../components/shared/Header";
 import { useRouter, usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import ErrorBoundary from "../components/shared/ErrorBoundary";
 
 export default function DashboardLayout({ children }) {
@@ -65,20 +65,17 @@ export default function DashboardLayout({ children }) {
 
         <main className={`main-content ${pathname === '/map' ? 'no-scroll' : ''}`}>
            <Header setSidebarOpen={setSidebarOpen} />
-           <AnimatePresence mode="wait">
-             <motion.div
-               key={pathname}
-               initial={{ opacity: 0, y: 12 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -12 }}
-               transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
-               style={{ width: "100%", height: pathname === '/map' ? '100%' : 'auto', display: "flex", flexDirection: "column" }}
-             >
-               <ErrorBoundary>
-                 {children}
-               </ErrorBoundary>
-             </motion.div>
-           </AnimatePresence>
+           <motion.div
+             key={pathname}
+             initial={{ opacity: 0, y: 12 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
+             style={{ width: "100%", minHeight: pathname === '/map' ? '100%' : 1, height: pathname === '/map' ? '100%' : 'auto', display: "flex", flexDirection: "column" }}
+           >
+             <ErrorBoundary>
+               {children}
+             </ErrorBoundary>
+           </motion.div>
          </main>
       </div>
     </DashboardProvider>

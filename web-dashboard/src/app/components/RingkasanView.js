@@ -20,6 +20,44 @@ import {
 import { useTranslations, useLocale } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
+const DEFAULT_WIDGET_ORDER = ['insight', 'kpi', 'vision_reservoir', 'history_distribution', 'daily_activity'];
+const DEFAULT_VISIBLE_WIDGETS = {
+  insight: true,
+  kpi: true,
+  vision_reservoir: true,
+  history_distribution: true,
+  daily_activity: true,
+};
+
+function normalizeWidgetOrder(value) {
+  if (!Array.isArray(value)) return DEFAULT_WIDGET_ORDER;
+
+  const known = new Set(DEFAULT_WIDGET_ORDER);
+  const cleaned = value.filter((item, index) => known.has(item) && value.indexOf(item) === index);
+  const missing = DEFAULT_WIDGET_ORDER.filter((item) => !cleaned.includes(item));
+  const nextOrder = [...cleaned, ...missing];
+
+  return nextOrder.length ? nextOrder : DEFAULT_WIDGET_ORDER;
+}
+
+function normalizeVisibleWidgets(value) {
+  const normalized = { ...DEFAULT_VISIBLE_WIDGETS };
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    DEFAULT_WIDGET_ORDER.forEach((key) => {
+      if (typeof value[key] === 'boolean') {
+        normalized[key] = value[key];
+      }
+    });
+  }
+
+  if (!DEFAULT_WIDGET_ORDER.some((key) => normalized[key])) {
+    return DEFAULT_VISIBLE_WIDGETS;
+  }
+
+  return normalized;
+}
+
 // A simple rolling number counter using Framer Motion animate
 function RollingNumber({ value, duration = 1 }) {
   const nodeRef = React.useRef();
@@ -287,14 +325,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [analysisDetailOpen, setAnalysisDetailOpen] = React.useState(false);
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
-  const [widgetOrder, setWidgetOrder] = React.useState(['insight', 'kpi', 'vision_reservoir', 'history_distribution', 'daily_activity']);
-  const [visibleWidgets, setVisibleWidgets] = React.useState({
-    insight: true,
-    kpi: true,
-    vision_reservoir: true,
-    history_distribution: true,
-    daily_activity: true,
-  });
+  const [widgetOrder, setWidgetOrder] = React.useState(DEFAULT_WIDGET_ORDER);
+  const [visibleWidgets, setVisibleWidgets] = React.useState(DEFAULT_VISIBLE_WIDGETS);
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [tourStep, setTourStep] = React.useState(-1);
 
@@ -302,20 +334,28 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     const savedOrder = localStorage.getItem("visiobin_widget_order");
     const savedVisible = localStorage.getItem("visiobin_visible_widgets");
     const hasSeenTour = localStorage.getItem("visiobin_onboarded");
+    let nextOrder = DEFAULT_WIDGET_ORDER;
+    let nextVisible = DEFAULT_VISIBLE_WIDGETS;
+
     if (savedOrder) {
-      try { setWidgetOrder(JSON.parse(savedOrder)); } catch (e) {}
+      try { nextOrder = normalizeWidgetOrder(JSON.parse(savedOrder)); } catch (e) {}
     }
     if (savedVisible) {
-      try { setVisibleWidgets(JSON.parse(savedVisible)); } catch (e) {}
+      try { nextVisible = normalizeVisibleWidgets(JSON.parse(savedVisible)); } catch (e) {}
     }
+
+    setWidgetOrder(nextOrder);
+    setVisibleWidgets(nextVisible);
+    saveLayout(nextOrder, nextVisible);
+
     if (!hasSeenTour) {
       setTourStep(0);
     }
   }, []);
 
   const saveLayout = (newOrder, newVisible) => {
-    localStorage.setItem("visiobin_widget_order", JSON.stringify(newOrder));
-    localStorage.setItem("visiobin_visible_widgets", JSON.stringify(newVisible));
+    localStorage.setItem("visiobin_widget_order", JSON.stringify(normalizeWidgetOrder(newOrder)));
+    localStorage.setItem("visiobin_visible_widgets", JSON.stringify(normalizeVisibleWidgets(newVisible)));
   };
 
   const tourSteps = [
@@ -390,6 +430,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     const hours = parseInt(filterRange);
     return rawGraphData.slice(-hours);
   }, [rawGraphData, filterRange]);
+
+  const renderedWidgetIds = React.useMemo(() => {
+    return normalizeWidgetOrder(widgetOrder).filter((widgetId) => visibleWidgets[widgetId]);
+  }, [widgetOrder, visibleWidgets]);
 
   if (loading) {
     return <RingkasanSkeleton />;
@@ -1114,15 +1158,16 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
 
       <Reorder.Group 
         axis="y" 
-        values={widgetOrder} 
+        values={renderedWidgetIds}
         onReorder={(newOrder) => {
-          setWidgetOrder(newOrder);
-          saveLayout(newOrder, visibleWidgets);
+          const hiddenWidgetIds = normalizeWidgetOrder(widgetOrder).filter((widgetId) => !visibleWidgets[widgetId]);
+          const nextOrder = normalizeWidgetOrder([...newOrder, ...hiddenWidgetIds]);
+          setWidgetOrder(nextOrder);
+          saveLayout(nextOrder, visibleWidgets);
         }}
         style={{ display: 'flex', flexDirection: 'column', gap: 24, listStyle: 'none', padding: 0, margin: 0 }}
       >
-        {widgetOrder.map((widgetId) => {
-          if (!visibleWidgets[widgetId]) return null;
+        {renderedWidgetIds.map((widgetId) => {
           return (
             <Reorder.Item 
               key={widgetId} 
