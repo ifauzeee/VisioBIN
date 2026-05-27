@@ -3,7 +3,7 @@
 import React from "react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush,
+  CartesianGrid, Tooltip, Legend, Brush,
   PieChart as RPieChart, Pie, Cell
 } from "recharts";
 import { 
@@ -177,6 +177,50 @@ function RingkasanSkeleton() {
   );
 }
 
+function ChartFrame({ children, height = 260, minHeight, style }) {
+  const frameRef = React.useRef(null);
+  const [size, setSize] = React.useState({ width: 0, height: 0 });
+
+  React.useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const updateReady = () => {
+      const { width, height: measuredHeight } = frame.getBoundingClientRect();
+      setSize({
+        width: Math.max(0, Math.floor(width)),
+        height: Math.max(0, Math.floor(measuredHeight)),
+      });
+    };
+
+    updateReady();
+    const observer = new ResizeObserver(updateReady);
+    observer.observe(frame);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={frameRef}
+      style={{
+        width: '100%',
+        height,
+        minHeight: minHeight ?? height,
+        minWidth: 0,
+        position: 'relative',
+        ...style,
+      }}
+    >
+      {size.width > 0 && size.height > 0
+        ? typeof children === 'function'
+          ? children(size)
+          : children
+        : null}
+    </div>
+  );
+}
+
 function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
   if (step < 0 || step >= steps.length) return null;
   const current = steps[step];
@@ -236,9 +280,8 @@ function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
 }
 
 export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading }) {
-  if (loading) {
-    return <RingkasanSkeleton />;
-  }
+  const safeSummary = summary || {};
+  const safeLogs = logs || [];
   const t = useTranslations('dashboard');
   const locale = useLocale();
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
@@ -340,7 +383,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     }
   }, []);
 
-  const rawGraphData = mapVolumeHistory(summary.volume_history || []);
+  const rawGraphData = mapVolumeHistory(safeSummary.volume_history || []);
 
   const graphData = React.useMemo(() => {
     if (filterRange === 'all') return rawGraphData;
@@ -348,25 +391,29 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
     return rawGraphData.slice(-hours);
   }, [rawGraphData, filterRange]);
 
-  const dailyStats = mapDailyStats(summary.daily_stats || []);
+  if (loading) {
+    return <RingkasanSkeleton />;
+  }
 
-  const hasClassifications = hasClassificationData(summary, logs);
+  const dailyStats = mapDailyStats(safeSummary.daily_stats || []);
 
-  const distributionData = hasClassifications && summary.distribution?.length > 0
-    ? summary.distribution
+  const hasClassifications = hasClassificationData(safeSummary, safeLogs);
+
+  const distributionData = hasClassifications && safeSummary.distribution?.length > 0
+    ? safeSummary.distribution
     : [];
 
-  const computedAccuracy = logs.length > 0
-    ? (logs.reduce((acc, l) => acc + (l.prob || 0), 0) / logs.length).toFixed(1)
+  const computedAccuracy = safeLogs.length > 0
+    ? (safeLogs.reduce((acc, l) => acc + (l.prob || 0), 0) / safeLogs.length).toFixed(1)
     : '0.0';
 
-  const computedLatency = logs.length > 0
-    ? Math.round(logs.reduce((acc, l) => acc + (l.inference_ms || 0), 0) / logs.length)
-    : summary.latency || 0;
+  const computedLatency = safeLogs.length > 0
+    ? Math.round(safeLogs.reduce((acc, l) => acc + (l.inference_ms || 0), 0) / safeLogs.length)
+    : safeSummary.latency || 0;
 
   const generateInsight = () => {
-    const total = summary.total_processed || 0;
-    const co2 = summary.co2 || 0;
+    const total = safeSummary.total_processed || 0;
+    const co2 = safeSummary.co2 || 0;
     const trend = 12;
 
     if (!hasClassifications && !rawGraphData.length) {
@@ -487,9 +534,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
-              <RollingNumber value={summary.total_processed} />
+              <RollingNumber value={safeSummary.total_processed || 0} />
             </span>
-            {summary.total_processed > 0 && (
+            {(safeSummary.total_processed || 0) > 0 && (
               <span style={{ color: 'var(--brand-organic)', fontSize: 13, display: 'flex', alignItems: 'center' }}>
                 <ArrowUpRight size={14} /> {t('active')}
               </span>
@@ -537,7 +584,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div className="card-title"><Orbit size={16} /> {t('co2_reduced')}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
-              <RollingNumber value={summary.co2} />
+              <RollingNumber value={safeSummary.co2 || 0} />
             </span>
             <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>kg</span>
           </div>
@@ -576,8 +623,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-            {logs.length > 0 
-              ? t('classifications_from', { count: logs.length }) 
+            {safeLogs.length > 0
+              ? t('classifications_from', { count: safeLogs.length })
               : t('avg_7_days')}
           </div>
         </motion.div>
@@ -614,9 +661,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
             </div>
             
             {/* Sparkline for trend */}
-            <div style={{ width: 80, height: 40 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={rawGraphData.slice(-10)}>
+            <ChartFrame height={40} style={{ width: 80, flex: '0 0 80px' }}>
+              {({ width, height }) => (
+                <AreaChart width={width} height={height} data={rawGraphData.slice(-10)}>
                   <Area 
                     type="monotone" 
                     dataKey="volume" 
@@ -627,8 +674,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                     isAnimationActive={true}
                   />
                 </AreaChart>
-              </ResponsiveContainer>
-            </div>
+              )}
+            </ChartFrame>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.4 }}>
             {forecast?.estimated_full_organic 
@@ -778,10 +825,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
               ))}
             </div>
           </div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
+          <ChartFrame height={300} style={{ flex: '1 1 300px', marginTop: 16, marginLeft: -20 }}>
             {graphData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+              ({ width, height }) => (
+                <AreaChart width={width} height={height} data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                   <defs>
                     <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />
@@ -804,13 +851,13 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                     onChange={handleBrushChange}
                   />
                 </AreaChart>
-              </ResponsiveContainer>
+              )
             ) : (
               <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                 Belum ada data telemetry.
               </div>
             )}
-          </div>
+          </ChartFrame>
         </motion.div>
 
         <motion.div
@@ -821,22 +868,22 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
           <div className="card-title">🥧 {t('waste_distribution')}</div>
-          <div style={{ flex: 1, marginTop: 8, minWidth: 0, position: 'relative' }}>
+          <ChartFrame height={220} style={{ flex: '0 0 220px', marginTop: 8 }}>
             {distributionData.length ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <RPieChart style={{ background: 'transparent' }}>
+              ({ width, height }) => (
+                <RPieChart width={width} height={height} style={{ background: 'transparent' }}>
                   <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
                     {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
                 </RPieChart>
-              </ResponsiveContainer>
+              )
             ) : (
               <div style={{ height: 220, display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                 Belum ada data klasifikasi.
               </div>
             )}
-          </div>
+          </ChartFrame>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, padding: '0 4px' }}>
             {(() => {
               const total = distributionData.reduce((acc, d) => acc + d.value, 0);
@@ -866,10 +913,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
           <div className="card-title">📊 {t('daily_classification')}</div>
-          <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
+          <ChartFrame height={250} style={{ flex: '1 1 250px', marginTop: 16, marginLeft: -20 }}>
             {dailyStats.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+              ({ width, height }) => (
+                <BarChart width={width} height={height} data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                   <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -878,13 +925,13 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
                   <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />
                 </BarChart>
-              </ResponsiveContainer>
+              )
             ) : (
               <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                 Belum ada klasifikasi harian.
               </div>
             )}
-          </div>
+          </ChartFrame>
         </motion.div>
 
         <motion.div
@@ -897,7 +944,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           <div className="card-title"><Activity size={16} /> {t('recent_activity')}</div>
           <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <AnimatePresence initial={false}>
-              {logs.length ? logs.map((log, i) => (
+              {safeLogs.length ? safeLogs.map((log, i) => (
                 <motion.div 
                   key={log.id} 
                   initial={{ opacity: 0, x: -20 }}
@@ -1138,7 +1185,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 right: "-10%",
                 width: "150px",
                 height: "150px",
-                background: logs && logs.length > 0 && logs[0].item === 'organic' ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
+                background: safeLogs.length > 0 && safeLogs[0].item === 'organic' ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
                 filter: "blur(40px)",
                 borderRadius: "50%",
                 pointerEvents: "none"
@@ -1163,7 +1210,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   color: "#fff",
                   letterSpacing: "-0.02em"
                 }}>
-                  <Sparkles size={20} color={logs && logs.length > 0 && logs[0].item === 'organic' ? "#10b981" : "#3b82f6"} /> 
+                  <Sparkles size={20} color={safeLogs.length > 0 && safeLogs[0].item === 'organic' ? "#10b981" : "#3b82f6"} />
                   {t('analysis_detail')}
                 </h3>
                 <button 
@@ -1188,7 +1235,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 </button>
               </div>
 
-              {logs && logs.length > 0 ? (
+              {safeLogs.length > 0 ? (
                 <div>
                   {/* Camera Snap Frame (HUD Viewfinder) */}
                   <div style={{ 
@@ -1223,10 +1270,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                         left: 0,
                         width: '100%',
                         height: '2px',
-                        background: logs[0].item === 'organic' 
+                        background: safeLogs[0].item === 'organic'
                           ? "linear-gradient(90deg, transparent, #10b981, transparent)" 
                           : "linear-gradient(90deg, transparent, #3b82f6, transparent)",
-                        boxShadow: logs[0].item === 'organic' 
+                        boxShadow: safeLogs[0].item === 'organic'
                           ? "0 0 8px #10b981" 
                           : "0 0 8px #3b82f6",
                         pointerEvents: 'none',
@@ -1286,9 +1333,9 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                         left: '25%',
                         width: '50%',
                         height: '60%',
-                        border: `2px solid ${logs[0].item === 'organic' ? '#10b981' : '#3b82f6'}`,
+                        border: `2px solid ${safeLogs[0].item === 'organic' ? '#10b981' : '#3b82f6'}`,
                         borderRadius: '8px',
-                        boxShadow: `0 0 20px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)'}, inset 0 0 10px ${logs[0].item === 'organic' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)'}`,
+                        boxShadow: `0 0 20px ${safeLogs[0].item === 'organic' ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)'}, inset 0 0 10px ${safeLogs[0].item === 'organic' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)'}`,
                         pointerEvents: 'none',
                         zIndex: 4
                       }}
@@ -1297,7 +1344,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                         position: 'absolute',
                         top: '-24px',
                         left: '-2px',
-                        background: logs[0].item === 'organic' ? '#10b981' : '#3b82f6',
+                        background: safeLogs[0].item === 'organic' ? '#10b981' : '#3b82f6',
                         color: '#fff',
                         fontSize: '10px',
                         fontWeight: '800',
@@ -1310,7 +1357,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                         alignItems: 'center',
                         gap: '4px'
                       }}>
-                        {logs[0].item === 'organic' ? t('organic') : t('inorganic')} ({logs[0].prob}%)
+                        {safeLogs[0].item === 'organic' ? t('organic') : t('inorganic')} ({safeLogs[0].prob}%)
                       </span>
                     </motion.div>
                   </div>
@@ -1333,10 +1380,10 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                       }}
                     >
                       <div style={{ 
-                        background: logs[0].item === 'organic' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
+                        background: safeLogs[0].item === 'organic' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
                         borderRadius: '8px', 
                         padding: '8px',
-                        color: logs[0].item === 'organic' ? '#10b981' : '#3b82f6',
+                        color: safeLogs[0].item === 'organic' ? '#10b981' : '#3b82f6',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -1345,8 +1392,8 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                       </div>
                       <div>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Hasil / Status</div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: logs[0].item === 'organic' ? '#10b981' : '#3b82f6', textTransform: 'capitalize' }}>
-                          {logs[0].item === 'organic' ? t('organic') : t('inorganic')}
+                        <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: safeLogs[0].item === 'organic' ? '#10b981' : '#3b82f6', textTransform: 'capitalize' }}>
+                          {safeLogs[0].item === 'organic' ? t('organic') : t('inorganic')}
                         </div>
                       </div>
                     </motion.div>
@@ -1379,7 +1426,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                       <div>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Kepercayaan (Confidence)</div>
                         <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
-                          {logs[0].prob}%
+                          {safeLogs[0].prob}%
                         </div>
                       </div>
                     </motion.div>
@@ -1412,7 +1459,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                       <div>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Latensi Inferensi</div>
                         <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
-                          {logs[0].inference_ms} ms
+                          {safeLogs[0].inference_ms} ms
                         </div>
                       </div>
                     </motion.div>
@@ -1445,7 +1492,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                       <div>
                         <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>Waktu Klasifikasi</div>
                         <div style={{ fontSize: '16px', fontWeight: '700', marginTop: '4px', color: '#fff' }}>
-                          {logs[0].time}
+                          {safeLogs[0].time}
                         </div>
                       </div>
                     </motion.div>
