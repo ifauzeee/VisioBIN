@@ -9,48 +9,26 @@ import { timeAgo } from "../../utils/formatters";
 export default function DataFreshness({ lastUpdated, error }) {
   if (error) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-        <div
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: "#ef4444",
-          }}
-        />
-        <span style={{ color: "#ef4444" }}>Koneksi terputus</span>
+      <div className="data-freshness">
+        <div className="data-freshness-dot data-freshness-dot-error" />
+        <span className="data-freshness-error">Koneksi terputus</span>
       </div>
     );
   }
 
   if (!lastUpdated) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-        <div
-          className="skeleton-shimmer"
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-          }}
-        />
-        <span style={{ color: "var(--text-muted)" }}>Menghubungkan...</span>
+      <div className="data-freshness">
+        <div className="data-freshness-dot skeleton-shimmer" />
+        <span>Menghubungkan...</span>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-      <div
-        className="pulse-dot-green"
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: "50%",
-          background: "var(--brand-organic)",
-        }}
-      />
-      <span style={{ color: "var(--text-muted)" }}>
+    <div className="data-freshness">
+      <div className="data-freshness-dot pulse-dot-green data-freshness-dot-ok" />
+      <span>
         Diperbarui {timeAgo(lastUpdated)}
       </span>
     </div>

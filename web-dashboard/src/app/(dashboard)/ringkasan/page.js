@@ -6,7 +6,23 @@ import { useDashboardContext } from "../../context/DashboardContext";
 import { motion } from "framer-motion";
 
 export default function RingkasanPage() {
-  const { summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading } = useDashboardContext();
+  const {
+    summary,
+    binLevel,
+    binLevelOrg,
+    binLevelInorg,
+    vision,
+    logs,
+    forecast,
+    wsActive,
+    loading,
+    error,
+    lastUpdated,
+    alerts,
+    unreadCount,
+    dashRefetch,
+    alertRefetch,
+  } = useDashboardContext();
 
   return (
     <motion.div
@@ -24,6 +40,14 @@ export default function RingkasanPage() {
         forecast={forecast}
         wsActive={wsActive}
         loading={loading}
+        error={error}
+        lastUpdated={lastUpdated}
+        alerts={alerts}
+        unreadCount={unreadCount}
+        onRetry={() => {
+          dashRefetch?.();
+          alertRefetch?.();
+        }}
       />
     </motion.div>
   );

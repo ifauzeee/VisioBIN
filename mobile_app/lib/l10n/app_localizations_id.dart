@@ -40,4 +40,34 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get language => 'Bahasa';
+
+  @override
+  String get offlineModeLastData => 'Mode Offline - Menampilkan Data Terakhir';
+
+  @override
+  String get systemStatus => 'Status Sistem';
+
+  @override
+  String get liveCamera => 'Kamera Langsung';
+
+  @override
+  String get open => 'Buka';
+
+  @override
+  String get realTimeCapacity => 'Kapasitas Real-time';
+
+  @override
+  String get weeklyScanAnalytics => 'Analitik Scan Mingguan';
+
+  @override
+  String get quickActions => 'Aksi Cepat';
+
+  @override
+  String get recentActivity => 'Aktivitas Terbaru';
+
+  @override
+  String get viewAll => 'Lihat Semua';
+
+  @override
+  String get openFullVideoStream => 'Buka Stream Video Penuh';
 }

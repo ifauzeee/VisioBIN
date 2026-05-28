@@ -163,6 +163,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
+
+  /// No description provided for @offlineModeLastData.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode - Showing Last Data'**
+  String get offlineModeLastData;
+
+  /// No description provided for @systemStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'System Status'**
+  String get systemStatus;
+
+  /// No description provided for @liveCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Camera'**
+  String get liveCamera;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @realTimeCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time Capacity'**
+  String get realTimeCapacity;
+
+  /// No description provided for @weeklyScanAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Scan Analytics'**
+  String get weeklyScanAnalytics;
+
+  /// No description provided for @quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get quickActions;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivity;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @openFullVideoStream.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Full Video Stream'**
+  String get openFullVideoStream;
 }
 
 class _AppLocalizationsDelegate

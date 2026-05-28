@@ -13,6 +13,7 @@ import '../widgets/dashboard/recent_activity_list.dart';
 import '../widgets/dashboard/alerts_bottom_sheet.dart';
 import '../widgets/dashboard/skeleton_loader.dart';
 import '../config/route_transitions.dart';
+import '../l10n/app_localizations.dart';
 import 'live_camera_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -62,6 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.watch<DashboardProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -98,7 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Mode Offline — Menampilkan Data Terakhir',
+                                    l10n.offlineModeLastData,
                                     style: TextStyle(
                                       color: isDark ? Colors.amber[200] : Colors.amber[900],
                                       fontWeight: FontWeight.w600,
@@ -119,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           _buildStatusCards(isDark, provider),
                           const SizedBox(height: 32),
                           Text(
-                            'System Status',
+                            l10n.systemStatus,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 16),
@@ -129,12 +131,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Live Camera',
+                                l10n.liveCamera,
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                               Semantics(
                                 button: true,
-                                label: 'Buka Video Stream Penuh',
+                                label: l10n.openFullVideoStream,
                                 child: TextButton.icon(
                                   onPressed: () => Navigator.of(context).push(
                                     FadeSlidePageRoute(
@@ -142,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ),
                                   icon: const Icon(LucideIcons.maximize2, size: 16),
-                                  label: const Text('Open'),
+                                  label: Text(l10n.open),
                                 ),
                               ),
                             ],
@@ -151,21 +153,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const LiveCameraCard(),
                           const SizedBox(height: 32),
                           Text(
-                            'Real-time Capacity',
+                            l10n.realTimeCapacity,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 16),
                           CapacityIndicators(provider: provider),
                           const SizedBox(height: 32),
                           Text(
-                            'Weekly Scan Analytics',
+                            l10n.weeklyScanAnalytics,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 16),
                           AnalyticsChart(provider: provider),
                           const SizedBox(height: 32),
                           Text(
-                            'Quick Actions',
+                            l10n.quickActions,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 16),
@@ -175,12 +177,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Recent Activity',
+                                l10n.recentActivity,
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                               TextButton(
                                 onPressed: () {},
-                                child: const Text('View All'),
+                                child: Text(l10n.viewAll),
                               ),
                             ],
                           ),

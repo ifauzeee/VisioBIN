@@ -76,7 +76,22 @@
     "daily_classification": "Klasifikasi Harian - 7 Hari Terakhir",
     "recent_activity": "Log Aktivitas Terbaru",
     "organic": "Organik",
-    "inorganic": "Anorganik"
+    "inorganic": "Anorganik",
+    "ops_mode": "Mode Operasional",
+    "ops_title": "Prioritas Hari Ini",
+    "ops_full_bins": "Bin penuh",
+    "ops_full_bins_note": "{count} unit perlu segera dikosongkan",
+    "ops_full_bins_clear": "Tidak ada bin penuh",
+    "ops_offline_devices": "Perangkat offline",
+    "ops_online_devices": "{count} perangkat aktif",
+    "ops_connection_issue": "Koneksi data sedang bermasalah",
+    "ops_active_alerts": "Alert aktif",
+    "ops_no_alerts": "Tidak ada alert aktif",
+    "ops_pickup_eta": "Estimasi angkut",
+    "ops_pickup_note": "Jadwal berdasarkan prediksi penuh",
+    "ops_offline_banner": "Mode degradasi: menampilkan data terakhir yang tersedia.",
+    "ops_live_connected": "Koneksi live aktif",
+    "ops_live_waiting": "Menunggu koneksi live"
   },
   "monitoring": {
     "title": "Pemantauan Langsung",

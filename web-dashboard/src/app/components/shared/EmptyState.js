@@ -4,7 +4,7 @@ import React from "react";
 import { Inbox, WifiOff, RefreshCw } from "lucide-react";
 
 const TrashBinIllustration = () => (
-  <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: 20 }}>
+  <svg className="empty-state-illustration" width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* Grid Background/Scanner lines */}
     <path d="M10 60 H110 M60 10 V110" stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="3 3" />
     <circle cx="60" cy="60" r="40" stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="4 4" />
@@ -47,74 +47,18 @@ export default function EmptyState({
   onAction,
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-        textAlign: "center",
-        minHeight: 200,
-      }}
-    >
+    <div className="empty-state">
       {Icon === Inbox ? (
         <TrashBinIllustration />
       ) : (
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid var(--border-color)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 20,
-          }}
-        >
+        <div className="empty-state-icon">
           <Icon size={24} color="var(--text-muted)" />
         </div>
       )}
-      <div
-        style={{
-          fontSize: 16,
-          fontWeight: 600,
-          color: "var(--text-main)",
-          marginBottom: 8,
-        }}
-      >
-        {title}
-      </div>
-      <div
-        style={{
-          fontSize: 13,
-          color: "var(--text-muted)",
-          maxWidth: 320,
-          lineHeight: 1.5,
-        }}
-      >
-        {description}
-      </div>
+      <div className="empty-state-title">{title}</div>
+      <div className="empty-state-description">{description}</div>
       {action && (
-        <button
-          onClick={onAction}
-          style={{
-            marginTop: 20,
-            padding: "8px 20px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid var(--border-color)",
-            borderRadius: 8,
-            color: "var(--text-main)",
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
+        <button onClick={onAction} className="empty-state-action" type="button">
           <RefreshCw size={14} />
           {action}
         </button>

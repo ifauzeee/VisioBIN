@@ -76,7 +76,22 @@
     "daily_classification": "Daily Classification - Last 7 Days",
     "recent_activity": "Recent Activity Log",
     "organic": "Organic",
-    "inorganic": "Inorganic"
+    "inorganic": "Inorganic",
+    "ops_mode": "Operational Mode",
+    "ops_title": "Today's Priorities",
+    "ops_full_bins": "Full bins",
+    "ops_full_bins_note": "{count} units need collection soon",
+    "ops_full_bins_clear": "No full bins",
+    "ops_offline_devices": "Offline devices",
+    "ops_online_devices": "{count} devices active",
+    "ops_connection_issue": "Data connection has an issue",
+    "ops_active_alerts": "Active alerts",
+    "ops_no_alerts": "No active alerts",
+    "ops_pickup_eta": "Collection ETA",
+    "ops_pickup_note": "Schedule based on fill prediction",
+    "ops_offline_banner": "Degraded mode: showing the latest available data.",
+    "ops_live_connected": "Live connection active",
+    "ops_live_waiting": "Waiting for live connection"
   },
   "monitoring": {
     "title": "Live Monitoring",

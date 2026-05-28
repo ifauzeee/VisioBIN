@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../l10n/app_localizations.dart';
 import '../widgets/live_camera_stream.dart';
 
 class LiveCameraScreen extends StatelessWidget {
@@ -9,9 +10,10 @@ class LiveCameraScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Live Camera'), centerTitle: false),
+      appBar: AppBar(title: Text(l10n.liveCamera), centerTitle: false),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),

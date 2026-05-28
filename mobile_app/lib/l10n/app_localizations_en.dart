@@ -40,4 +40,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
+
+  @override
+  String get offlineModeLastData => 'Offline Mode - Showing Last Data';
+
+  @override
+  String get systemStatus => 'System Status';
+
+  @override
+  String get liveCamera => 'Live Camera';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get realTimeCapacity => 'Real-time Capacity';
+
+  @override
+  String get weeklyScanAnalytics => 'Weekly Scan Analytics';
+
+  @override
+  String get quickActions => 'Quick Actions';
+
+  @override
+  String get recentActivity => 'Recent Activity';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get openFullVideoStream => 'Open Full Video Stream';
 }

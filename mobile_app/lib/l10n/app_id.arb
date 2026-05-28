@@ -10,6 +10,15 @@
   "home": "Beranda",
   "history": "Riwayat",
   "repair": "Perbaikan",
-  "chat": "Obrolan"
+  "chat": "Obrolan",
+  "offlineModeLastData": "Mode Offline - Menampilkan Data Terakhir",
+  "systemStatus": "Status Sistem",
+  "liveCamera": "Kamera Langsung",
+  "open": "Buka",
+  "realTimeCapacity": "Kapasitas Real-time",
+  "weeklyScanAnalytics": "Analitik Scan Mingguan",
+  "quickActions": "Aksi Cepat",
+  "recentActivity": "Aktivitas Terbaru",
+  "viewAll": "Lihat Semua",
+  "openFullVideoStream": "Buka Stream Video Penuh"
 }
-

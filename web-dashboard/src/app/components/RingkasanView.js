@@ -9,7 +9,7 @@ import {
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
   ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X, Percent, Tag,
-  GripVertical, Eye, EyeOff, HelpCircle, Edit, Check
+  GripVertical, Eye, EyeOff, HelpCircle, Edit, Check, AlertTriangle, WifiOff, Route, RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence, animate, Reorder } from "framer-motion";
 import {
@@ -19,6 +19,8 @@ import {
 } from '../utils/realDataTransforms.mjs';
 import { useTranslations, useLocale } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
+import EmptyState, { ErrorState } from "./shared/EmptyState";
+import DataFreshness from "./shared/DataFreshness";
 
 const DEFAULT_WIDGET_ORDER = ['insight', 'kpi', 'vision_reservoir', 'history_distribution', 'daily_activity'];
 const DEFAULT_VISIBLE_WIDGETS = {
@@ -56,6 +58,29 @@ function normalizeVisibleWidgets(value) {
   }
 
   return normalized;
+}
+
+function readSavedWidgetOrder() {
+  if (typeof window === "undefined") return DEFAULT_WIDGET_ORDER;
+  try {
+    return normalizeWidgetOrder(JSON.parse(localStorage.getItem("visiobin_widget_order")));
+  } catch (e) {
+    return DEFAULT_WIDGET_ORDER;
+  }
+}
+
+function readSavedVisibleWidgets() {
+  if (typeof window === "undefined") return DEFAULT_VISIBLE_WIDGETS;
+  try {
+    return normalizeVisibleWidgets(JSON.parse(localStorage.getItem("visiobin_visible_widgets")));
+  } catch (e) {
+    return DEFAULT_VISIBLE_WIDGETS;
+  }
+}
+
+function readInitialTourStep() {
+  if (typeof window === "undefined") return -1;
+  return localStorage.getItem("visiobin_onboarded") ? -1 : 0;
 }
 
 // A simple rolling number counter using Framer Motion animate
@@ -259,6 +284,115 @@ function ChartFrame({ children, height = 260, minHeight, style }) {
   );
 }
 
+function getBinLevel(bin) {
+  if (!bin) return 0;
+  const organic = bin.volume_organic_pct || 0;
+  const inorganic = bin.volume_inorganic_pct || 0;
+  return Math.round(bin.volume_pct ?? bin.volume_total_pct ?? Math.max(organic, inorganic));
+}
+
+function formatForecastTime(forecast) {
+  const value = forecast?.estimated_full_organic || forecast?.estimated_full_inorganic;
+  if (!value) return null;
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function OperationalDashboardMode({
+  summary,
+  alerts,
+  unreadCount,
+  forecast,
+  wsActive,
+  error,
+  lastUpdated,
+  onRetry,
+  locale,
+  t,
+}) {
+  const bins = summary.bin_statuses || [];
+  const fullBins = bins.filter((bin) => getBinLevel(bin) >= 80);
+  const offlineBins = bins.filter((bin) => {
+    const status = String(bin.status || bin.connection_status || "").toLowerCase();
+    return status.includes("offline") || status.includes("inactive") || status.includes("nonaktif");
+  });
+  const nextPickup = formatForecastTime(forecast);
+  const latestAlert = (alerts || []).find((alert) => !alert.is_read) || (alerts || [])[0];
+  const isID = locale === "id";
+
+  const cards = [
+    {
+      icon: Trash2,
+      tone: fullBins.length ? "danger" : "ok",
+      label: t("ops_full_bins"),
+      value: fullBins.length,
+      note: fullBins.length
+        ? t("ops_full_bins_note", { count: fullBins.length })
+        : t("ops_full_bins_clear"),
+    },
+    {
+      icon: WifiOff,
+      tone: offlineBins.length || error ? "danger" : "ok",
+      label: t("ops_offline_devices"),
+      value: offlineBins.length,
+      note: error ? t("ops_connection_issue") : t("ops_online_devices", { count: summary.active_bins || 0 }),
+    },
+    {
+      icon: AlertTriangle,
+      tone: unreadCount ? "warning" : "ok",
+      label: t("ops_active_alerts"),
+      value: unreadCount || 0,
+      note: latestAlert?.title || latestAlert?.message || t("ops_no_alerts"),
+    },
+    {
+      icon: Route,
+      tone: nextPickup ? "info" : "muted",
+      label: t("ops_pickup_eta"),
+      value: nextPickup || "--:--",
+      note: nextPickup ? t("ops_pickup_note") : t("waiting_data"),
+    },
+  ];
+
+  return (
+    <section className="ops-panel" aria-label={isID ? "Mode dashboard operasional" : "Operational dashboard mode"}>
+      <div className="ops-panel-header">
+        <div>
+          <div className="ops-eyebrow">{t("ops_mode")}</div>
+          <h3>{t("ops_title")}</h3>
+        </div>
+        <div className="ops-actions">
+          <DataFreshness lastUpdated={lastUpdated} error={error} />
+          <button className="ops-refresh-btn" onClick={onRetry} type="button">
+            <RefreshCw size={14} />
+            {isID ? "Muat ulang" : "Refresh"}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <div className="ops-offline-banner">
+          <WifiOff size={16} />
+          <span>{t("ops_offline_banner")}</span>
+        </div>
+      )}
+      <div className="ops-grid">
+        {cards.map(({ icon: Icon, tone, label, value, note }) => (
+          <article className={`ops-card ops-card-${tone}`} key={label}>
+            <div className="ops-card-icon"><Icon size={18} /></div>
+            <div className="ops-card-body">
+              <span>{label}</span>
+              <strong>{value}</strong>
+              <p>{note}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="ops-footer">
+        <span className={wsActive ? "ops-live" : "ops-muted-dot"} />
+        {wsActive ? t("ops_live_connected") : t("ops_live_waiting")}
+      </div>
+    </section>
+  );
+}
+
 function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
   if (step < 0 || step >= steps.length) return null;
   const current = steps[step];
@@ -317,7 +451,22 @@ function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
   );
 }
 
-export default React.memo(function RingkasanView({ summary, binLevel, binLevelOrg, binLevelInorg, vision, logs, forecast, wsActive, loading }) {
+export default React.memo(function RingkasanView({
+  summary,
+  binLevel,
+  binLevelOrg,
+  binLevelInorg,
+  vision,
+  logs,
+  forecast,
+  wsActive,
+  loading,
+  error,
+  lastUpdated,
+  alerts = [],
+  unreadCount = 0,
+  onRetry,
+}) {
   const safeSummary = summary || {};
   const safeLogs = logs || [];
   const t = useTranslations('dashboard');
@@ -325,40 +474,17 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [analysisDetailOpen, setAnalysisDetailOpen] = React.useState(false);
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
-  const [widgetOrder, setWidgetOrder] = React.useState(DEFAULT_WIDGET_ORDER);
-  const [visibleWidgets, setVisibleWidgets] = React.useState(DEFAULT_VISIBLE_WIDGETS);
+  const [widgetOrder, setWidgetOrder] = React.useState(readSavedWidgetOrder);
+  const [visibleWidgets, setVisibleWidgets] = React.useState(readSavedVisibleWidgets);
   const [isEditMode, setIsEditMode] = React.useState(false);
-  const [tourStep, setTourStep] = React.useState(-1);
+  const [tourStep, setTourStep] = React.useState(readInitialTourStep);
 
-  React.useEffect(() => {
-    const savedOrder = localStorage.getItem("visiobin_widget_order");
-    const savedVisible = localStorage.getItem("visiobin_visible_widgets");
-    const hasSeenTour = localStorage.getItem("visiobin_onboarded");
-    let nextOrder = DEFAULT_WIDGET_ORDER;
-    let nextVisible = DEFAULT_VISIBLE_WIDGETS;
-
-    if (savedOrder) {
-      try { nextOrder = normalizeWidgetOrder(JSON.parse(savedOrder)); } catch (e) {}
-    }
-    if (savedVisible) {
-      try { nextVisible = normalizeVisibleWidgets(JSON.parse(savedVisible)); } catch (e) {}
-    }
-
-    setWidgetOrder(nextOrder);
-    setVisibleWidgets(nextVisible);
-    saveLayout(nextOrder, nextVisible);
-
-    if (!hasSeenTour) {
-      setTourStep(0);
-    }
-  }, []);
-
-  const saveLayout = (newOrder, newVisible) => {
+  const saveLayout = React.useCallback((newOrder, newVisible) => {
     localStorage.setItem("visiobin_widget_order", JSON.stringify(normalizeWidgetOrder(newOrder)));
     localStorage.setItem("visiobin_visible_widgets", JSON.stringify(normalizeVisibleWidgets(newVisible)));
-  };
+  }, []);
 
-  const tourSteps = [
+  const tourSteps = React.useMemo(() => [
     {
       target: ".sidebar",
       title: locale === 'id' ? "Navigasi Menu Utama" : "Main Navigation",
@@ -387,7 +513,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
         ? "Log riwayat pemrosesan deteksi sampah yang terjadi di seluruh stasiun secara langsung."
         : "A scrolling log of incoming trash detection classifications from all sensor devices in real-time.",
     }
-  ];
+  ], [locale]);
 
   React.useEffect(() => {
     if (tourStep < 0 || tourStep >= tourSteps.length) {
@@ -401,7 +527,7 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
       el.classList.add("tour-highlight");
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [tourStep]);
+  }, [tourStep, tourSteps]);
 
   React.useEffect(() => {
     const handleKeyDown = (e) => {
@@ -494,6 +620,19 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
   };
 
   const insight = generateInsight();
+
+  const hasOperationalData = safeSummary.total_bins > 0 || safeLogs.length > 0 || rawGraphData.length > 0 || alerts.length > 0;
+
+  if (error && !hasOperationalData) {
+    return (
+      <ErrorState
+        message={locale === 'id'
+          ? `Dashboard belum bisa memuat data real. ${error}`
+          : `The dashboard could not load live data yet. ${error}`}
+        onRetry={onRetry}
+      />
+    );
+  }
 
   const renderWidget = (widgetId) => {
     switch (widgetId) {
@@ -897,9 +1036,14 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 </AreaChart>
               )
             ) : (
-              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                Belum ada data telemetry.
-              </div>
+              <EmptyState
+                title={locale === 'id' ? "Belum ada data telemetri" : "No telemetry data yet"}
+                description={locale === 'id'
+                  ? "Kirim data sensor dari unit VisioBin untuk menampilkan tren volume."
+                  : "Send sensor data from a VisioBin unit to show volume trends."}
+                action={locale === 'id' ? "Muat ulang" : "Refresh"}
+                onAction={onRetry}
+              />
             )}
           </ChartFrame>
         </motion.div>
@@ -923,9 +1067,12 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 </RPieChart>
               )
             ) : (
-              <div style={{ height: 220, display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                Belum ada data klasifikasi.
-              </div>
+              <EmptyState
+                title={locale === 'id' ? "Belum ada klasifikasi" : "No classifications yet"}
+                description={locale === 'id'
+                  ? "Hasil AI akan muncul setelah kamera mengirim log klasifikasi."
+                  : "AI results will appear after the camera sends classification logs."}
+              />
             )}
           </ChartFrame>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, padding: '0 4px' }}>
@@ -971,9 +1118,12 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                 </BarChart>
               )
             ) : (
-              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                Belum ada klasifikasi harian.
-              </div>
+              <EmptyState
+                title={locale === 'id' ? "Belum ada klasifikasi harian" : "No daily classifications yet"}
+                description={locale === 'id'
+                  ? "Grafik mingguan akan terisi otomatis dari data klasifikasi terbaru."
+                  : "The weekly chart will fill automatically from incoming classifications."}
+              />
             )}
           </ChartFrame>
         </motion.div>
@@ -1006,9 +1156,14 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
                   </div>
                 </motion.div>
               )) : (
-                <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  Belum ada aktivitas klasifikasi.
-                </div>
+                <EmptyState
+                  title={locale === 'id' ? "Belum ada aktivitas" : "No activity yet"}
+                  description={locale === 'id'
+                    ? "Aktivitas terbaru akan muncul saat perangkat mulai mengirim hasil scan."
+                    : "Recent activity appears when devices start sending scan results."}
+                  action={locale === 'id' ? "Cek ulang" : "Check again"}
+                  onAction={onRetry}
+                />
               )}
             </AnimatePresence>
           </div>
@@ -1098,6 +1253,19 @@ export default React.memo(function RingkasanView({ summary, binLevel, binLevelOr
           </button>
         </div>
       </div>
+
+      <OperationalDashboardMode
+        summary={safeSummary}
+        alerts={alerts}
+        unreadCount={unreadCount}
+        forecast={forecast}
+        wsActive={wsActive}
+        error={error}
+        lastUpdated={lastUpdated}
+        onRetry={onRetry}
+        locale={locale}
+        t={t}
+      />
 
       {/* Edit Mode Customization Controls Panel */}
       <AnimatePresence>

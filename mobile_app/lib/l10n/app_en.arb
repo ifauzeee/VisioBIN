@@ -41,8 +41,17 @@
     "description": "Label for the chat screen"
   },
   "language": "Language",
-
   "@language": {
     "description": "Label for the language selection"
-  }
+  },
+  "offlineModeLastData": "Offline Mode - Showing Last Data",
+  "systemStatus": "System Status",
+  "liveCamera": "Live Camera",
+  "open": "Open",
+  "realTimeCapacity": "Real-time Capacity",
+  "weeklyScanAnalytics": "Weekly Scan Analytics",
+  "quickActions": "Quick Actions",
+  "recentActivity": "Recent Activity",
+  "viewAll": "View All",
+  "openFullVideoStream": "Open Full Video Stream"
 }

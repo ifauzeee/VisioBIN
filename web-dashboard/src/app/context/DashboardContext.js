@@ -16,7 +16,23 @@ export function DashboardProvider({ children }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <DashboardContext.Provider value={{ ...dashboardState, ...alertData, searchQuery, setSearchQuery }}>
+    <DashboardContext.Provider
+      value={{
+        ...dashboardState,
+        ...alertData,
+        loading: dashboardState.loading,
+        error: dashboardState.error,
+        refetch: dashboardState.refetch,
+        dashLoading: dashboardState.loading,
+        dashError: dashboardState.error,
+        dashRefetch: dashboardState.refetch,
+        alertLoading: alertData.loading,
+        alertError: alertData.error,
+        alertRefetch: alertData.refetch,
+        searchQuery,
+        setSearchQuery,
+      }}
+    >
       {children}
     </DashboardContext.Provider>
   );
