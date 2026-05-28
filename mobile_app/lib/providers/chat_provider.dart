@@ -80,15 +80,29 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  void connectWebSocket(String wsUrl) {
-    _wsUrl = wsUrl;
+  void connectWebSocket(String wsUrl, {String? token}) {
+    final uri = Uri.parse(wsUrl);
+    final resolvedUrl = token == null || token.isEmpty
+        ? uri.toString()
+        : uri
+            .replace(
+              queryParameters: {
+                ...uri.queryParameters,
+                'token': token,
+              },
+            )
+            .toString();
+
+    if (_isWsConnected && _wsUrl == resolvedUrl) return;
+
+    _wsUrl = resolvedUrl;
     _reconnectTimer?.cancel();
     _channel?.sink.close();
     
-    debugPrint('[ChatProvider] Connecting to WS: $wsUrl');
+    debugPrint('[ChatProvider] Connecting to WS: ${_redactToken(resolvedUrl)}');
     
     try {
-      _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      _channel = WebSocketChannel.connect(Uri.parse(resolvedUrl));
       _isWsConnected = true;
       notifyListeners();
       _channel!.stream.listen(
@@ -240,6 +254,15 @@ class ChatProvider extends ChangeNotifier {
         connectWebSocket(_wsUrl!);
       }
     });
+  }
+
+  String _redactToken(String url) {
+    final uri = Uri.parse(url);
+    if (!uri.queryParameters.containsKey('token')) return url;
+    return uri.replace(queryParameters: {
+      ...uri.queryParameters,
+      'token': '<redacted>',
+    }).toString();
   }
 
   Future<bool> sendMessage(String content) async {

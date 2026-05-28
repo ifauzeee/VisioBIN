@@ -30,7 +30,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Connect WS in background for notifications if needed,
       // but the detail page will also ensure connection
-      chatProvider.connectWebSocket(AppConfig.wsBaseUrl);
+      chatProvider.connectWebSocket(
+        AppConfig.wsBaseUrl,
+        token: chatProvider.apiService.authToken,
+      );
     });
   }
 

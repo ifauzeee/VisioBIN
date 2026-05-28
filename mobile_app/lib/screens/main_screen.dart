@@ -33,7 +33,10 @@ class _MainScreenState extends State<MainScreen> {
       chatProvider.setCurrentUserId(dashboardProvider.currentUser?.id);
       chatProvider.fetchMembers();
 
-      chatProvider.connectWebSocket(AppConfig.wsBaseUrl);
+      chatProvider.connectWebSocket(
+        AppConfig.wsBaseUrl,
+        token: chatProvider.apiService.authToken,
+      );
     });
   }
 

@@ -32,8 +32,8 @@ void main() async {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     
-    // Load .env configuration
-    await dotenv.load(fileName: ".env");
+    // .env is optional because mobile config is normally passed via --dart-define.
+    await dotenv.load(fileName: ".env", isOptional: true);
   } catch (e) {
     debugPrint("Initialization error: $e");
   }

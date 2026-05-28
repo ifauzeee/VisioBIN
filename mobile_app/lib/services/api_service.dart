@@ -70,6 +70,9 @@ class ApiService {
   /// Apakah sudah punya token?
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
 
+  /// Token JWT aktif untuk koneksi realtime seperti WebSocket.
+  String? get authToken => _token;
+
   /// User data saat ini
   Map<String, dynamic>? get currentUser => _user;
 
