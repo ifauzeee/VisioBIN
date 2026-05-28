@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, Check, CheckCheck, AlertTriangle, Info, AlertCircle } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, Info, AlertCircle, Camera, Wrench } from "lucide-react";
 import { timeAgo } from "../../utils/formatters";
 import { SEVERITY_CONFIG } from "../../utils/constants";
 
@@ -160,6 +160,7 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
                 const severity = (alert.severity || "info").toLowerCase();
                 const config = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.info;
                 const SevIcon = SEVERITY_ICONS[severity] || Info;
+                const location = alert.location || alert.bin_location || alert.bin_name || alert.bin_id?.slice(0, 8) || "Unit tidak diketahui";
 
                 return (
                   <div
@@ -213,6 +214,14 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
                           >
                             {alert.message || alert.alert_type}
                           </div>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: config.color, background: config.bg, border: `1px solid ${config.color}`, borderRadius: 999, padding: "2px 7px" }}>
+                              {severity}
+                            </span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-color)", borderRadius: 999, padding: "2px 7px" }}>
+                              {alert.alert_type || "system"}
+                            </span>
+                          </div>
                           <div
                             style={{
                               display: "flex",
@@ -221,9 +230,41 @@ export default function AlertBell({ alerts, unreadCount, onMarkRead, onMarkAllRe
                               color: "var(--text-muted)",
                             }}
                           >
-                            <span>{alert.bin_name || alert.bin_id?.slice(0, 8)}</span>
+                            <span>{location}</span>
                             <span>·</span>
                             <span>{timeAgo(alert.created_at)}</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 6, marginTop: 10 }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkRead(alert.id);
+                              }}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.03)", color: "var(--text-main)", borderRadius: 7, padding: "6px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                            >
+                              <Check size={12} /> Ditangani
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = "/maint";
+                              }}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.03)", color: "var(--text-main)", borderRadius: 7, padding: "6px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                            >
+                              <Wrench size={12} /> Log
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = "/pemantauan";
+                              }}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.03)", color: "var(--text-main)", borderRadius: 7, padding: "6px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+                            >
+                              <Camera size={12} /> Kamera
+                            </button>
                           </div>
                         </div>
                       </div>

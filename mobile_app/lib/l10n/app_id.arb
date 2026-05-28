@@ -20,5 +20,13 @@
   "quickActions": "Aksi Cepat",
   "recentActivity": "Aktivitas Terbaru",
   "viewAll": "Lihat Semua",
-  "openFullVideoStream": "Buka Stream Video Penuh"
+  "openFullVideoStream": "Buka Stream Video Penuh",
+  "scanBin": "Scan Bin",
+  "reportIssue": "Laporkan",
+  "navigateToBin": "Navigasi",
+  "syncOffline": "Sinkronkan",
+  "scanBinOpened": "Kamera dibuka untuk validasi scan.",
+  "reportIssuePrompt": "Catat masalah fisik bin dari menu perawatan.",
+  "navigationPrompt": "Buka peta untuk memilih unit dan rute pengambilan.",
+  "syncComplete": "Data dashboard berhasil disinkronkan."
 }

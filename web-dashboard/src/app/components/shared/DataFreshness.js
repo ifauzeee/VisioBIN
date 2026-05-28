@@ -9,7 +9,7 @@ import { timeAgo } from "../../utils/formatters";
 export default function DataFreshness({ lastUpdated, error }) {
   if (error) {
     return (
-      <div className="data-freshness">
+      <div className="data-freshness" role="status" aria-live="polite">
         <div className="data-freshness-dot data-freshness-dot-error" />
         <span className="data-freshness-error">Koneksi terputus</span>
       </div>
@@ -18,7 +18,7 @@ export default function DataFreshness({ lastUpdated, error }) {
 
   if (!lastUpdated) {
     return (
-      <div className="data-freshness">
+      <div className="data-freshness" role="status" aria-live="polite">
         <div className="data-freshness-dot skeleton-shimmer" />
         <span>Menghubungkan...</span>
       </div>
@@ -26,7 +26,7 @@ export default function DataFreshness({ lastUpdated, error }) {
   }
 
   return (
-    <div className="data-freshness">
+    <div className="data-freshness" role="status" aria-live="polite">
       <div className="data-freshness-dot pulse-dot-green data-freshness-dot-ok" />
       <span>
         Diperbarui {timeAgo(lastUpdated)}

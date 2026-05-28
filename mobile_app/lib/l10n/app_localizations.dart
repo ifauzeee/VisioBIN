@@ -223,6 +223,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Full Video Stream'**
   String get openFullVideoStream;
+
+  /// No description provided for @scanBin.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Bin'**
+  String get scanBin;
+
+  /// No description provided for @reportIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportIssue;
+
+  /// No description provided for @navigateToBin.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get navigateToBin;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncOffline;
+
+  /// No description provided for @scanBinOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera opened for scan validation.'**
+  String get scanBinOpened;
+
+  /// No description provided for @reportIssuePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Record physical bin issues from the maintenance menu.'**
+  String get reportIssuePrompt;
+
+  /// No description provided for @navigationPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the map to choose a unit and pickup route.'**
+  String get navigationPrompt;
+
+  /// No description provided for @syncComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard data synced successfully.'**
+  String get syncComplete;
 }
 
 class _AppLocalizationsDelegate

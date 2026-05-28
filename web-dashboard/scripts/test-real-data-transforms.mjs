@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import {
   averageConfidence,
   averageInferenceMs,
+  deriveAiExplanation,
   deriveSystemState,
   groupClassificationsByDay,
+  hasChartFallbackData,
   hasClassificationData,
   hasTelemetryData,
   mapDailyStats,
@@ -80,5 +82,18 @@ assert.deepEqual(deriveSystemState({ hasError: true }), { tone: "error", message
 assert.deepEqual(deriveSystemState({ hasError: false, unreadCount: 2 }), { tone: "warning", messageKey: "needs_attention" });
 assert.deepEqual(deriveSystemState({ hasError: false, hasTelemetry: false, hasClassifications: false }), { tone: "muted", messageKey: "waiting_real_data" });
 assert.deepEqual(deriveSystemState({ hasError: false, hasTelemetry: true, hasClassifications: true }), { tone: "ok", messageKey: "real_data_active" });
+
+assert.deepEqual(deriveAiExplanation([]), {
+  confidence: 0,
+  trend: "unknown",
+  misclassificationRisk: "unknown",
+  reason: "Belum ada log klasifikasi yang bisa dianalisis.",
+  sampleLabel: "-",
+  sampleTime: "-",
+});
+assert.equal(deriveAiExplanation([{ item: "organic", prob: 92, time: "10:00" }]).confidence, 92);
+assert.equal(deriveAiExplanation([{ item: "organic", prob: 62 }, { item: "inorganic", prob: 58 }, { item: "organic", prob: 65 }]).misclassificationRisk, "high");
+assert.equal(hasChartFallbackData([{ organic: 0, inorganic: 0 }]), false);
+assert.equal(hasChartFallbackData([{ organic: 1, inorganic: 0 }]), true);
 
 console.log("realDataTransforms checks passed");

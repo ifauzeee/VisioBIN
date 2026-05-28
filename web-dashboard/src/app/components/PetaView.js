@@ -7,6 +7,34 @@ import { getBinLevelColor } from "../utils/formatters";
 import { useTranslations } from 'next-intl';
 import { useDashboardContext } from "../context/DashboardContext";
 
+const DEFAULT_CENTER = [-6.3625, 106.8241];
+
+function deterministicOffset(seed, axis) {
+  const input = String(seed || "visiobin");
+  let hash = axis === "lat" ? 17 : 31;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 33 + input.charCodeAt(i)) % 997;
+  }
+  return (hash / 997 - 0.5) * 0.01;
+}
+
+function ChangeView({ LeafletComponents, center, zoom }) {
+  const map = LeafletComponents.useMap();
+  useEffect(() => {
+    map.flyTo(center, zoom, { duration: 0.8 });
+  }, [center, zoom, map]);
+  return null;
+}
+
+function MapEventsController({ LeafletComponents, onZoomChange }) {
+  LeafletComponents.useMapEvents({
+    zoomend: (e) => {
+      onZoomChange(e.target.getZoom());
+    },
+  });
+  return null;
+}
+
 export default function PetaView({ bins }) {
   const t = useTranslations('map');
   const { searchQuery, setSearchQuery } = useDashboardContext();
@@ -15,7 +43,9 @@ export default function PetaView({ bins }) {
   const [LeafletComponents, setLeafletComponents] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => (
+    typeof document === "undefined" ? true : !document.body.classList.contains("light-mode")
+  ));
   const [zoom, setZoom] = useState(15);
 
   const getSignalStatus = (rssi) => {
@@ -26,7 +56,6 @@ export default function PetaView({ bins }) {
   };
 
   useEffect(() => {
-    setIsDarkMode(!document.body.classList.contains("light-mode"));
     const observer = new MutationObserver(() => {
       setIsDarkMode(!document.body.classList.contains("light-mode"));
     });
@@ -54,16 +83,33 @@ export default function PetaView({ bins }) {
     loadLeaflet();
   }, []);
 
-  const defaultCenter = [-6.3625, 106.8241];
-
   const enrichedBins = useMemo(() => (bins || []).map((bin) => ({
     ...bin,
-    latitude: bin.latitude || defaultCenter[0] + (Math.random() - 0.5) * 0.01,
-    longitude: bin.longitude || defaultCenter[1] + (Math.random() - 0.5) * 0.01,
+    latitude: bin.latitude || DEFAULT_CENTER[0] + deterministicOffset(bin.id || bin.name, "lat"),
+    longitude: bin.longitude || DEFAULT_CENTER[1] + deterministicOffset(bin.id || bin.name, "lng"),
   })), [bins]);
 
-  const getBinLevel = (bin) => {
+  const getBinLevel = React.useCallback((bin) => {
     return Math.round(((bin.latest_reading?.volume_organic_pct ?? 0) + (bin.latest_reading?.volume_inorganic_pct ?? 0)) / 2);
+  }, []);
+
+  const isBinOffline = React.useCallback((bin) => {
+    const status = String(bin.status || bin.connection_status || "").toLowerCase();
+    return status.includes("offline") || status.includes("inactive") || status.includes("nonaktif");
+  }, []);
+
+  const getBinOperationalStatus = React.useCallback((bin) => {
+    if (isBinOffline(bin)) return "offline";
+    const level = getBinLevel(bin);
+    if (level > 80) return "full";
+    if (level > 60) return "nearFull";
+    return "normal";
+  }, [getBinLevel, isBinOffline]);
+
+  const openPickupRoute = (bin) => {
+    const lat = bin.latitude || DEFAULT_CENTER[0];
+    const lng = bin.longitude || DEFAULT_CENTER[1];
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank", "noopener,noreferrer");
   };
 
   // Filter & search bins
@@ -83,15 +129,17 @@ export default function PetaView({ bins }) {
         const level = getBinLevel(bin);
         switch (activeFilter) {
           case "empty": return level <= 60;
+          case "normal": return getBinOperationalStatus(bin) === "normal";
           case "nearFull": return level > 60 && level <= 80;
           case "full": return level > 80;
+          case "offline": return isBinOffline(bin);
           default: return true;
         }
       });
     }
 
     return result;
-  }, [enrichedBins, searchQuery, activeFilter]);
+  }, [enrichedBins, searchQuery, activeFilter, getBinLevel, getBinOperationalStatus, isBinOffline]);
 
   const getGridSize = (zoomLevel) => {
     if (zoomLevel >= 17) return 0; // No clustering at very high zoom
@@ -214,25 +262,9 @@ export default function PetaView({ bins }) {
     const levels = enrichedBins.map(getBinLevel);
     const avg = total > 0 ? Math.round(levels.reduce((a, b) => a + b, 0) / total) : 0;
     const full = levels.filter(l => l > 80).length;
-    return { total, active, avg, full };
-  }, [enrichedBins]);
-
-  const ChangeView = ({ center, zoom }) => {
-    const map = LeafletComponents.useMap();
-    useEffect(() => {
-      map.flyTo(center, zoom, { duration: 0.8 });
-    }, [center, zoom, map]);
-    return null;
-  };
-
-  const MapEventsController = () => {
-    LeafletComponents.useMapEvents({
-      zoomend: (e) => {
-        setZoom(e.target.getZoom());
-      },
-    });
-    return null;
-  };
+    const offline = enrichedBins.filter(isBinOffline).length;
+    return { total, active, avg, full, offline };
+  }, [enrichedBins, getBinLevel, isBinOffline]);
 
   const createCustomIcon = (level) => {
     const { L } = LeafletComponents;
@@ -273,8 +305,8 @@ export default function PetaView({ bins }) {
   };
 
   const mapCenter = activeBin
-    ? [activeBin.latitude || defaultCenter[0], activeBin.longitude || defaultCenter[1]]
-    : defaultCenter;
+    ? [activeBin.latitude || DEFAULT_CENTER[0], activeBin.longitude || DEFAULT_CENTER[1]]
+    : DEFAULT_CENTER;
 
   // Loading state
   if (!isMounted || !LeafletComponents) {
@@ -306,9 +338,10 @@ export default function PetaView({ bins }) {
 
   const filters = [
     { key: "all", label: t('filterAll'), activeClass: "active" },
-    { key: "empty", label: t('filterEmpty'), activeClass: "active" },
+    { key: "normal", label: t('filterNormal'), activeClass: "active" },
     { key: "nearFull", label: t('filterNearFull'), activeClass: "active-warning" },
     { key: "full", label: t('filterFull'), activeClass: "active-danger" },
+    { key: "offline", label: t('filterOffline'), activeClass: "active-danger" },
   ];
 
   return (
@@ -357,6 +390,16 @@ export default function PetaView({ bins }) {
           <div className="map-kpi-info">
             <div className="map-kpi-value" style={{ color: '#ef4444' }}>{kpiStats.full}</div>
             <div className="map-kpi-label">{t('fullUnits')}</div>
+          </div>
+        </div>
+
+        <div className="map-kpi-card">
+          <div className="map-kpi-icon" style={{ background: 'rgba(148, 163, 184, 0.12)' }}>
+            <Zap size={17} color="var(--text-muted)" />
+          </div>
+          <div className="map-kpi-info">
+            <div className="map-kpi-value" style={{ color: 'var(--text-muted)' }}>{kpiStats.offline}</div>
+            <div className="map-kpi-label">{t('offlineUnits')}</div>
           </div>
         </div>
       </motion.div>
@@ -453,6 +496,9 @@ export default function PetaView({ bins }) {
                       <MapPin size={10} />
                       {bin.location || t('noLocation')}
                     </div>
+                    <div className={`map-bin-operational-status status-${getBinOperationalStatus(bin)}`}>
+                      {t(`status_${getBinOperationalStatus(bin)}`)}
+                    </div>
                     <div className="map-bin-item-stats">
                       <div className="map-bin-item-bar-wrapper">
                         <div className="map-bin-item-bar">
@@ -500,7 +546,7 @@ export default function PetaView({ bins }) {
           transition={{ duration: 0.3, delay: 0.15 }}
         >
           <MapContainer
-            center={defaultCenter}
+            center={DEFAULT_CENTER}
             zoom={15}
             style={{ height: "100%", width: "100%", background: isDarkMode ? '#1a1a2e' : '#f8fafc' }}
             zoomControl={true}
@@ -509,8 +555,8 @@ export default function PetaView({ bins }) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <ChangeView center={mapCenter} zoom={activeBin ? 17 : 15} />
-            <MapEventsController />
+            <ChangeView LeafletComponents={LeafletComponents} center={mapCenter} zoom={activeBin ? 17 : 15} />
+            <MapEventsController LeafletComponents={LeafletComponents} onZoomChange={setZoom} />
 
             {!showHeatmap ? (
               clusteredItems.map((item, index) => {
@@ -589,10 +635,18 @@ export default function PetaView({ bins }) {
                             <span style={{ color: 'var(--text-muted)' }}>{t('level')}</span>
                             <span style={{ fontWeight: 600, color: getBinLevelColor(level) }}>{level}%</span>
                           </div>
-                          <div className="map-popup-bar-track">
+                        <div className="map-popup-bar-track">
                             <div className="map-popup-bar-fill" style={{ width: `${level}%`, background: getBinLevelColor(level) }} />
                           </div>
                         </div>
+                        <button
+                          type="button"
+                          className="map-route-button"
+                          onClick={() => openPickupRoute(bin)}
+                        >
+                          <Navigation size={13} />
+                          {t('createRoute')}
+                        </button>
                       </div>
                     </Popup>
                   </Marker>
@@ -735,6 +789,17 @@ export default function PetaView({ bins }) {
                     </div>
                   );
                 })()}
+
+                <div className="map-detail-actions">
+                  <button type="button" className="map-route-button" onClick={() => openPickupRoute(activeBin)}>
+                    <Navigation size={14} />
+                    {t('createRoute')}
+                  </button>
+                  <button type="button" className="map-secondary-button" onClick={() => setActiveFilter(getBinOperationalStatus(activeBin))}>
+                    <Activity size={14} />
+                    {t('filterSimilar')}
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

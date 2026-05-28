@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence, animate, Reorder } from "framer-motion";
 import {
   hasClassificationData,
+  deriveAiExplanation,
   mapDailyStats,
   mapVolumeHistory,
 } from '../utils/realDataTransforms.mjs';
@@ -468,7 +469,7 @@ export default React.memo(function RingkasanView({
   onRetry,
 }) {
   const safeSummary = summary || {};
-  const safeLogs = logs || [];
+  const safeLogs = React.useMemo(() => logs || [], [logs]);
   const t = useTranslations('dashboard');
   const locale = useLocale();
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
@@ -476,6 +477,8 @@ export default React.memo(function RingkasanView({
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
   const [widgetOrder, setWidgetOrder] = React.useState(readSavedWidgetOrder);
   const [visibleWidgets, setVisibleWidgets] = React.useState(readSavedVisibleWidgets);
+  const [draftWidgetOrder, setDraftWidgetOrder] = React.useState(widgetOrder);
+  const [draftVisibleWidgets, setDraftVisibleWidgets] = React.useState(visibleWidgets);
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [tourStep, setTourStep] = React.useState(readInitialTourStep);
 
@@ -483,6 +486,40 @@ export default React.memo(function RingkasanView({
     localStorage.setItem("visiobin_widget_order", JSON.stringify(normalizeWidgetOrder(newOrder)));
     localStorage.setItem("visiobin_visible_widgets", JSON.stringify(normalizeVisibleWidgets(newVisible)));
   }, []);
+
+  const widgetLabelMap = React.useMemo(() => ({
+    insight: locale === 'id' ? 'Insight AI' : 'AI Insight',
+    kpi: locale === 'id' ? 'Kartu KPI' : 'KPI Cards',
+    vision_reservoir: locale === 'id' ? 'Video AI & Reservoir' : 'AI Video & Reservoir',
+    history_distribution: locale === 'id' ? 'Tren Volume & Distribusi' : 'Volume Trend & Distribution',
+    daily_activity: locale === 'id' ? 'Grafik Harian & Aktivitas' : 'Daily Charts & Activity',
+  }), [locale]);
+
+  const beginEditLayout = () => {
+    setDraftWidgetOrder(widgetOrder);
+    setDraftVisibleWidgets(visibleWidgets);
+    setIsEditMode(true);
+  };
+
+  const saveEditLayout = () => {
+    const nextOrder = normalizeWidgetOrder(draftWidgetOrder);
+    const nextVisible = normalizeVisibleWidgets(draftVisibleWidgets);
+    setWidgetOrder(nextOrder);
+    setVisibleWidgets(nextVisible);
+    saveLayout(nextOrder, nextVisible);
+    setIsEditMode(false);
+  };
+
+  const cancelEditLayout = () => {
+    setDraftWidgetOrder(widgetOrder);
+    setDraftVisibleWidgets(visibleWidgets);
+    setIsEditMode(false);
+  };
+
+  const resetEditLayout = () => {
+    setDraftWidgetOrder(DEFAULT_WIDGET_ORDER);
+    setDraftVisibleWidgets(DEFAULT_VISIBLE_WIDGETS);
+  };
 
   const tourSteps = React.useMemo(() => [
     {
@@ -557,9 +594,13 @@ export default React.memo(function RingkasanView({
     return rawGraphData.slice(-hours);
   }, [rawGraphData, filterRange]);
 
+  const activeWidgetOrder = isEditMode ? draftWidgetOrder : widgetOrder;
+  const activeVisibleWidgets = isEditMode ? draftVisibleWidgets : visibleWidgets;
+
   const renderedWidgetIds = React.useMemo(() => {
-    return normalizeWidgetOrder(widgetOrder).filter((widgetId) => visibleWidgets[widgetId]);
-  }, [widgetOrder, visibleWidgets]);
+    return normalizeWidgetOrder(activeWidgetOrder).filter((widgetId) => activeVisibleWidgets[widgetId]);
+  }, [activeWidgetOrder, activeVisibleWidgets]);
+  const aiExplanation = React.useMemo(() => deriveAiExplanation(safeLogs), [safeLogs]);
 
   if (loading) {
     return <RingkasanSkeleton />;
@@ -1233,12 +1274,7 @@ export default React.memo(function RingkasanView({
           </button>
           
           <button 
-            onClick={() => {
-              if (isEditMode) {
-                saveLayout(widgetOrder, visibleWidgets);
-              }
-              setIsEditMode(!isEditMode);
-            }}
+            onClick={isEditMode ? saveEditLayout : beginEditLayout}
             style={{ 
               display: 'flex', alignItems: 'center', gap: 6,
               background: isEditMode ? 'var(--brand-organic)' : 'rgba(255,255,255,0.03)', 
@@ -1249,7 +1285,7 @@ export default React.memo(function RingkasanView({
             aria-label={isEditMode ? 'Selesai kustomisasi layout' : 'Kustomisasi layout dashboard'}
           >
             {isEditMode ? <Check size={14} /> : <Edit size={14} />}
-            {isEditMode ? (locale === 'id' ? 'Selesai' : 'Selesai') : (locale === 'id' ? 'Edit Layout' : 'Edit Layout')}
+            {isEditMode ? (locale === 'id' ? 'Simpan Layout' : 'Save Layout') : (locale === 'id' ? 'Edit Layout' : 'Edit Layout')}
           </button>
         </div>
       </div>
@@ -1280,26 +1316,43 @@ export default React.memo(function RingkasanView({
               overflow: 'hidden'
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              {locale === 'id' ? 'Tampilkan / Sembunyikan Widget' : 'Show / Hide Widgets'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  {locale === 'id' ? 'Mode Edit Layout' : 'Layout Edit Mode'}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-main)', marginTop: 4 }}>
+                  {locale === 'id'
+                    ? 'Atur urutan, sembunyikan widget, lalu simpan setelah preview sesuai.'
+                    : 'Reorder, hide widgets, then save once the preview looks right.'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={resetEditLayout}
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)', padding: '7px 12px', fontSize: 12, cursor: 'pointer' }}
+                >
+                  {locale === 'id' ? 'Reset Default' : 'Reset Default'}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEditLayout}
+                  style={{ background: 'transparent', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-muted)', padding: '7px 12px', fontSize: 12, cursor: 'pointer' }}
+                >
+                  {locale === 'id' ? 'Batal' : 'Cancel'}
+                </button>
+              </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {Object.keys(visibleWidgets).map(key => {
-                const labelMap = {
-                  insight: 'AI Insight Narrative',
-                  kpi: 'KPI Cards Grid',
-                  vision_reservoir: 'AI Video & Reservoir',
-                  history_distribution: 'Volume Trend & Distribution',
-                  daily_activity: 'Daily Charts & Recent Activity'
-                };
-                const isVis = visibleWidgets[key];
+              {Object.keys(draftVisibleWidgets).map(key => {
+                const isVis = draftVisibleWidgets[key];
                 return (
                   <button
                     key={key}
                     onClick={() => {
-                      const updated = { ...visibleWidgets, [key]: !isVis };
-                      setVisibleWidgets(updated);
-                      saveLayout(widgetOrder, updated);
+                      const updated = { ...draftVisibleWidgets, [key]: !isVis };
+                      setDraftVisibleWidgets(normalizeVisibleWidgets(updated));
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
@@ -1309,10 +1362,10 @@ export default React.memo(function RingkasanView({
                       color: isVis ? 'var(--brand-organic)' : 'var(--text-muted)',
                       cursor: 'pointer', transition: 'all 0.2s'
                     }}
-                    aria-label={'Toggle ' + labelMap[key]}
+                    aria-label={'Toggle ' + widgetLabelMap[key]}
                   >
                     {isVis ? <Eye size={14} /> : <EyeOff size={14} />}
-                    {labelMap[key]}
+                    {widgetLabelMap[key]}
                   </button>
                 );
               })}
@@ -1328,10 +1381,14 @@ export default React.memo(function RingkasanView({
         axis="y" 
         values={renderedWidgetIds}
         onReorder={(newOrder) => {
-          const hiddenWidgetIds = normalizeWidgetOrder(widgetOrder).filter((widgetId) => !visibleWidgets[widgetId]);
+          const hiddenWidgetIds = normalizeWidgetOrder(activeWidgetOrder).filter((widgetId) => !activeVisibleWidgets[widgetId]);
           const nextOrder = normalizeWidgetOrder([...newOrder, ...hiddenWidgetIds]);
-          setWidgetOrder(nextOrder);
-          saveLayout(nextOrder, visibleWidgets);
+          if (isEditMode) {
+            setDraftWidgetOrder(nextOrder);
+          } else {
+            setWidgetOrder(nextOrder);
+            saveLayout(nextOrder, visibleWidgets);
+          }
         }}
         style={{ display: 'flex', flexDirection: 'column', gap: 24, listStyle: 'none', padding: 0, margin: 0 }}
       >
@@ -1357,7 +1414,7 @@ export default React.memo(function RingkasanView({
                   display: 'flex', alignItems: 'center', gap: 4, zIndex: 11, cursor: 'grab'
                 }}>
                   <GripVertical size={10} />
-                  {widgetId === 'insight' ? 'AI Insight Narrative' : widgetId === 'kpi' ? 'KPI Cards Grid' : widgetId === 'vision_reservoir' ? 'AI Video & Reservoir' : widgetId === 'history_distribution' ? 'Volume Trend & Distribution' : 'Daily Charts & Recent Activity'}
+                  {widgetLabelMap[widgetId]}
                 </div>
               )}
               <div style={{ opacity: isEditMode ? 0.7 : 1 }}>
@@ -1710,6 +1767,41 @@ export default React.memo(function RingkasanView({
                       </div>
                     </motion.div>
 
+                  </div>
+                  <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 10 }}>
+                      {locale === 'id' ? 'Penjelasan Keputusan AI' : 'AI Decision Explanation'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', fontWeight: 700 }}>
+                          Confidence
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{aiExplanation.confidence}%</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', fontWeight: 700 }}>
+                          Trend
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: aiExplanation.trend === 'down' ? '#f59e0b' : 'var(--brand-organic)' }}>
+                          {aiExplanation.trend}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', fontWeight: 700 }}>
+                          Risiko
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: aiExplanation.misclassificationRisk === 'high' ? '#ef4444' : aiExplanation.misclassificationRisk === 'medium' ? '#f59e0b' : 'var(--brand-organic)' }}>
+                          {aiExplanation.misclassificationRisk}
+                        </div>
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.68)', fontSize: 12, lineHeight: 1.6 }}>
+                      {aiExplanation.reason}
+                    </p>
+                    <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                      {locale === 'id' ? 'Frame terakhir' : 'Last frame'}: {aiExplanation.sampleLabel} · {aiExplanation.sampleTime}
+                    </div>
                   </div>
                 </div>
               ) : (

@@ -53,5 +53,13 @@
   "quickActions": "Quick Actions",
   "recentActivity": "Recent Activity",
   "viewAll": "View All",
-  "openFullVideoStream": "Open Full Video Stream"
+  "openFullVideoStream": "Open Full Video Stream",
+  "scanBin": "Scan Bin",
+  "reportIssue": "Report",
+  "navigateToBin": "Navigate",
+  "syncOffline": "Sync",
+  "scanBinOpened": "Camera opened for scan validation.",
+  "reportIssuePrompt": "Record physical bin issues from the maintenance menu.",
+  "navigationPrompt": "Open the map to choose a unit and pickup route.",
+  "syncComplete": "Dashboard data synced successfully."
 }

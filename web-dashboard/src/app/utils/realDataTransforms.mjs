@@ -115,3 +115,48 @@ export function deriveSystemState({
   if (!hasTelemetry && !hasClassifications) return { tone: "muted", messageKey: "waiting_real_data" };
   return { tone: "ok", messageKey: "real_data_active" };
 }
+
+export function deriveAiExplanation(logs = []) {
+  if (!logs.length) {
+    return {
+      confidence: 0,
+      trend: "unknown",
+      misclassificationRisk: "unknown",
+      reason: "Belum ada log klasifikasi yang bisa dianalisis.",
+      sampleLabel: "-",
+      sampleTime: "-",
+    };
+  }
+
+  const normalized = logs.map((log) => ({
+    ...log,
+    score: toNumber(log.prob ?? (toNumber(log.confidence) * 100)),
+  }));
+  const latest = normalized[0];
+  const confidence = +latest.score.toFixed(1);
+  const lowConfidenceCount = normalized.filter((log) => log.score > 0 && log.score < 70).length;
+  const misclassificationRisk = lowConfidenceCount >= 3 ? "high" : lowConfidenceCount > 0 ? "medium" : "low";
+  const previous = normalized.slice(1, 6);
+  const previousAverage = previous.length
+    ? previous.reduce((acc, log) => acc + log.score, 0) / previous.length
+    : confidence;
+  const trend = confidence >= previousAverage + 4 ? "up" : confidence <= previousAverage - 4 ? "down" : "stable";
+  const label = latest.item || latest.predicted_class || "-";
+
+  return {
+    confidence,
+    trend,
+    misclassificationRisk,
+    reason: confidence >= 85
+      ? "Model yakin karena confidence tinggi dan hasil terbaru konsisten."
+      : confidence >= 70
+        ? "Model cukup yakin, tetapi operator tetap perlu melihat frame bila kondisi objek bertumpuk."
+        : "Confidence rendah. Validasi manual disarankan sebelum memakai hasil untuk keputusan operasional.",
+    sampleLabel: label,
+    sampleTime: latest.time || latest.classified_at || "-",
+  };
+}
+
+export function hasChartFallbackData(points = []) {
+  return points.some((point) => Object.values(point).some((value) => toNumber(value) > 0));
+}

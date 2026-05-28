@@ -70,4 +70,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openFullVideoStream => 'Open Full Video Stream';
+
+  @override
+  String get scanBin => 'Scan Bin';
+
+  @override
+  String get reportIssue => 'Report';
+
+  @override
+  String get navigateToBin => 'Navigate';
+
+  @override
+  String get syncOffline => 'Sync';
+
+  @override
+  String get scanBinOpened => 'Camera opened for scan validation.';
+
+  @override
+  String get reportIssuePrompt =>
+      'Record physical bin issues from the maintenance menu.';
+
+  @override
+  String get navigationPrompt =>
+      'Open the map to choose a unit and pickup route.';
+
+  @override
+  String get syncComplete => 'Dashboard data synced successfully.';
 }

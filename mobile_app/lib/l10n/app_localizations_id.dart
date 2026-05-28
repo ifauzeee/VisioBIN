@@ -70,4 +70,30 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get openFullVideoStream => 'Buka Stream Video Penuh';
+
+  @override
+  String get scanBin => 'Scan Bin';
+
+  @override
+  String get reportIssue => 'Laporkan';
+
+  @override
+  String get navigateToBin => 'Navigasi';
+
+  @override
+  String get syncOffline => 'Sinkronkan';
+
+  @override
+  String get scanBinOpened => 'Kamera dibuka untuk validasi scan.';
+
+  @override
+  String get reportIssuePrompt =>
+      'Catat masalah fisik bin dari menu perawatan.';
+
+  @override
+  String get navigationPrompt =>
+      'Buka peta untuk memilih unit dan rute pengambilan.';
+
+  @override
+  String get syncComplete => 'Data dashboard berhasil disinkronkan.';
 }

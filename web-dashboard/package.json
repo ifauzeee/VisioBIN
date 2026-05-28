@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test:transforms": "node scripts/test-real-data-transforms.mjs",
+    "smoke:home": "node scripts/smoke-home.mjs",
+    "lint:ui": "eslint \"src/app/components/RingkasanView.js\" \"src/app/components/PetaView.js\" \"src/app/components/shared/AlertBell.js\" \"src/app/components/shared/DataFreshness.js\" \"src/app/components/shared/EmptyState.js\" \"src/app/dev/design-system/page.js\"",
+    "quality:frontend": "npm run lint:ui && npm run test:transforms && npm run smoke:home && npm run build",
     "lint": "eslint"
   },
   "dependencies": {
