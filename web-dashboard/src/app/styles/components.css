@@ -97,7 +97,7 @@ button,
 .ops-refresh-btn,
 .empty-state-action {
   align-items: center;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-main);
@@ -136,7 +136,7 @@ button,
 }
 
 .ops-card {
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   gap: 12px;
@@ -252,7 +252,7 @@ button,
 
 .empty-state-icon {
   align-items: center;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   display: flex;
@@ -480,7 +480,7 @@ button,
   border: 1.5px solid;
   border-radius: 4px;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-elevated);
 }
 
 /* Status Chips */
@@ -583,7 +583,7 @@ button,
   width: 100%;
   height: 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-elevated);
   overflow: hidden;
 }
 
@@ -601,8 +601,8 @@ button,
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #e8e8e8;
-  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  background: var(--bg-elevated);
 }
 
 .station-row {
@@ -613,7 +613,7 @@ button,
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-elevated);
   font-size: 12px;
 }
 
@@ -629,7 +629,7 @@ button,
   width: 100%;
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-elevated);
   overflow: hidden;
 }
 
@@ -658,7 +658,7 @@ button,
 .report-table td {
   font-size: 13px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-elevated);
 }
 
 .report-table tr td:first-child {
@@ -673,7 +673,7 @@ button,
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-elevated);
   transition: border-color 0.2s;
 }
 
@@ -685,7 +685,7 @@ button,
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-elevated);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -706,7 +706,7 @@ button,
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 8px;
@@ -846,7 +846,7 @@ button,
 
 .btn-secondary:hover {
   background: var(--border-color);
-  color: #fff;
+  color: var(--text-main);
 }
 
 .btn-secondary:disabled {
@@ -1654,7 +1654,7 @@ button,
 }
 
 .map-secondary-button {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   color: var(--text-main);
 }

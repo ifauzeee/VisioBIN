@@ -209,11 +209,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                     {item.badge && (
                       <div
                         style={{
-                          background: "var(--border-color)",
+                          background: "var(--bg-hover)",
                           padding: "2px 6px",
                           borderRadius: 4,
                           fontSize: 10,
-                          color: "#fff",
+                          color: "var(--text-main)",
                         }}
                       >
                         {item.badge}

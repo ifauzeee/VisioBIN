@@ -5,13 +5,30 @@
   --bg-page: #030712; /* Deep slate background */
   --bg-card: #0B0F19; /* Rich dark slate card */
   --bg-hover: #151D30; /* Elevated slate hover */
+  --bg-elevated: rgba(255, 255, 255, 0.03); /* Subtle surface elevation (dark) */
   --border-color: #1E293B; /* Slate-800 border */
   --border-hover: #334155; /* Slate-700 hover border */
   --text-main: #F8FAFC; /* Slate-50 bright text */
   --text-muted: #94A3B8; /* Slate-400 muted text */
+  --text-inverse: #0F172A; /* Dark text for light bg (WCAG AA) */
   --brand-organic: #10B981;
   --brand-inorganic: #3B82F6;
   --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.55);
+
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* Font-size scale */
+  --fs-meta: 11px;
+  --fs-body: 13px;
+  --fs-card-title: 14px;
+  --fs-h3: 18px;
+  --fs-h2: 24px;
+  --fs-h1: 32px;
   --glass-bg: rgba(11, 15, 25, 0.65);
   --glass-border: rgba(255, 255, 255, 0.09);
 
@@ -45,10 +62,12 @@
   --bg-page: #F8FAFC;
   --bg-card: #FFFFFF;
   --bg-hover: #F1F5F9;
+  --bg-elevated: rgba(0, 0, 0, 0.04); /* Subtle surface elevation (light) */
   --border-color: #E2E8F0;
   --border-hover: #CBD5E1;
   --text-main: #0F172A;
   --text-muted: #64748B;
+  --text-inverse: #F8FAFC; /* Light text for dark bg (WCAG AA) */
   --brand-organic: #047857; /* Emerald 700 for better WCAG contrast */
   --brand-inorganic: #1D4ED8; /* Blue 700 for better WCAG contrast */
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
@@ -67,4 +86,89 @@
   --stream-offline-bg: rgba(0, 0, 0, 0.03);
   --stream-offline-icon: var(--text-muted);
   --stream-offline-text: var(--text-muted);
+}
+
+/* ── Light mode overrides for hardcoded inline rgba patterns ── */
+/* Target low-alpha white backgrounds that become invisible on white bg */
+
+.light-mode .ops-refresh-btn,
+.light-mode .empty-state-action {
+  background: var(--bg-hover);
+}
+
+.light-mode .ops-card {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.light-mode .station-row,
+.light-mode .report-table td,
+.light-mode .mini-stat,
+.light-mode .sensor-card,
+.light-mode .impact-card {
+  background: var(--bg-hover);
+}
+
+.light-mode .event-item {
+  background: var(--bg-page);
+}
+
+.light-mode .ops-offline-banner {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+
+/* Map card backgrounds */
+.light-mode .map-bin-item {
+  background: transparent;
+}
+.light-mode .map-bin-item:hover {
+  background: var(--bg-hover);
+}
+
+/* Navigation sidebar */
+.light-mode .nav-item {
+  color: #64748B;
+}
+.light-mode .nav-item:hover {
+  color: var(--text-main);
+}
+.light-mode .nav-item.active {
+  color: var(--brand-inorganic);
+}
+
+/* Progress bars & tracks */
+.light-mode .progress-bar,
+.light-mode .mix-track,
+.light-mode .map-bin-item-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Status chips dark borders */
+.light-mode .status-chip.online {
+  border-color: rgba(4, 120, 87, 0.3);
+}
+.light-mode .status-chip.degraded {
+  border-color: rgba(217, 119, 6, 0.3);
+}
+.light-mode .status-chip.offline {
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+/* Recharts tooltips */
+.light-mode .custom-tooltip {
+  background: #ffffff !important;
+  border-color: var(--border-color) !important;
+}
+
+/* DataManagementView inline style overrides */
+.light-mode .selector-item:hover {
+  color: var(--text-main) !important;
+  background: var(--bg-hover) !important;
+}
+
+.light-mode .modal-box {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
 }
