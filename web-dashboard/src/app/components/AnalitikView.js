@@ -150,7 +150,7 @@ export default React.memo(function AnalitikView() {
           <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             {trendData.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} role="img" aria-label="Grafik tren throughput dan kepercayaan sistem">
                   <defs>
                     <linearGradient id="colorConf" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
@@ -203,7 +203,7 @@ export default React.memo(function AnalitikView() {
           <div className="card-title"><Activity size={16} /> Distribusi Klasifikasi</div>
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={[{ name: "Organik", val: orgC }, { name: "Anorganik", val: inorgC }]}>
+              <BarChart data={[{ name: "Organik", val: orgC }, { name: "Anorganik", val: inorgC }]} role="img" aria-label="Grafik distribusi klasifikasi organik dan anorganik">
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
@@ -246,7 +246,7 @@ export default React.memo(function AnalitikView() {
           <div style={{ height: 220, marginTop: 16, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             {accuracyData.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={accuracyData}>
+                <AreaChart data={accuracyData} role="img" aria-label="Grafik tren akurasi harian model AI">
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                   <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis domain={[0, 100]} stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />

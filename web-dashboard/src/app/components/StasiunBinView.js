@@ -265,7 +265,7 @@ export default function StasiunBinView() {
                 {historyData.length > 0 ? (
                   <div style={{ flex: 1, marginTop: 16, marginLeft: -20, minWidth: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={historyData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                      <AreaChart data={historyData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }} role="img" aria-label="Grafik riwayat sensor stasiun 24 jam terakhir">
                         <defs>
                           <linearGradient id="gHistOrg" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />

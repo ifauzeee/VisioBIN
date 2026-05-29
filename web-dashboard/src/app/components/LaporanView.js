@@ -120,7 +120,7 @@ export default React.memo(function LaporanView() {
           <div style={{ flex: 1, marginLeft: -20, minWidth: 0, position: 'relative' }}>
             {dailyData.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyData}>
+                <BarChart data={dailyData} role="img" aria-label="Grafik laporan harian volume organik dan anorganik">
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                   <XAxis dataKey="tgl" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />

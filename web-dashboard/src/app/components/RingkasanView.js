@@ -887,7 +887,7 @@ export default React.memo(function RingkasanView({
             {/* Sparkline for trend */}
             <ChartFrame height={40} style={{ width: 80, flex: '0 0 80px' }}>
               {({ width, height }) => (
-                <AreaChart width={width} height={height} data={rawGraphData.slice(-10)}>
+                <AreaChart width={width} height={height} data={rawGraphData.slice(-10)} role="img" aria-label="Sparkline volume sampah 10 titik terakhir">
                   <Area 
                     type="monotone" 
                     dataKey="volume" 
@@ -1052,7 +1052,7 @@ export default React.memo(function RingkasanView({
           <ChartFrame height={300} style={{ flex: '1 1 300px', marginTop: 16, marginLeft: -20 }}>
             {graphData.length ? (
               ({ width, height }) => (
-                <AreaChart width={width} height={height} data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+                <AreaChart width={width} height={height} data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }} role="img" aria-label="Grafik volume sampah 24 jam terakhir">
                   <defs>
                     <linearGradient id="gVol" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--brand-organic)" stopOpacity={0.2} />
@@ -1100,7 +1100,7 @@ export default React.memo(function RingkasanView({
           <ChartFrame height={220} style={{ flex: '0 0 220px', marginTop: 8 }}>
             {distributionData.length ? (
               ({ width, height }) => (
-                <RPieChart width={width} height={height} style={{ background: 'transparent' }}>
+                <RPieChart width={width} height={height} style={{ background: 'transparent' }} role="img" aria-label="Distribusi jenis sampah organik dan anorganik">
                   <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
                     {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
@@ -1148,7 +1148,7 @@ export default React.memo(function RingkasanView({
           <ChartFrame height={250} style={{ flex: '1 1 250px', marginTop: 16, marginLeft: -20 }}>
             {dailyStats.length ? (
               ({ width, height }) => (
-                <BarChart width={width} height={height} data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }}>
+                <BarChart width={width} height={height} data={dailyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} style={{ background: 'transparent' }} role="img" aria-label="Grafik klasifikasi harian 7 hari terakhir">
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} fill="none" />
                   <XAxis dataKey="hari" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -1427,7 +1427,7 @@ export default React.memo(function RingkasanView({
       {/* Analysis Detail Modal */}
       <AnimatePresence>
         {analysisDetailOpen && (
-          <div className="modal-overlay" style={{ background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", display: "flex", justifyContent: "center", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }} onClick={() => setAnalysisDetailOpen(false)}>
+          <button className="modal-overlay" onClick={() => setAnalysisDetailOpen(false)} aria-label="Close analysis detail" style={{ all: "unset", background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(8px)", display: "flex", justifyContent: "center", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, cursor: "default" }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
