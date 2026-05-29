@@ -280,8 +280,8 @@ export default function StasiunBinView() {
                         <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                         <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
                         <Tooltip contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} itemStyle={{ color: "var(--text-main)" }} />
-                        <Area type="monotone" dataKey="volOrganik" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gHistOrg)" name="Organik %" />
-                        <Area type="monotone" dataKey="volAnorganik" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gHistInorg)" name="Anorganik %" />
+                        <Area type="monotone" dataKey="volOrganik" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gHistOrg)" name="Organik %" isAnimationActive={false} />
+                        <Area type="monotone" dataKey="volAnorganik" stroke="var(--brand-inorganic)" strokeWidth={2} fill="url(#gHistInorg)" name="Anorganik %" isAnimationActive={false} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

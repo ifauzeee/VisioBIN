@@ -903,7 +903,7 @@ export default React.memo(function RingkasanView({
                     fill="var(--brand-organic)" 
                     fillOpacity={0.2} 
                     strokeWidth={2}
-                    isAnimationActive={true}
+                  isAnimationActive={false}
                   />
                 </AreaChart>
               )}
@@ -1071,7 +1071,7 @@ export default React.memo(function RingkasanView({
                   <XAxis dataKey="jam" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomVolumeTooltip />} />
-                  <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={true} />
+                  <Area type="monotone" dataKey="volume" stroke="var(--brand-organic)" strokeWidth={2} fill="url(#gVol)" name="Volume (%)" isAnimationActive={false} />
                   <Brush
                     dataKey="jam"
                     height={30}
@@ -1109,7 +1109,7 @@ export default React.memo(function RingkasanView({
             {distributionData.length ? (
               ({ width, height }) => (
                 <RPieChart width={width} height={height} style={{ background: 'transparent' }} role="img" aria-label="Distribusi jenis sampah organik dan anorganik">
-                  <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={true}>
+                  <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} isAnimationActive={false} activeIndex={undefined}>
                     {distributionData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
@@ -1162,8 +1162,8 @@ export default React.memo(function RingkasanView({
                   <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomWeeklyTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={true} />
-                  <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={true} />
+                  <Bar dataKey="organik" fill="var(--brand-organic)" radius={[4, 4, 0, 0]} name={t('organic')} isAnimationActive={false} />
+                  <Bar dataKey="anorganik" fill="var(--brand-inorganic)" radius={[4, 4, 0, 0]} name={t('inorganic')} isAnimationActive={false} />
                 </BarChart>
               )
             ) : (
