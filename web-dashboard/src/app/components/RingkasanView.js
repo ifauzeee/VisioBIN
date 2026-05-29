@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, Brush,
@@ -472,6 +473,13 @@ export default React.memo(function RingkasanView({
   const safeLogs = React.useMemo(() => logs || [], [logs]);
   const t = useTranslations('dashboard');
   const locale = useLocale();
+  const logParentRef = useRef(null);
+  const logVirtualizer = useVirtualizer({
+    count: safeLogs.length,
+    getScrollElement: () => logParentRef.current,
+    estimateSize: () => 64,
+    overscan: 5,
+  });
   const [filterRange, setFilterRange] = React.useState('all'); // '6h', '12h', '24h', 'all'
   const [analysisDetailOpen, setAnalysisDetailOpen] = React.useState(false);
   const [brushRange, setBrushRange] = React.useState({ start: 0, end: undefined });
@@ -1177,36 +1185,60 @@ export default React.memo(function RingkasanView({
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
           <div className="card-title"><Activity size={16} /> {t('recent_activity')}</div>
-          <div style={{ flex: 1, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <AnimatePresence initial={false}>
-              {safeLogs.length ? safeLogs.map((log, i) => (
-                <motion.div 
-                  key={log.id} 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border-color)' }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>{t('bin_reservoir').toLowerCase()}</div>
-                    <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
-                  </div>
-                </motion.div>
-              )) : (
-                <EmptyState
-                  title={locale === 'id' ? "Belum ada aktivitas" : "No activity yet"}
-                  description={locale === 'id'
-                    ? "Aktivitas terbaru akan muncul saat perangkat mulai mengirim hasil scan."
-                    : "Recent activity appears when devices start sending scan results."}
-                  action={locale === 'id' ? "Cek ulang" : "Check again"}
-                  onAction={onRetry}
-                />
-              )}
-            </AnimatePresence>
+          <div
+            ref={logParentRef}
+            style={{ flex: 1, overflowY: 'auto', marginTop: 16, position: 'relative' }}
+          >
+            {safeLogs.length ? (
+              <div style={{ height: `${logVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+                {logVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const log = safeLogs[virtualRow.index];
+                  const isNewest = virtualRow.index < 5;
+                  return (
+                    <motion.div
+                      key={log.id}
+                      initial={isNewest ? { opacity: 0, x: -20 } : false}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={isNewest ? { delay: virtualRow.index * 0.05 } : { duration: 0 }}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualRow.start}px)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        height: `${virtualRow.size - 8}px`,
+                        background: 'var(--bg-elevated)',
+                        borderRadius: 8,
+                        border: '1px solid var(--border-color)',
+                        marginBottom: 8,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
+                        <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>{t('bin_reservoir').toLowerCase()}</div>
+                        <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                title={locale === 'id' ? "Belum ada aktivitas" : "No activity yet"}
+                description={locale === 'id'
+                  ? "Aktivitas terbaru akan muncul saat perangkat mulai mengirim hasil scan."
+                  : "Recent activity appears when devices start sending scan results."}
+                action={locale === 'id' ? "Cek ulang" : "Check again"}
+                onAction={onRetry}
+              />
+            )}
           </div>
         </motion.div>
       </div>
@@ -1277,9 +1309,9 @@ export default React.memo(function RingkasanView({
             onClick={isEditMode ? saveEditLayout : beginEditLayout}
             style={{ 
               display: 'flex', alignItems: 'center', gap: 6,
-              background: isEditMode ? 'var(--brand-organic)' : 'rgba(255,255,255,0.03)', 
+              background: isEditMode ? 'var(--brand-organic)' : 'var(--bg-elevated)', 
               border: isEditMode ? 'none' : '1px solid var(--border-color)', 
-              borderRadius: 8, padding: '8px 14px', fontSize: 12, color: '#fff', cursor: 'pointer',
+              borderRadius: 8, padding: '8px 14px', fontSize: 12, color: isEditMode ? '#fff' : 'var(--text-main)', cursor: 'pointer',
               fontWeight: 600, transition: 'all 0.2s'
             }}
             aria-label={isEditMode ? 'Selesai kustomisasi layout' : 'Kustomisasi layout dashboard'}
