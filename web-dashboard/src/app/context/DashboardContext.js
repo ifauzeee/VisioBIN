@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState } from "react";
 import { useDashboard } from "../hooks/useDashboard";
 import { useAlerts } from "../hooks/useAlerts";
 import { useAuth } from "../hooks/useAuth";
+import { useNotifications } from "../hooks/useNotifications";
 
 const DashboardContext = createContext(null);
 
@@ -12,6 +13,7 @@ export function DashboardProvider({ children }) {
   
   const dashboardState = useDashboard(isAuthenticated ? token : null);
   const alertData = useAlerts(isAuthenticated ? token : null);
+  useNotifications({ token: isAuthenticated ? token : null, pushEnabled: true });
 
   const [searchQuery, setSearchQuery] = useState("");
 
