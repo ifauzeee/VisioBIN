@@ -241,7 +241,7 @@ export default function TeamView() {
       {/* Registration Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <button className="modal-overlay" onClick={() => setIsModalOpen(false)} aria-label="Close modal" style={{ all: "unset", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 998, padding: 24, cursor: "default" }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

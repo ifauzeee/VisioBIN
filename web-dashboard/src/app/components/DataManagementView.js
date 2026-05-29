@@ -410,7 +410,7 @@ export default function DataManagementView() {
       {/* CRUD Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <button className="modal-overlay" onClick={() => setIsModalOpen(false)} aria-label="Close modal" style={{ all: "unset", position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20, cursor: "default" }}>
             <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 

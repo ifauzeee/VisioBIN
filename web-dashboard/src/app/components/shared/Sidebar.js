@@ -324,25 +324,30 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           </div>
         </Link>
 
-        <div
+        <button
           onClick={logout}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { logout(); } }}
-          role="button"
-          tabIndex={0}
           className="nav-item"
           style={{
+            all: "unset",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "8px 12px",
             marginLeft: -12,
             marginRight: -12,
             color: "#ef4444",
-            cursor: "pointer"
+            cursor: "pointer",
+            width: "calc(100% + 24px)",
+            fontSize: 13,
+            fontWeight: 500,
+            borderRadius: 6,
+            boxSizing: "border-box",
           }}
           aria-label={t('logout')}
         >
           <LogOut size={16} aria-hidden="true" />
-          <span style={{ fontSize: 13, fontWeight: 500 }}>
-            {t('logout')}
-          </span>
-        </div>
+          <span>{t('logout')}</span>
+        </button>
       </div>
     </aside>
   );
