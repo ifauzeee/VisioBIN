@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Inbox, WifiOff, RefreshCw } from "lucide-react";
+import { friendlyError } from "../../utils/errors";
 
 const TrashBinIllustration = () => (
   <svg className="empty-state-illustration" width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,15 +69,43 @@ export default function EmptyState({
 }
 
 /**
- * Error state with retry button.
+ * Error state with retry button and auto-retry countdown.
  */
-export function ErrorState({ message = "Gagal memuat data", onRetry }) {
+export function ErrorState({ message = "Gagal memuat data", onRetry, autoRetry = false, locale = "id" }) {
+  const [retryCountdown, setRetryCountdown] = useState(null);
+  const timerRef = useRef(null);
+
+  const friendly = friendlyError(message, locale);
+
+  useEffect(() => {
+    if (!autoRetry || !onRetry) return;
+    let count = 5;
+    setRetryCountdown(count);
+    timerRef.current = setInterval(() => {
+      count -= 1;
+      if (count <= 0) {
+        clearInterval(timerRef.current);
+        setRetryCountdown(null);
+        onRetry();
+      } else {
+        setRetryCountdown(count);
+      }
+    }, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [autoRetry, onRetry]);
+
+  const description = friendly.isFriendly
+    ? `${friendly.message}${retryCountdown != null ? ` Mencoba ulang dalam ${retryCountdown} detik...` : ""}`
+    : message;
+
   return (
     <EmptyState
       icon={WifiOff}
       title="Koneksi Bermasalah"
-      description={message}
-      action="Coba Lagi"
+      description={description}
+      action={retryCountdown != null ? `Coba Lagi (${retryCountdown})` : "Coba Lagi"}
       onAction={onRetry}
     />
   );
