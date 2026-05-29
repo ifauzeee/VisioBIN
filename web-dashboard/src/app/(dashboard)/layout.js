@@ -9,6 +9,7 @@ import Header from "../components/shared/Header";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import ErrorBoundary from "../components/shared/ErrorBoundary";
+import CommandPalette from "../components/shared/CommandPalette";
 
 export default function DashboardLayout({ children }) {
   const { mounted, isAuthenticated, isCheckingAuth, logout, user } = useAuth();
@@ -80,6 +81,7 @@ export default function DashboardLayout({ children }) {
          </main>
 
          <BottomNav />
+         <CommandPalette />
       </div>
     </DashboardProvider>
   );
