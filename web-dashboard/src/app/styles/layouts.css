@@ -111,6 +111,91 @@ h3 {
 }
 
 /* ========================= */
+/* Bottom Navigation (Mobile)*/
+/* ========================= */
+
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  z-index: 100;
+  padding: 6px 0;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  justify-content: space-around;
+  align-items: center;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+  position: relative;
+  min-width: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item:hover {
+  color: var(--text-main);
+}
+
+.bottom-nav-item.active {
+  color: var(--brand-inorganic);
+}
+
+.bottom-nav-item.active .bottom-nav-label {
+  color: var(--brand-inorganic);
+}
+
+.bottom-nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.bottom-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -9px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--bg-card);
+}
+
+.bottom-nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+/* ========================= */
 /* Layout Media Queries      */
 /* ========================= */
 
@@ -196,6 +281,16 @@ h3 {
 
   .sidebar-overlay {
     display: block;
+  }
+
+  /* Bottom navigation for mobile */
+  .bottom-nav {
+    display: flex;
+  }
+
+  /* Prevent content from hiding behind fixed bottom nav */
+  .main-content {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Smaller header on mobile */

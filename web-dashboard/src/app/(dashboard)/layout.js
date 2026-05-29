@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { DashboardProvider } from "../context/DashboardContext";
 import Sidebar from "../components/shared/Sidebar";
+import BottomNav from "../components/shared/BottomNav";
 import Header from "../components/shared/Header";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -77,6 +78,8 @@ export default function DashboardLayout({ children }) {
              </ErrorBoundary>
            </motion.div>
          </main>
+
+         <BottomNav />
       </div>
     </DashboardProvider>
   );
