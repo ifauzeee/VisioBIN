@@ -1810,7 +1810,7 @@ export default React.memo(function RingkasanView({
                 </div>
               )}
             </motion.div>
-          </div>
+          </button>
         )}
       </AnimatePresence>
     </motion.div>

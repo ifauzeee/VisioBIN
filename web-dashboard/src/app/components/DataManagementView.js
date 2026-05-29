@@ -463,7 +463,7 @@ export default function DataManagementView() {
                     </div>
                 </form>
             </motion.div>
-          </div>
+          </button>
         )}
       </AnimatePresence>
 

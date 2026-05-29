@@ -346,7 +346,7 @@ export default function TeamView() {
                 </div>
               </form>
             </motion.div>
-          </div>
+          </button>
         )}
       </AnimatePresence>
 
