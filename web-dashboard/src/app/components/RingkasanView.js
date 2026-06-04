@@ -484,6 +484,8 @@ export default React.memo(function RingkasanView({
       showProgress: true,
       animate: true,
       allowClose: true,
+      popoverClass: 'visiobin-driver-theme',
+      stagePadding: 8,
       nextBtnText: locale === 'id' ? 'Lanjut' : 'Next',
       prevBtnText: locale === 'id' ? 'Kembali' : 'Prev',
       doneBtnText: locale === 'id' ? 'Selesai' : 'Done',
@@ -492,40 +494,40 @@ export default React.memo(function RingkasanView({
         {
           element: '.sidebar',
           popover: {
-            title: locale === 'id' ? "Navigasi Menu Utama" : "Main Navigation",
+            title: locale === 'id' ? "Navigasi Cerdas" : "Smart Navigation",
             description: locale === 'id' 
-              ? "Gunakan panel navigasi kiri untuk mengakses berbagai fitur seperti peta stasiun, chat komunitas, analitik, dan log maintenance."
-              : "Use the left navigation panel to access features like map stations, community chat, analytics, and maintenance logs.",
+              ? "Semua fitur utama dalam genggaman Anda. Jelajahi peta sebaran stasiun, pantau performa AI, atau kelola jadwal pemeliharaan dari panel kiri ini."
+              : "All core features at your fingertips. Explore station maps, monitor AI performance, or manage maintenance schedules from this left panel.",
             side: "right", align: 'start'
           }
         },
         {
           element: '.kpi-grid',
           popover: {
-            title: locale === 'id' ? "Metrik Ringkasan Utama" : "Core Metrics Overview",
+            title: locale === 'id' ? "Denyut Nadi VisioBIN" : "VisioBIN Pulse",
             description: locale === 'id'
-              ? "Di sini ditampilkan total scan hari ini, tingkat keterisian stasiun, CO2 tereduksi, latensi pemrosesan edge, akurasi AI, dan estimasi stasiun penuh."
-              : "This section shows today's scan volume, average fill levels, reduced CO2 emissions, edge latency, AI accuracy, and fill-up predictions.",
+              ? "Ringkasan real-time operasi hari ini. Pantau lonjakan volume scan, efisiensi reduksi karbon (CO2), hingga kecepatan dan akurasi inferensi AI Edge kita."
+              : "Real-time summary of today's operations. Monitor scan volumes, carbon reduction efficiency (CO2), and our Edge AI inference speed and accuracy.",
             side: "bottom", align: 'start'
           }
         },
         {
           element: '.scanner-container',
           popover: {
-            title: locale === 'id' ? "AI Vision Engine Live" : "Live AI Vision Engine",
+            title: locale === 'id' ? "Mata AI (Vision Engine)" : "AI Vision Engine",
             description: locale === 'id'
-              ? "Feed kamera real-time dari Raspberry Pi stasiun sampah. Kotak pembatas visual akan otomatis mendeteksi objek sampah organik/anorganik."
-              : "A real-time camera stream directly from the waste station. Custom bounding boxes dynamically outline detected organic and inorganic waste.",
+              ? "Saksikan bagaimana model AI kami secara presisi mengklasifikasikan sampah Organik dan Anorganik secara langsung melalui mata kamera stasiun cerdas."
+              : "Witness how our AI model precisely classifies Organic and Inorganic waste live through the eyes of the smart station camera.",
             side: "right", align: 'start'
           }
         },
         {
           element: '.recent-activity-panel',
           popover: {
-            title: locale === 'id' ? "Aktivitas Terbaru" : "Recent Scan Activity",
+            title: locale === 'id' ? "Log Inferensi Langsung" : "Live Inference Logs",
             description: locale === 'id'
-              ? "Log riwayat pemrosesan deteksi sampah yang terjadi di seluruh stasiun secara langsung."
-              : "A scrolling log of incoming trash detection classifications from all sensor devices in real-time.",
+              ? "Daftar gulir aktivitas inferensi yang baru saja terjadi. Anda bisa melihat skor kepercayaan (Confidence Score) AI untuk tiap objek yang dipindai."
+              : "A scrolling list of recent inference activities. You can observe the AI's Confidence Score for each scanned object here.",
             side: "left", align: 'start'
           }
         }
