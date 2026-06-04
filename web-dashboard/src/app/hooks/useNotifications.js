@@ -39,11 +39,8 @@ export function useNotifications({ token, pushEnabled = true, threshold = 80 }) 
     [pushEnabled]
   );
 
-  useEffect(() => {
-    if (!token) return;
-    requestPushPermission();
-    return () => {};
-  }, [token, requestPushPermission]);
+  // Browser requires user gesture to request Notification permission, 
+  // so we don't call it automatically in a useEffect anymore.
 
   useEffect(() => {
     if (!token) return;
