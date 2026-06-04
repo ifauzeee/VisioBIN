@@ -335,8 +335,18 @@ h3 {
   }
 
   .kpi-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  /* Secara paksa ubah SEMUA inline grid (termasuk yang diset via React style={{}}) menjadi 1 kolom di HP */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pengecualian: Strip KPI kecil di Peta tetap bisa 2 kolom */
+  .map-kpi-strip[style*="grid-template-columns"] {
+    grid-template-columns: 1fr 1fr !important;
   }
 
   .card {
