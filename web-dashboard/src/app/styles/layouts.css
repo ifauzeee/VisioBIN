@@ -257,17 +257,19 @@ h3 {
   }
 
   .map-main-layout {
-    flex-direction: column;
+    flex-direction: column-reverse;
     height: auto;
   }
 
   .map-sidebar {
     width: 100%;
-    max-height: 300px;
+    max-height: none;
   }
 
   .map-container-wrapper {
-    min-height: 400px;
+    height: 50vh;
+    min-height: 350px;
+    margin-bottom: 24px;
   }
 
   .map-detail-panel {
@@ -277,6 +279,11 @@ h3 {
 }
 
 @media (max-width: 768px) {
+  /* Izinkan scrolling di halaman map khusus HP agar sidebar di bawah map bisa dilihat */
+  .main-content.no-scroll {
+    overflow-y: auto !important;
+  }
+
   .app-container {
     flex-direction: column;
   }
@@ -378,10 +385,6 @@ h3 {
 
   .map-page-header h1 {
     font-size: 22px;
-  }
-
-  .map-sidebar {
-    max-height: 250px;
   }
 
   .map-legend {
