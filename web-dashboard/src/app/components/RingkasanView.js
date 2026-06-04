@@ -485,7 +485,7 @@ export default React.memo(function RingkasanView({
       animate: true,
       allowClose: true,
       popoverClass: 'visiobin-driver-theme',
-      stagePadding: 8,
+      stagePadding: 16,
       nextBtnText: locale === 'id' ? 'Lanjut' : 'Next',
       prevBtnText: locale === 'id' ? 'Kembali' : 'Prev',
       doneBtnText: locale === 'id' ? 'Selesai' : 'Done',
