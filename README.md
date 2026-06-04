@@ -8,6 +8,8 @@
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-336791?logo=postgresql)](https://postgresql.org)
 [![Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker)](https://docker.com)
 
+> ⚠️ **Satu `.env` untuk semua.** Seluruh konfigurasi (Backend, Dashboard, Mobile, AI, Docker) dibaca dari satu file `.env` di root project. Tidak ada `.env` terpisah di subfolder.
+
 ---
 
 ## 📋 Daftar Isi
@@ -554,11 +556,11 @@ python stream_server.py
 
 ## 👥 Tim
 
-| Nama | NIM | Peran |
+| Nama | NIM | Tanggung Jawab |
 |---|---|---|
-| Muhammad Ibnu Fauzi | 2307422004 | IoT, Backend, Integration |
-| Dheo Rafi Ibrahimovic | 2307422017 | AI Model, Raspberry Pi |
-| Muhammad Adian Hendrawan | 2307422020 | Web Dashboard, Mobile App |
+| **Muhammad Ibnu Fauzi** | 2307422004 | Backend API (Go), Web Dashboard (Next.js), Mobile App (Flutter), AI Model & Raspberry Pi, Docker & DevOps, IoT Firmware ESP32, Integrasi sistem end-to-end |
+| Dheo Rafi Ibrahimovic | 2307422017 | Hardware & Perakitan Fisik |
+| Muhammad Adian Hendrawan | 2307422020 | Hardware & Perakitan Fisik |
 
 **Dosen Pembimbing:** Dr. Prihatin Oktivasari, S.Si., M.Si
 
