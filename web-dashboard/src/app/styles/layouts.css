@@ -64,6 +64,38 @@ h3 {
   flex-direction: column;
   padding: 24px;
   z-index: 10;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+}
+
+.sidebar.sidebar-collapsed {
+  width: 88px;
+  padding: 24px 16px;
+}
+
+.sidebar.sidebar-collapsed .sidebar-text,
+.sidebar.sidebar-collapsed .sidebar-section,
+.sidebar.sidebar-collapsed .nav-badge,
+.sidebar.sidebar-collapsed .nav-soon,
+.sidebar.sidebar-collapsed .sidebar-search-wrapper {
+  display: none !important;
+}
+
+.sidebar.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar.sidebar-collapsed .nav-item svg {
+  margin: 0;
+}
+
+.sidebar.sidebar-collapsed .sidebar-header {
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar.sidebar-collapsed .sidebar-status-box {
+  display: none !important;
 }
 
 .main-content {

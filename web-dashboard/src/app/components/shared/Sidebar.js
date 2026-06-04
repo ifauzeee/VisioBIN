@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  SquareTerminal, BarChart, Settings2, Trash2,
+  ChevronLeft, ChevronRight, SquareTerminal, BarChart, Settings2, Trash2,
   Cpu, Search, Box, History,
   Users, LogOut, Video, TrendingUp, FileText,
   Sun, Moon, MapPin, Database, Activity, MessageSquare
@@ -18,6 +18,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
   const td = useTranslations('dashboard');
   const pathname = usePathname();
   const { summary, logs, dashError, unreadCount, binLevel, searchQuery, setSearchQuery } = useDashboardContext();
+  
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  React.useEffect(() => {
+    const saved = localStorage.getItem("visiobin-sidebar-collapsed");
+    if (saved) setIsCollapsed(saved === "true");
+  }, []);
+  const toggleCollapse = () => {
+    const newVal = !isCollapsed;
+    setIsCollapsed(newVal);
+    localStorage.setItem("visiobin-sidebar-collapsed", newVal);
+  };
+
   const role = user?.role || "guest";
   const isAdmin = role === "admin";
   const isOperator = role === "operator";
@@ -86,8 +98,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
 
 
   return (
-    <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
+    <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""} ${isCollapsed ? "sidebar-collapsed" : ""}`}>
       <div
+        className="sidebar-header"
         style={{
           display: "flex",
           alignItems: "center",
@@ -124,6 +137,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           />
         </div>
         <span
+          className="sidebar-text"
           style={{
             fontSize: 20,
             fontWeight: 700,
@@ -136,6 +150,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         </span>
         <button
           onClick={toggleTheme}
+          className="hide-print"
           style={{
             background: "var(--bg-hover)",
             border: "1px solid var(--border-color)",
@@ -153,9 +168,27 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
+        <button
+          onClick={toggleCollapse}
+          className="desktop-only hide-print"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--text-muted)",
+            padding: 4,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
 
-      <div style={{ position: "relative", marginBottom: 16 }}>
+      <div className="sidebar-search-wrapper" style={{ position: "relative", marginBottom: 16 }}>
         <Search
           size={14}
           color="#666"
@@ -203,11 +236,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={`nav-item ${isActive ? "active" : ""} ${isDisabled ? "nav-disabled" : ""}`}
+                    title={isCollapsed ? item.label : undefined}
                   >
                     <Icon size={16} />
-                    <span style={{ flex: 1 }}>{item.label}</span>
+                    <span className="sidebar-text" style={{ flex: 1 }}>{item.label}</span>
                     {item.badge && (
                       <div
+                        className="nav-badge"
                         style={{
                           background: "var(--bg-hover)",
                           padding: "2px 6px",
@@ -220,7 +255,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                       </div>
                     )}
                     {isDisabled && (
-                      <span style={{ fontSize: 9, color: "var(--text-muted)", fontStyle: "italic" }}>
+                      <span className="nav-soon" style={{ fontSize: 9, color: "var(--text-muted)", fontStyle: "italic" }}>
                         {t('soon')}
                       </span>
                     )}
@@ -243,6 +278,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
         }}
       >
         <div
+          className="sidebar-status-box"
           style={{
             background: "var(--bg-hover)",
             border: "1px solid var(--border-color)",
@@ -273,10 +309,10 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           </div>
         </div>
 
-        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }}>
+        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }} title={isCollapsed ? (user?.full_name || "User") : undefined}>
           <div
             className={`nav-item ${pathname === "/profile" ? "active" : ""} ${isGuest ? "nav-disabled" : ""}`}
-            style={{ marginLeft: -12, marginRight: -12, cursor: isGuest ? "default" : "pointer" }}
+            style={{ marginLeft: -12, marginRight: -12, cursor: isGuest ? "default" : "pointer", justifyContent: isCollapsed ? "center" : "flex-start" }}
           >
             <div
               style={{
@@ -291,13 +327,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                 color: "#fff",
                 fontSize: 12,
                 fontWeight: 700,
+                flexShrink: 0
               }}
             >
               {(user?.full_name || "U").charAt(0).toUpperCase()}
             </div>
-            <div style={{ flex: 1 }}>
+            <div className="sidebar-text" style={{ flex: 1 }}>
               <div
-                style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}
+                style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
               >
                 {user?.full_name || "User"}
               </div>
@@ -342,11 +379,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
             fontWeight: 500,
             borderRadius: 6,
             boxSizing: "border-box",
+            justifyContent: isCollapsed ? "center" : "flex-start"
           }}
           aria-label={t('logout')}
+          title={isCollapsed ? t('logout') : undefined}
         >
-          <LogOut size={16} aria-hidden="true" />
-          <span>{t('logout')}</span>
+          <LogOut size={16} aria-hidden="true" style={{ flexShrink: 0 }} />
+          <span className="sidebar-text">{t('logout')}</span>
         </button>
       </div>
     </aside>
