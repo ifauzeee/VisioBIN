@@ -512,7 +512,7 @@ export default React.memo(function RingkasanView({
           }
         },
         {
-          element: '.scanner-container',
+          element: '#tour-ai-vision',
           popover: {
             title: locale === 'id' ? "Mata AI (Vision Engine)" : "AI Vision Engine",
             description: locale === 'id'
@@ -889,6 +889,7 @@ export default React.memo(function RingkasanView({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
           className="card"
+          id="tour-ai-vision"
           style={{ padding: 0, display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
