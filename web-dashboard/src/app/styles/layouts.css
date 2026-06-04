@@ -388,9 +388,13 @@ h3 {
   }
 
   .map-legend {
-    bottom: 12px;
-    left: 12px;
-    padding: 10px 14px;
+    top: 12px;
+    bottom: auto;
+    left: auto;
+    right: 12px;
+    padding: 8px 10px;
+    transform: scale(0.9);
+    transform-origin: top right;
   }
 }
 

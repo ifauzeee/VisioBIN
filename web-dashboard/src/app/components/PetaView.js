@@ -35,6 +35,17 @@ function MapEventsController({ LeafletComponents, onZoomChange }) {
   return null;
 }
 
+function ResizeMapController({ LeafletComponents }) {
+  const map = LeafletComponents.useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (map) map.invalidateSize();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 export default function PetaView({ bins }) {
   const t = useTranslations('map');
   const { searchQuery, setSearchQuery } = useDashboardContext();
@@ -555,6 +566,7 @@ export default function PetaView({ bins }) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <ResizeMapController LeafletComponents={LeafletComponents} />
             <ChangeView LeafletComponents={LeafletComponents} center={mapCenter} zoom={activeBin ? 17 : 15} />
             <MapEventsController LeafletComponents={LeafletComponents} onZoomChange={setZoom} />
 
