@@ -13,6 +13,10 @@ services:
       - visiobin_pgdata:/var/lib/postgresql/data
       - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
       - ./backend/migrations/002_maintenance_logs.sql:/docker-entrypoint-initdb.d/002_maintenance_logs.sql
+      - ./backend/migrations/003_iot_updates.sql:/docker-entrypoint-initdb.d/003_iot_updates.sql
+      - ./backend/migrations/003_battery_wifi.sql:/docker-entrypoint-initdb.d/003b_battery_wifi.sql
+      - ./backend/migrations/004_chat_system.sql:/docker-entrypoint-initdb.d/004_chat_system.sql
+      - ./backend/migrations/005_private_chat.sql:/docker-entrypoint-initdb.d/005_private_chat.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\""]
       interval: 5s

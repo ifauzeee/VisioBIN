@@ -90,12 +90,12 @@ CREATE TABLE IF NOT EXISTS users (
 -- ============================================
 -- SEED DATA: Default Admin & Sample Bin
 -- ============================================
--- Password: admin123 (bcrypt hash)
+-- Password: Admin123 (bcrypt hash, cost=10)
 INSERT INTO users (username, email, password_hash, full_name, role)
 VALUES (
     'admin',
     'admin@visiobin.local',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$10$VkqLU/2DwLcMGLXuHsJ/tO2tWNs.hClcs2ssuuHBkb6Es9LsCWqYS',
     'Administrator',
     'admin'
 ) ON CONFLICT (username) DO NOTHING;
