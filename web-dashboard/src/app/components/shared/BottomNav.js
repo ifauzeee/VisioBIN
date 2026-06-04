@@ -16,7 +16,6 @@ export default function BottomNav() {
     { key: "ringkasan", label: t('dashboard'), icon: SquareTerminal, href: "/ringkasan" },
     { key: "pemantauan", label: t('monitoring'), icon: Activity, href: "/pemantauan" },
     { key: "map", label: t('map'), icon: MapPin, href: "/map" },
-    { key: "alert", label: t('notifications'), icon: Bell, href: "/ringkasan" },
     { key: "profile", label: t('profile'), icon: User, href: "/profile" },
   ];
 
