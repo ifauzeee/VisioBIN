@@ -15,8 +15,6 @@ export default function BottomNav() {
   const items = [
     { key: "ringkasan", label: t('dashboard'), icon: SquareTerminal, href: "/ringkasan" },
     { key: "pemantauan", label: t('monitoring'), icon: Activity, href: "/pemantauan" },
-    { key: "map", label: t('map'), icon: MapPin, href: "/map" },
-    { key: "profile", label: t('profile'), icon: User, href: "/profile" },
   ];
 
   return (

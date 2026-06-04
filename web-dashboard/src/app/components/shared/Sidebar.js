@@ -58,7 +58,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
       items: [
         { key: "ringkasan", label: td('overview'), icon: SquareTerminal, href: "/ringkasan" },
         { key: "pemantauan", label: t('monitoring'), icon: Activity, href: "/pemantauan" },
-        { key: "map", label: t('map'), icon: MapPin, href: "/map" },
+        { key: "map", label: t('map'), icon: MapPin, href: "/map", hideOnMobile: true },
         !isGuest && { key: "chat", label: t('chat'), icon: MessageSquare, href: "/chat" },
         (isAdmin || isManager) && { key: "analitik", label: t('analytics'), icon: BarChart, href: "/analitik" },
 
@@ -231,6 +231,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                   href={isDisabled ? "#" : item.href} 
                   key={item.key}
                   style={{ textDecoration: 'none' }}
+                  className={item.hideOnMobile ? 'desktop-only' : ''}
                 >
                   <motion.div
                     whileHover={{ x: 4 }}
@@ -309,7 +310,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           </div>
         </div>
 
-        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }} title={isCollapsed ? (user?.full_name || "User") : undefined}>
+        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }} title={isCollapsed ? (user?.full_name || "User") : undefined} className="desktop-only">
           <div
             className={`nav-item ${pathname === "/profile" ? "active" : ""} ${isGuest ? "nav-disabled" : ""}`}
             style={{ marginLeft: -12, marginRight: -12, cursor: isGuest ? "default" : "pointer", justifyContent: isCollapsed ? "center" : "flex-start" }}

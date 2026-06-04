@@ -1261,18 +1261,20 @@ export default React.memo(function RingkasanView({
         </div>
       </div>
 
-      <OperationalDashboardMode
-        summary={safeSummary}
-        alerts={alerts}
-        unreadCount={unreadCount}
-        forecast={forecast}
-        wsActive={wsActive}
-        error={error}
-        lastUpdated={lastUpdated}
-        onRetry={onRetry}
-        locale={locale}
-        t={t}
-      />
+      <div className="desktop-only" style={{ flexDirection: 'column', width: '100%' }}>
+        <OperationalDashboardMode
+          summary={safeSummary}
+          alerts={alerts}
+          unreadCount={unreadCount}
+          forecast={forecast}
+          wsActive={wsActive}
+          error={error}
+          lastUpdated={lastUpdated}
+          onRetry={onRetry}
+          locale={locale}
+          t={t}
+        />
+      </div>
 
       {/* Edit Mode Customization Controls Panel */}
       <AnimatePresence>
