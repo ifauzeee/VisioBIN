@@ -26,10 +26,11 @@ import { APP_CONFIG } from '../config/appConfig';
 import EmptyState, { ErrorState } from "./shared/EmptyState";
 import DataFreshness from "./shared/DataFreshness";
 
-const DEFAULT_WIDGET_ORDER = ['insight', 'kpi', 'vision_reservoir', 'history_distribution', 'daily_activity'];
+const DEFAULT_WIDGET_ORDER = ['insight', 'kpi', 'ops_mode', 'vision_reservoir', 'history_distribution', 'daily_activity'];
 const DEFAULT_VISIBLE_WIDGETS = {
   insight: true,
   kpi: true,
+  ops_mode: true,
   vision_reservoir: true,
   history_distribution: true,
   daily_activity: true,
@@ -41,6 +42,15 @@ function normalizeWidgetOrder(value) {
   const known = new Set(DEFAULT_WIDGET_ORDER);
   const cleaned = value.filter((item, index) => known.has(item) && value.indexOf(item) === index);
   const missing = DEFAULT_WIDGET_ORDER.filter((item) => !cleaned.includes(item));
+  
+  if (missing.includes('ops_mode')) {
+    const kpiIndex = cleaned.indexOf('kpi');
+    if (kpiIndex !== -1) {
+      cleaned.splice(kpiIndex + 1, 0, 'ops_mode');
+      missing.splice(missing.indexOf('ops_mode'), 1);
+    }
+  }
+
   const nextOrder = [...cleaned, ...missing];
 
   return nextOrder.length ? nextOrder : DEFAULT_WIDGET_ORDER;
@@ -447,6 +457,7 @@ export default React.memo(function RingkasanView({
   const widgetLabelMap = React.useMemo(() => ({
     insight: locale === 'id' ? 'Insight AI' : 'AI Insight',
     kpi: locale === 'id' ? 'Kartu KPI' : 'KPI Cards',
+    ops_mode: locale === 'id' ? 'Mode Operasional' : 'Operational Mode',
     vision_reservoir: locale === 'id' ? 'Video AI & Reservoir' : 'AI Video & Reservoir',
     history_distribution: locale === 'id' ? 'Tren Volume & Distribusi' : 'Volume Trend & Distribution',
     daily_activity: locale === 'id' ? 'Grafik Harian & Aktivitas' : 'Daily Charts & Activity',
@@ -713,6 +724,23 @@ export default React.memo(function RingkasanView({
           {t('analysis_detail')}
         </button>
       </motion.div>
+        );
+      case 'ops_mode':
+        return (
+          <div className="hide-on-mobile" style={{ width: '100%', marginBottom: 24 }}>
+            <OperationalDashboardMode
+              summary={safeSummary}
+              alerts={alerts}
+              unreadCount={unreadCount}
+              forecast={forecast}
+              wsActive={wsActive}
+              error={error}
+              lastUpdated={lastUpdated}
+              onRetry={onRetry}
+              locale={locale}
+              t={t}
+            />
+          </div>
         );
       case 'kpi':
         return (
@@ -1259,21 +1287,6 @@ export default React.memo(function RingkasanView({
             {isEditMode ? (locale === 'id' ? 'Simpan Layout' : 'Save Layout') : (locale === 'id' ? 'Edit Layout' : 'Edit Layout')}
           </button>
         </div>
-      </div>
-
-      <div className="hide-on-mobile" style={{ width: '100%' }}>
-        <OperationalDashboardMode
-          summary={safeSummary}
-          alerts={alerts}
-          unreadCount={unreadCount}
-          forecast={forecast}
-          wsActive={wsActive}
-          error={error}
-          lastUpdated={lastUpdated}
-          onRetry={onRetry}
-          locale={locale}
-          t={t}
-        />
       </div>
 
       {/* Edit Mode Customization Controls Panel */}
