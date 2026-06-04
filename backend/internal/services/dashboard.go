@@ -159,7 +159,7 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 
 	// Bin statuses with latest readings
 	const statusQuery = `
-		SELECT b.id, b.name, b.status, sr.volume_organic_pct, sr.volume_inorganic_pct, sr.gas_amonia_ppm, sr.battery_pct, sr.wifi_rssi_dbm
+		SELECT b.id, b.name, b.status, b.location, b.latitude, b.longitude, sr.volume_organic_pct, sr.volume_inorganic_pct, sr.gas_amonia_ppm, sr.battery_pct, sr.wifi_rssi_dbm
 		FROM bins b
 		LEFT JOIN LATERAL (
 			SELECT volume_organic_pct, volume_inorganic_pct, gas_amonia_ppm, battery_pct, wifi_rssi_dbm
@@ -174,6 +174,7 @@ func (s *DashboardService) GetSummary(ctx context.Context) (*models.DashboardSum
 		for binRows.Next() {
 			var bs models.BinStatusSummary
 			err := binRows.Scan(&bs.BinID, &bs.BinName, &bs.Status,
+				&bs.Location, &bs.Latitude, &bs.Longitude,
 				&bs.VolumeOrganicPct, &bs.VolumeInorganicPct, &bs.GasAmoniaPpm,
 				&bs.BatteryPct, &bs.WifiRssiDbm)
 			if err == nil {

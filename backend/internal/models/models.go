@@ -202,6 +202,9 @@ type BinStatusSummary struct {
 	BinID              string   `json:"bin_id"`
 	BinName            string   `json:"bin_name"`
 	Status             string   `json:"status"`
+	Location           *string  `json:"location"`
+	Latitude           *float64 `json:"latitude"`
+	Longitude          *float64 `json:"longitude"`
 	VolumeOrganicPct   *float64 `json:"volume_organic_pct"`
 	VolumeInorganicPct *float64 `json:"volume_inorganic_pct"`
 	GasAmoniaPpm       *float64 `json:"gas_amonia_ppm"`
