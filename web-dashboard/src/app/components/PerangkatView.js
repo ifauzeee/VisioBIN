@@ -72,7 +72,7 @@ export default function PerangkatView() {
 
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card" whileHover={{ scale: 1.02 }}>
               <div className="card-title">
-                <Wifi size={16} color="var(--brand-organic)" /> Aktif
+                <WifiIcon size={16} color="var(--brand-organic)" /> Aktif
               </div>
               <div
                 style={{
