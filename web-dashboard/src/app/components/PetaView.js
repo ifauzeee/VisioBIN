@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Battery, Zap, Trash2, Search, MapPin, Activity, AlertTriangle, X, Navigation } from "lucide-react";
+import { Battery, Zap, Trash2, Search, MapPin, Activity, AlertTriangle, X, Navigation, Wifi, SignalHigh, SignalMedium, SignalLow, Thermometer, CheckCircle2, Locate, Flame } from "lucide-react";
 import { getBinLevelColor } from "../utils/formatters";
 import { useTranslations } from 'next-intl';
 import { useDashboardContext } from "../context/DashboardContext";
@@ -416,7 +416,7 @@ export default function PetaView({ bins }) {
           {/* Sidebar Header */}
           <div className="map-sidebar-header">
             <div className="map-sidebar-title">
-              <span>📍 {t('unitList')}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MapPin size={16} color="var(--brand-organic)" /> {t('unitList')}</span>
               <span className="map-sidebar-count">{filteredBins.length} {t('unitsDetected')}</span>
             </div>
             <div className="map-search-wrapper">
@@ -446,7 +446,7 @@ export default function PetaView({ bins }) {
               }}
               aria-label="Toggle Heatmap View"
             >
-              🔥 {showHeatmap ? 'Heatmap Aktif' : 'Tampilan Heatmap'}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Flame size={16} color={showHeatmap ? "#f97316" : "var(--text-muted)"} /> {showHeatmap ? 'Heatmap Aktif' : 'Tampilan Heatmap'}</span>
             </button>
           </div>
 

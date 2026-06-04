@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend, Brush
 } from "recharts";
-import { Download } from "lucide-react";
+import { Download, BarChart2, Globe, List } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { getDashboardSummary, listClassifications } from "../services/api";
@@ -114,7 +114,7 @@ export default React.memo(function LaporanView() {
           animate={{ opacity: 1, scale: 1 }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div className="card-title" style={{ margin: 0 }}>📊 {t('dailyTrend')}</div>
+            <div className="card-title" style={{ margin: 0 }}><BarChart2 size={16} color="var(--brand-inorganic)" /> {t('dailyTrend')}</div>
             <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 12 }}>{t('downloadCsv')}</button>
           </div>
           <div style={{ flex: 1, marginLeft: -20, minWidth: 0, position: 'relative' }}>
@@ -150,7 +150,7 @@ export default React.memo(function LaporanView() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div className="card">
-            <div className="card-title">🌍 {t('envImpact')}</div>
+            <div className="card-title"><Globe size={16} color="var(--brand-organic)" /> {t('envImpact')}</div>
             <div style={{ marginTop: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t('co2Avoided')}</span>
@@ -189,7 +189,7 @@ export default React.memo(function LaporanView() {
 
       <div className="card page-break-before" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div className="card-title" style={{ margin: 0 }}>📋 {t('deepLog')}</div>
+          <div className="card-title" style={{ margin: 0 }}><List size={16} color="var(--text-muted)" /> {t('deepLog')}</div>
           <button 
             className="btn-primary" 
             style={{ padding: "8px 16px", fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}

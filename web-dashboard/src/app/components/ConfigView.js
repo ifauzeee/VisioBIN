@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw, Loader2 } from "lucide-react";
+import { Settings2, Wifi, Bell, Clock, Database, Cpu, Save, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "./shared/Toast";
 import { APP_CONFIG } from "../config/appConfig";
 
@@ -150,7 +150,7 @@ export default function ConfigView() {
 
       {/* Thresholds */}
       <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }} className="card" style={{ marginBottom: 24 }}>
-        <div className="card-title">⚠️ Threshold Peringatan</div>
+        <div className="card-title"><AlertTriangle size={16} color="#f59e0b" /> Threshold Peringatan</div>
         <div style={{ marginTop: 8 }}>
           <InputRow icon={Settings2} label="Volume Peringatan" desc="Warna kuning saat melebihi">
             <NumInput value={config.binWarningPct} onChange={v => update("binWarningPct", v)} unit="%" max={100} />

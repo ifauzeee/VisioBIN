@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Users, ShieldCheck, Mail, RefreshCw, BarChart, Cpu, Plus, X, UserPlus, Shield, Save, Trash2 } from "lucide-react";
+import { Users, ShieldCheck, Mail, RefreshCw, BarChart, Cpu, Plus, X, UserPlus, Shield, Save, Trash2, GraduationCap } from "lucide-react";
 
 import { useAuth } from "../hooks/useAuth";
 import { listUsers, registerUser, deleteUser } from "../services/api";
@@ -162,7 +162,7 @@ export default function TeamView() {
         className="card-title" 
         style={{ marginBottom: 16, paddingLeft: 4 }}
       >
-        👥 Daftar Anggota Aktif
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Users size={20} color="var(--brand-inorganic)" /> Daftar Anggota Aktif</div>
       </motion.div>
       {members.length === 0 ? (
         <div className="card">
@@ -359,7 +359,7 @@ export default function TeamView() {
         transition={{ delay: 0.6 }}
         whileHover={{ scale: 1.01 }}
       >
-        <div className="card-title">🎓 Dosen Pembimbing</div>
+        <div className="card-title"><GraduationCap size={16} color="var(--brand-organic)" /> Dosen Pembimbing</div>
         <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14,

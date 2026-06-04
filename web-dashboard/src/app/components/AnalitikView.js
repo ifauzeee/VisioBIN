@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText, Timer } from "lucide-react";
+import { TrendingUp, Activity, Zap, Database, RefreshCw, Download, FileText, Timer, ArrowUpRight, Video, Focus, Sparkles, Filter, Calendar, BarChart2 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -276,7 +276,7 @@ export default React.memo(function AnalitikView() {
           transition={{ delay: 0.5 }}
           className="card"
         >
-          <div className="card-title">🚀 Statistik Cepat</div>
+          <div className="card-title"><Activity size={16} color="var(--brand-inorganic)" /> Statistik Cepat</div>
           <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:20 }}>
             {[
               { l:"Rata-rata Confidence", v:`${avgConf}%`, c:"#10B981" },

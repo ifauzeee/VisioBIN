@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Cpu, Wifi, AlertTriangle, MapPin, Activity } from "lucide-react";
+import { Activity, Battery, Wifi as WifiIcon, Wrench, AlertTriangle, Cpu, Zap, SignalHigh, SignalMedium, SignalLow, Terminal, RotateCcw, Lock, ArrowUpCircle, X, Check, MapPin, Scale, Wind } from "lucide-react";
 import { useBins } from "../hooks/useBins";
 import { useAuth } from "../hooks/useAuth";
 import { useDashboardContext } from "../context/DashboardContext";
@@ -131,7 +131,7 @@ export default function PerangkatView() {
           transition={{ delay: 0.2 }}
           whileHover={{ scale: 1.002 }}
         >
-          <div className="card-title">📡 Status Perangkat IoT</div>
+          <div className="card-title"><WifiIcon size={16} color="var(--brand-inorganic)" /> Status Perangkat IoT</div>
           <div style={{ marginTop: 16, overflowX: "auto" }}>
             <table className="report-table">
               <thead>
@@ -230,7 +230,7 @@ export default function PerangkatView() {
         className="card-title" 
         style={{ marginBottom: 16, paddingLeft: 4 }}
       >
-        🔧 Detail Perangkat
+        <Wrench size={16} color="var(--text-muted)" style={{ display: 'inline', marginRight: 8 }} /> Detail Perangkat
       </motion.div>
       <motion.div
         style={{
@@ -280,7 +280,7 @@ export default function PerangkatView() {
               </div>
 
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
-                📍 {s.lokasi}
+                <MapPin size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} /> {s.lokasi}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -291,7 +291,7 @@ export default function PerangkatView() {
                       padding: "10px 12px",
                     }}
                   >
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>🟢 Organik</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-organic)' }} /> Organik</div>
                   <div
                     className="mono"
                     style={{
@@ -310,7 +310,7 @@ export default function PerangkatView() {
                       padding: "10px 12px",
                     }}
                   >
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>🔵 Anorganik</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-inorganic)' }} /> Anorganik</div>
                   <div
                     className="mono"
                     style={{
@@ -329,7 +329,7 @@ export default function PerangkatView() {
                       padding: "10px 12px",
                     }}
                   >
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>⚖️ Berat</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", display: 'flex', alignItems: 'center', gap: 4 }}><Scale size={12} /> Berat</div>
                   <div className="mono" style={{ fontSize: 18, fontWeight: 600 }}>
                     {totalWeight.toFixed(1)} kg
                   </div>
@@ -341,7 +341,7 @@ export default function PerangkatView() {
                       padding: "10px 12px",
                     }}
                   >
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>💨 Gas</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", display: 'flex', alignItems: 'center', gap: 4 }}><Wind size={12} /> Gas</div>
                   <div className="mono" style={{
                     fontSize: 18,
                     fontWeight: 600,
