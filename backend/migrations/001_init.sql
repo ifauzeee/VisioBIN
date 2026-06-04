@@ -100,8 +100,7 @@ VALUES (
     'admin'
 ) ON CONFLICT (username) DO NOTHING;
 
-INSERT INTO bins (name, location, max_volume_cm, max_weight_kg, status)
-VALUES
-    ('VisioBin-01 Gedung Q Lt.1', 'Lorong utama lantai 1 Gedung Q JTIK', 50.0, 20.0, 'active'),
-    ('VisioBin-02 Gedung Q Lt.2', 'Dekat tangga lantai 2 Gedung Q JTIK', 50.0, 20.0, 'active')
-ON CONFLICT DO NOTHING;
+  INSERT INTO bins (name, location, latitude, longitude, max_volume_cm, max_weight_kg, status)
+  VALUES
+      ('VisioBin Utama Gedung Q', 'Gedung Q JTIK PNJ', -6.372212073791622, 106.82405843064423, 50.0, 20.0, 'active')
+  ON CONFLICT DO NOTHING;
