@@ -762,9 +762,8 @@ export default React.memo(function RingkasanView({
       >
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title">
@@ -785,9 +784,8 @@ export default React.memo(function RingkasanView({
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title">
@@ -814,9 +812,8 @@ export default React.memo(function RingkasanView({
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Orbit size={16} /> {t('co2_reduced')}</div>
@@ -831,9 +828,8 @@ export default React.memo(function RingkasanView({
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Cpu size={16} /> {t('edge_latency')}</div>
@@ -848,9 +844,8 @@ export default React.memo(function RingkasanView({
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> {t('ai_accuracy')}</div>
@@ -869,9 +864,8 @@ export default React.memo(function RingkasanView({
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          whileHover={{ y: -6, scale: 1.015, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.2)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="glass-card"
+          className="glass-card hover-elevate"
           style={{ 
             padding: '20px 24px', 
             border: '1px solid rgba(16, 185, 129, 0.2)',
