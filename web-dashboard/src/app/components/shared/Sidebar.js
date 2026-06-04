@@ -231,7 +231,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
                   href={isDisabled ? "#" : item.href} 
                   key={item.key}
                   style={{ textDecoration: 'none' }}
-                  className={item.hideOnMobile ? 'desktop-only' : ''}
+                  className={item.hideOnMobile ? 'hide-on-mobile' : ''}
                 >
                   <motion.div
                     whileHover={{ x: 4 }}
@@ -310,7 +310,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, theme, toggleThem
           </div>
         </div>
 
-        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }} title={isCollapsed ? (user?.full_name || "User") : undefined} className="desktop-only">
+        <Link href={isGuest ? "#" : "/profile"} style={{ textDecoration: 'none' }} title={isCollapsed ? (user?.full_name || "User") : undefined} className="hide-on-mobile">
           <div
             className={`nav-item ${pathname === "/profile" ? "active" : ""} ${isGuest ? "nav-disabled" : ""}`}
             style={{ marginLeft: -12, marginRight: -12, cursor: isGuest ? "default" : "pointer", justifyContent: isCollapsed ? "center" : "flex-start" }}

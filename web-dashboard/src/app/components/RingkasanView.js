@@ -1261,7 +1261,7 @@ export default React.memo(function RingkasanView({
         </div>
       </div>
 
-      <div className="desktop-only" style={{ flexDirection: 'column', width: '100%' }}>
+      <div className="hide-on-mobile" style={{ width: '100%' }}>
         <OperationalDashboardMode
           summary={safeSummary}
           alerts={alerts}

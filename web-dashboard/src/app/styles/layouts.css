@@ -296,7 +296,8 @@ h3 {
     display: flex;
   }
 
-  .desktop-only {
+  .desktop-only,
+  .hide-on-mobile {
     display: none !important;
   }
 
