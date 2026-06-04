@@ -13,6 +13,8 @@ import {
   GripVertical, Eye, EyeOff, HelpCircle, Edit, Check, AlertTriangle, WifiOff, Route, RefreshCw, BarChart2, PieChart, Lightbulb
 } from "lucide-react";
 import { motion, AnimatePresence, animate, Reorder } from "framer-motion";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import {
   hasClassificationData,
   deriveAiExplanation,
@@ -401,64 +403,6 @@ function OperationalDashboardMode({
   );
 }
 
-function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
-  if (step < 0 || step >= steps.length) return null;
-  const current = steps[step];
-  
-  return (
-    <div style={{
-      position: 'fixed',
-      bottom: 24,
-      right: 24,
-      zIndex: 2000,
-      width: 320,
-      background: "linear-gradient(135deg, rgba(20, 20, 24, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%)",
-      border: "1px solid var(--brand-organic)",
-      borderRadius: 16,
-      padding: 20,
-      boxShadow: "0 20px 40px rgba(0,0,0,0.8)",
-      color: "#fff",
-      backdropFilter: "blur(12px)"
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--brand-organic)", display: "flex", alignItems: "center", gap: 8 }}>
-          <Sparkles size={16} /> {current.title}
-        </h4>
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-          {step + 1} / {steps.length}
-        </span>
-      </div>
-      <p style={{ margin: "0 0 16px 0", fontSize: 13, lineHeight: 1.5, color: "var(--text-muted)" }}>
-        {current.content}
-      </p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button 
-          onClick={onSkip} 
-          style={{ background: "transparent", border: "none", color: "var(--text-muted)", fontSize: 12, cursor: "pointer" }}
-        >
-          Lewati
-        </button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {step > 0 && (
-            <button 
-              onClick={onPrev} 
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff", padding: "6px 12px", fontSize: 12, cursor: "pointer" }}
-            >
-              Kembali
-            </button>
-          )}
-          <button 
-            onClick={onNext} 
-            style={{ background: "var(--brand-organic)", border: "none", borderRadius: 6, color: "#fff", padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-          >
-            {step === steps.length - 1 ? "Selesai" : "Lanjut"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default React.memo(function RingkasanView({
   summary,
   binLevel,
@@ -494,8 +438,7 @@ export default React.memo(function RingkasanView({
   const [draftWidgetOrder, setDraftWidgetOrder] = React.useState(widgetOrder);
   const [draftVisibleWidgets, setDraftVisibleWidgets] = React.useState(visibleWidgets);
   const [isEditMode, setIsEditMode] = React.useState(false);
-  const [tourStep, setTourStep] = React.useState(readInitialTourStep);
-
+  
   const saveLayout = React.useCallback((newOrder, newVisible) => {
     localStorage.setItem("visiobin_widget_order", JSON.stringify(normalizeWidgetOrder(newOrder)));
     localStorage.setItem("visiobin_visible_widgets", JSON.stringify(normalizeVisibleWidgets(newVisible)));
@@ -535,50 +478,69 @@ export default React.memo(function RingkasanView({
     setDraftVisibleWidgets(DEFAULT_VISIBLE_WIDGETS);
   };
 
-  const tourSteps = React.useMemo(() => [
-    {
-      target: ".sidebar",
-      title: locale === 'id' ? "Navigasi Menu Utama" : "Main Navigation",
-      content: locale === 'id' 
-        ? "Gunakan panel navigasi kiri untuk mengakses berbagai fitur seperti peta stasiun, chat komunitas, analitik, dan log maintenance."
-        : "Use the left navigation panel to access features like map stations, community chat, analytics, and maintenance logs.",
-    },
-    {
-      target: ".kpi-grid",
-      title: locale === 'id' ? "Metrik Ringkasan Utama" : "Core Metrics Overview",
-      content: locale === 'id'
-        ? "Di sini ditampilkan total scan hari ini, tingkat keterisian stasiun, CO2 tereduksi, latensi pemrosesan edge, akurasi AI, dan estimasi stasiun penuh."
-        : "This section shows today's scan volume, average fill levels, reduced CO2 emissions, edge latency, AI accuracy, and fill-up predictions.",
-    },
-    {
-      target: ".scanner-container",
-      title: locale === 'id' ? "AI Vision Engine Live" : "Live AI Vision Engine",
-      content: locale === 'id'
-        ? "Feed kamera real-time dari Raspberry Pi stasiun sampah. Kotak pembatas visual akan otomatis mendeteksi objek sampah organik/anorganik."
-        : "A real-time camera stream directly from the waste station. Custom bounding boxes dynamically outline detected organic and inorganic waste.",
-    },
-    {
-      target: ".recent-activity-panel",
-      title: locale === 'id' ? "Aktivitas Terbaru" : "Recent Scan Activity",
-      content: locale === 'id'
-        ? "Log riwayat pemrosesan deteksi sampah yang terjadi di seluruh stasiun secara langsung."
-        : "A scrolling log of incoming trash detection classifications from all sensor devices in real-time.",
-    }
-  ], [locale]);
+  
+  const startTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      allowClose: true,
+      nextBtnText: locale === 'id' ? 'Lanjut' : 'Next',
+      prevBtnText: locale === 'id' ? 'Kembali' : 'Prev',
+      doneBtnText: locale === 'id' ? 'Selesai' : 'Done',
+      progressText: '{{current}} / {{total}}',
+      steps: [
+        {
+          element: '.sidebar',
+          popover: {
+            title: locale === 'id' ? "Navigasi Menu Utama" : "Main Navigation",
+            description: locale === 'id' 
+              ? "Gunakan panel navigasi kiri untuk mengakses berbagai fitur seperti peta stasiun, chat komunitas, analitik, dan log maintenance."
+              : "Use the left navigation panel to access features like map stations, community chat, analytics, and maintenance logs.",
+            side: "right", align: 'start'
+          }
+        },
+        {
+          element: '.kpi-grid',
+          popover: {
+            title: locale === 'id' ? "Metrik Ringkasan Utama" : "Core Metrics Overview",
+            description: locale === 'id'
+              ? "Di sini ditampilkan total scan hari ini, tingkat keterisian stasiun, CO2 tereduksi, latensi pemrosesan edge, akurasi AI, dan estimasi stasiun penuh."
+              : "This section shows today's scan volume, average fill levels, reduced CO2 emissions, edge latency, AI accuracy, and fill-up predictions.",
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '.scanner-container',
+          popover: {
+            title: locale === 'id' ? "AI Vision Engine Live" : "Live AI Vision Engine",
+            description: locale === 'id'
+              ? "Feed kamera real-time dari Raspberry Pi stasiun sampah. Kotak pembatas visual akan otomatis mendeteksi objek sampah organik/anorganik."
+              : "A real-time camera stream directly from the waste station. Custom bounding boxes dynamically outline detected organic and inorganic waste.",
+            side: "right", align: 'start'
+          }
+        },
+        {
+          element: '.recent-activity-panel',
+          popover: {
+            title: locale === 'id' ? "Aktivitas Terbaru" : "Recent Scan Activity",
+            description: locale === 'id'
+              ? "Log riwayat pemrosesan deteksi sampah yang terjadi di seluruh stasiun secara langsung."
+              : "A scrolling log of incoming trash detection classifications from all sensor devices in real-time.",
+            side: "left", align: 'start'
+          }
+        }
+      ]
+    });
+    driverObj.drive();
+  };
 
   React.useEffect(() => {
-    if (tourStep < 0 || tourStep >= tourSteps.length) {
-      document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
-      return;
+    if (typeof window !== "undefined" && !localStorage.getItem("visiobin_onboarded_v2")) {
+      setTimeout(startTour, 1000);
+      localStorage.setItem("visiobin_onboarded_v2", "true");
     }
-    document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
-    const step = tourSteps[tourStep];
-    const el = document.querySelector(step.target);
-    if (el) {
-      el.classList.add("tour-highlight");
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [tourStep, tourSteps]);
+  }, [locale]);
+
 
   React.useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1255,35 +1217,9 @@ export default React.memo(function RingkasanView({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <style jsx global>{`
-        .tour-highlight {
-          position: relative !important;
-          z-index: 1500 !important;
-          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65), 0 0 15px 5px var(--brand-organic) !important;
-          transition: all 0.3s ease !important;
-          background: var(--bg-card) !important;
-          border-radius: 16px !important;
-        }
-      `}</style>
+      
 
-      {/* Onboarding Tour Dialog */}
-      <OnboardingTour 
-        step={tourStep} 
-        steps={tourSteps} 
-        onNext={() => {
-          if (tourStep === tourSteps.length - 1) {
-            localStorage.setItem("visiobin_onboarded", "true");
-            setTourStep(-1);
-          } else {
-            setTourStep(tourStep + 1);
-          }
-        }} 
-        onPrev={() => setTourStep(tourStep - 1)} 
-        onSkip={() => {
-          localStorage.setItem("visiobin_onboarded", "true");
-          setTourStep(-1);
-        }} 
-      />
+      
 
       {/* Configuration Toolbar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
@@ -1292,7 +1228,7 @@ export default React.memo(function RingkasanView({
         </h2>
         <div style={{ display: 'flex', gap: 12 }}>
           <button 
-            onClick={() => setTourStep(0)}
+            onClick={startTour}
             style={{ 
               display: 'flex', alignItems: 'center', gap: 6,
               background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', 
