@@ -1,0 +1,77 @@
+/* VisioBIN Custom Theme for Driver.js Showcase */
+.driver-popover {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+  padding: 20px !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.driver-popover-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--brand-organic) !important;
+  margin-bottom: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.driver-popover-description {
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+  line-height: 1.5 !important;
+}
+
+.driver-popover-footer {
+  margin-top: 16px !important;
+}
+
+.driver-popover-progress-text {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.driver-popover-btn-prev {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-btn-next,
+.driver-popover-btn-close {
+  background: var(--brand-organic) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-btn-prev:hover {
+  background: var(--bg-hover) !important;
+}
+
+.driver-popover-btn-next:hover,
+.driver-popover-btn-close:hover {
+  opacity: 0.9 !important;
+}
+
+/* Override spotlight SVG to have a nice greenish glow instead of pure white/black */
+div#driver-page-overlay {
+  background: transparent !important;
+}
+
+/* In v1, driver.js handles overlay via SVG. We don't need to tweak much unless we want color overlay */
