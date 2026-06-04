@@ -10,7 +10,7 @@ import {
 import { 
   Leaf as LeafIcon, Trash2, Orbit, Cpu, Award, ShieldCheck, 
   ArrowUpRight, Video, Focus, Activity, Sparkles, TrendingUp, Clock, X, Percent, Tag,
-  GripVertical, Eye, EyeOff, HelpCircle, Edit, Check, AlertTriangle, WifiOff, Route, RefreshCw
+  GripVertical, Eye, EyeOff, HelpCircle, Edit, Check, AlertTriangle, WifiOff, Route, RefreshCw, BarChart2, PieChart, Lightbulb
 } from "lucide-react";
 import { motion, AnimatePresence, animate, Reorder } from "framer-motion";
 import {
@@ -144,11 +144,17 @@ const CustomWeeklyTooltip = ({ active, payload, label }) => {
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: "var(--text-main)" }}>{label}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
-            <span style={{ color: "var(--brand-organic)", fontWeight: 500 }}>🟢 Organik:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-organic)' }} />
+              <span style={{ color: "var(--brand-organic)", fontWeight: 500 }}>Organik:</span>
+            </div>
             <span className="mono" style={{ fontWeight: 600 }}>{organik} ({organicPercent}%)</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 24 }}>
-            <span style={{ color: "var(--brand-inorganic)", fontWeight: 500 }}>🔵 Anorganik:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-inorganic)' }} />
+              <span style={{ color: "var(--brand-inorganic)", fontWeight: 500 }}>Anorganik:</span>
+            </div>
             <span className="mono" style={{ fontWeight: 600 }}>{anorganik} ({inorganicPercent}%)</span>
           </div>
           <div style={{ height: 1, background: "var(--border-color)", margin: "4px 0" }} />
@@ -415,8 +421,8 @@ function OnboardingTour({ step, steps, onNext, onPrev, onSkip }) {
       backdropFilter: "blur(12px)"
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--brand-organic)" }}>
-          ✨ {current.title}
+        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--brand-organic)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Sparkles size={16} /> {current.title}
         </h4>
         <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
           {step + 1} / {steps.length}
@@ -1030,7 +1036,7 @@ export default React.memo(function RingkasanView({
           style={{ minHeight: 400, display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
-            <div className="card-title" style={{ margin: 0 }}>📈 {t('volume_history')}</div>
+            <div className="card-title" style={{ margin: 0 }}><TrendingUp size={16} color="#f59e0b" /> {t('volume_history')}</div>
             <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8 }}>
               {['6h', '12h', '24h', 'all'].map(r => (
                 <button
@@ -1104,7 +1110,7 @@ export default React.memo(function RingkasanView({
           className="card" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title">🥧 {t('waste_distribution')}</div>
+          <div className="card-title"><PieChart size={16} color="#ec4899" /> {t('waste_distribution')}</div>
           <ChartFrame height={220} style={{ flex: '0 0 220px', marginTop: 8 }}>
             {distributionData.length ? (
               ({ width, height }) => (
@@ -1152,7 +1158,7 @@ export default React.memo(function RingkasanView({
           className="card recent-activity-panel" 
           style={{ minHeight: 350, display: 'flex', flexDirection: 'column' }}
         >
-          <div className="card-title">📊 {t('daily_classification')}</div>
+          <div className="card-title"><BarChart2 size={16} color="var(--brand-inorganic)" /> {t('daily_classification')}</div>
           <ChartFrame height={250} style={{ flex: '1 1 250px', marginTop: 16, marginLeft: -20 }}>
             {dailyStats.length ? (
               ({ width, height }) => (
@@ -1403,7 +1409,7 @@ export default React.memo(function RingkasanView({
               })}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              💡 {locale === 'id' ? 'Seret / drag widget di bawah untuk mengurutkan tata letak sesuai keinginan.' : 'Drag widgets below to rearrange layout as desired.'}
+              <Lightbulb size={16} color="#f59e0b" /> {locale === 'id' ? 'Seret / drag widget di bawah untuk mengurutkan tata letak sesuai keinginan.' : 'Drag widgets below to rearrange layout as desired.'}
             </div>
           </motion.div>
         )}

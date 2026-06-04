@@ -306,12 +306,13 @@ button,
 }
 
 .card-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
+  letter-spacing: 0.02em;
 }
 
 /* Navigation */
