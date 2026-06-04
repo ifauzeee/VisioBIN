@@ -171,6 +171,23 @@ func (h *BinHandler) IngestTelemetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fallback: jika field panjang kosong (0), gunakan field pendek dari ESP32
+	if req.DistanceOrganicCm == 0 && req.DistOrgShort > 0 {
+		req.DistanceOrganicCm = req.DistOrgShort
+	}
+	if req.DistanceInorganicCm == 0 && req.DistInorgShort > 0 {
+		req.DistanceInorganicCm = req.DistInorgShort
+	}
+	if req.WeightOrganicKg == 0 && req.WeightOrgShort > 0 {
+		req.WeightOrganicKg = req.WeightOrgShort
+	}
+	if req.WeightInorganicKg == 0 && req.WeightInorgShort > 0 {
+		req.WeightInorganicKg = req.WeightInorgShort
+	}
+	if req.GasAmoniaPpm == 0 && req.GasPpmShort > 0 {
+		req.GasAmoniaPpm = req.GasPpmShort
+	}
+
 	// Input validation: clamp sensor values to valid ranges
 	req.DistanceOrganicCm = clampFloat(req.DistanceOrganicCm, 0, 500)
 	req.DistanceInorganicCm = clampFloat(req.DistanceInorganicCm, 0, 500)

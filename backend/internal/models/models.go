@@ -59,6 +59,7 @@ type SensorReading struct {
 
 type TelemetryRequest struct {
 	BinID               string  `json:"bin_id"`
+	// Long names (from dashboard / API client)
 	DistanceOrganicCm   float64 `json:"distance_organic_cm"`
 	DistanceInorganicCm float64 `json:"distance_inorganic_cm"`
 	WeightOrganicKg     float64 `json:"weight_organic_kg"`
@@ -66,6 +67,12 @@ type TelemetryRequest struct {
 	GasAmoniaPpm        float64 `json:"gas_amonia_ppm"`
 	BatteryPct          int     `json:"battery_pct"`
 	WifiRssiDbm         int     `json:"wifi_rssi_dbm"`
+	// Short names (dari ESP32 firmware: dist_org, dist_inorg, gas_ppm)
+	DistOrgShort     float64 `json:"dist_org"`
+	DistInorgShort   float64 `json:"dist_inorg"`
+	WeightOrgShort   float64 `json:"weight_org"`
+	WeightInorgShort float64 `json:"weight_inorg"`
+	GasPpmShort      float64 `json:"gas_ppm"`
 }
 
 // --- Classification Models ---
