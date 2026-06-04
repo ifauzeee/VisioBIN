@@ -235,7 +235,7 @@ func (r *BinRepository) UpdateOfflineStatuses(ctx context.Context, timeoutMinute
 	query := `
 		UPDATE bins 
 		SET status = 'inactive' 
-		WHERE last_seen < NOW() - ($1 || ' minutes')::interval 
+		WHERE last_seen < NOW() - ($1 * interval '1 minute') 
 		AND status = 'active'
 	`
 	tag, err := r.pool.Exec(ctx, query, timeoutMinutes)
