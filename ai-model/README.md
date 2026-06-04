@@ -1,94 +1,132 @@
-# 🧠 VisioBin AI Model (YOLOv5 Classification)
+# 🧠 VisioBin AI Model
 
-Mengingat dataset kaggle yang kita gunakan adalah kumpulan foto *"full image"* tanpa _bounding box_, maka kita akan melatih model **YOLOv5 - Classification** (`yolov5n-cls.pt`). AI ini akan menjawab: *"Foto ini kelasnya Organik atau Anorganik?"*
+Modul Edge AI untuk klasifikasi sampah Organik / Anorganik menggunakan YOLOv8 Classification yang berjalan di Raspberry Pi.
 
-Disarankan untuk melakukan *Training* model di **Google Colab** secara gratis karena butuh GPU.
+## Model
 
-## 🚀 Langkah 1: Format Kaggle Dataset
-Agar bisa dilatih oleh YOLOv5-cls, dataset kamu sudah kita format ke struktur seperti ini otomatis oleh sistem:
+| File | Ukuran | Format | Digunakan untuk |
+|---|---|---|---|
+| `best.pt` | ~8.1 MB | PyTorch | Development / retraining |
+| `best.onnx` | ~16.7 MB | ONNX | **Produksi Raspberry Pi** |
+| `best.onnx.data` | ~16 MB | Data | (bagian dari ONNX) |
 
-```text
-visiobin_cls_dataset/
-  ├── train/
-  │   ├── Organic/
-  │   └── Inorganic/
-  └── val/
-      ├── Organic/
-      └── Inorganic/
+**Kelas output:** `organic` / `inorganic`
+
+## File Utama
+
+| File | Deskripsi |
+|---|---|
+| `ai_bridge_onnx.py` | Kamera → YOLOv8 ONNX → kirim hasil ke Backend + ESP32 |
+| `uart_bridge.py` | Baca data UART dari ESP32 → kirim ke Backend API |
+| `ai_bridge_picam.py` | Versi khusus Pi Camera (CSI) |
+| `stream_server.py` | Streaming kamera ke web browser |
+| `test_inference.py` | Test inferensi dengan gambar statis |
+| `test_single_image.py` | Test satu gambar spesifik |
+| `export_tflite.py` | Export model ke TFLite (opsional) |
+
+## Instalasi Dependencies
+
+```bash
+pip install onnxruntime opencv-python numpy requests pyserial
 ```
 
-**Tugasmu:** Buka folder `ai-model` di laptopmu, jadikan folder `visiobin_cls_dataset` menjadi zip (`visiobin_cls_dataset.zip`) lalu **Upload ZIP itu ke Google Drive kamu**.
-
-## 🚀 Langkah 2: Training di Google Colab
-1. Buka [Google Colab](https://colab.research.google.com/).
-2. Buat Notebook baru, lalu **pilih runtime T4 GPU** (Runtime > Change runtime type > T4 GPU).
-3. Jalankan kode di bawah ini pada cell satu-per-satu (copy paste):
-
-### 1. Mount Google Drive & Setup YOLO
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-
-# Install YOLOv5 dari ultralytics
-!git clone https://github.com/ultralytics/yolov5
-%cd yolov5
-!pip install -qr requirements.txt
+Untuk Raspberry Pi (ARM):
+```bash
+pip install onnxruntime-openvino  # atau versi lite untuk Pi
 ```
 
-### 2. Copy Dataset dari GDrive
-```python
-# Sesuaikan path-nya jika kamu taruh zip di dalam folder/sub-folder
-!cp /content/drive/MyDrive/visiobin_cls_dataset.zip /content/
-!unzip /content/visiobin_cls_dataset.zip -d /content/dataset/
+## Menjalankan di Raspberry Pi
+
+### Mode 1: UART Bridge saja (tanpa kamera, hanya relay sensor data)
+```bash
+python uart_bridge.py
 ```
 
-### 3. Mulai Training (Classification Mode - 20 Epoch)
-```python
-# Kita menggunakan modul "classify/train.py" khusus classification
-!python classify/train.py --model yolov5n-cls.pt --data /content/dataset/visiobin_cls_dataset --epochs 20 --img 224
+Baca data JSON dari ESP32 via UART (`/dev/ttyUSB0`) dan kirim ke Backend API secara otomatis.
+
+### Mode 2: AI + Kamera (produksi penuh)
+```bash
+# Kamera USB / webcam
+python ai_bridge_onnx.py \
+  --onnx best.onnx \
+  --uart-port /dev/ttyUSB0 \
+  --capture
+
+# Pi Camera CSI
+python ai_bridge_picam.py
 ```
 
-## 🚀 Langkah 3: Ekspor untuk Raspberry Pi (ONNX/TFLite)
-Model hasil training biasanya ada di `runs/train-cls/exp/weights/best.pt`.
-Ekspor ke format yang ringan untuk Raspberry Pi:
-
-```python
-# Jalankan di Colab setelah training selesai
-!python export.py --weights runs/train-cls/exp/weights/best.pt --include onnx tflite --img 224
+### Mode 3: Test dengan gambar statis (tanpa kamera)
+```bash
+python ai_bridge_onnx.py \
+  --onnx best.onnx \
+  --mock \
+  --mock-dir test_images
 ```
-Kemudian **Download** file `best.pt`, `best.onnx`, atau `best.tflite` dari navigasi file Colab di sebelah kiri layarmu.
 
-## 🚀 Langkah 4: Test Real-Time di Laptop Kamu
-Setelah di-download, taruh file model kamu (`best.pt`) ke dalam folder `ai-model/` ini.
+### Mode 4: Stream kamera ke browser
+```bash
+python stream_server.py
+# Buka: http://<ip-raspberry>:8000/stream
+```
 
-1. Buka terminal (CMD / PowerShell).
-2. Pastikan sudah install dependensi: 
-   `pip install torch torchvision torchaudio opencv-python numpy onnxruntime`
-3. Hidupkan Webcam laptop dan tes:
-   `py ai_bridge.py --weights best.pt`
+## Alur Kerja AI
 
-### ⚡ Versi High-Performance (Rekomendasi Raspberry Pi)
-Gunakan versi ONNX untuk kecepatan maksimal di perangkat Edge:
-1. Pastikan file `best.onnx` ada di folder ini.
-2. Jalankan (Mode Live Kamera):
-   `py ai_bridge_onnx.py --onnx best.onnx --capture`
-3. Jalankan (Mode Mock Gambar - Jika kamera jelek/tidak ada):
-   `py ai_bridge_onnx.py --onnx best.onnx --mock --mock-dir test_images`
+```
+Kamera (Pi Camera / USB)
+      ↓
+ai_bridge_onnx.py
+      ↓
+YOLOv8 ONNX Inferensi
+      ↓ (hasil: organic / inorganic, confidence)
+      ├─→ POST /api/v1/classifications   (ke Backend)
+      └─→ UART: "CLASSIFY:ORGANIC\n"    (ke ESP32 → Servo)
+```
 
-### ⚙️ Integrasi Hardware (ESP32 Servo Control)
-Script ONNX sekarang bisa mengirim perintah ke ESP32 via kabel USB (Serial).
-1. Hubungkan ESP32 ke Raspberry Pi/Laptop.
-2. Cek nama port (misal: `COM3` di Windows atau `/dev/ttyUSB0` di Linux).
-3. Jalankan dengan flag `--uart-port`:
-   `py ai_bridge_onnx.py --onnx best.onnx --uart-port COM3`
+## Environment Variables (dari root `.env`)
 
-*Setiap kali AI mendeteksi sampah, ia akan mengirim teks `CLASSIFY:ORGANIK\n` atau `CLASSIFY:ANORGANIK\n` ke ESP32.*
+```env
+VISIOBIN_BACKEND=http://localhost:8082/api/v1/classifications
+VISIOBIN_BACKEND_API_BASE=http://localhost:8082/api/v1
+VISIOBIN_ONNX=best.onnx
+VISIOBIN_BIN_ID=VBIN-01
+VISIOBIN_CAMERA=0
+VISIOBIN_THRESHOLD=0.75     # Confidence minimum untuk klasifikasi
+VISIOBIN_COOLDOWN=3.0       # Jeda antar klasifikasi (detik)
+VISIOBIN_UART_PORT=/dev/ttyUSB0
+VISIOBIN_UART_BAUD=115200
+VISIOBIN_INTERVAL=5.0       # Interval UART bridge (detik)
+```
 
-### 📸 Tips Pi Camera (CSI Module)
-Jika Anda menggunakan modul Pi Camera:
-1. **Resolusi Otomatis:** Script sudah dioptimalkan untuk menangkap gambar di 640x480 agar beban CPU Pi tetap ringan.
-2. **Kamera Tidak Terdeteksi?** Jika menggunakan Raspberry Pi OS terbaru (Bullseye/Bookworm), pastikan driver V4L2 aktif. Jika tetap gagal, coba jalankan dengan:
-   `LIBCAMERA_LOG_LEVEL=0 python ai_bridge_onnx.py --onnx best.onnx`
-3. **Rotasi Gambar:** Jika kamera Anda terpasang terbalik, Anda bisa menambahkan `frame = cv2.flip(frame, -1)` di dalam fungsi `run_live` pada script.
+## Retraining Model (Google Colab)
 
-*Fitur `--capture` akan menyimpan foto setiap kali klasifikasi berhasil ke folder `captures/`.*
+Jika ingin melatih ulang model dengan dataset baru:
+
+1. Siapkan dataset dalam struktur:
+   ```
+   dataset/
+   ├── train/
+   │   ├── organic/      (foto sampah organik)
+   │   └── inorganic/    (foto sampah anorganik)
+   └── val/
+       ├── organic/
+       └── inorganic/
+   ```
+
+2. Upload ke Google Drive, buka Google Colab dengan GPU T4
+
+3. Training:
+   ```python
+   from ultralytics import YOLO
+   model = YOLO('yolov8n-cls.pt')
+   model.train(data='/content/dataset', epochs=50, imgsz=224)
+   ```
+
+4. Export ke ONNX:
+   ```python
+   model.export(format='onnx', imgsz=224)
+   ```
+
+5. Download `best.onnx` → taruh di folder `ai-model/`
+
+> 📄 Konfigurasi lengkap di root [`README.md`](../README.md)
