@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -27,13 +28,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables first
+  await dotenv.load(fileName: ".env", isOptional: true);
+  
   // Inisialisasi Firebase
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
-    // .env is optional because mobile config is normally passed via --dart-define.
-    await dotenv.load(fileName: ".env", isOptional: true);
   } catch (e) {
     debugPrint("Initialization error: $e");
   }
