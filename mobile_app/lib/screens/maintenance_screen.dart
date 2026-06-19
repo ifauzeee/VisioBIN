@@ -51,6 +51,14 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
         actions: [
+          if (context.watch<DashboardProvider>().currentUser?.role != 'guest')
+            IconButton(
+              icon: Icon(
+                LucideIcons.plus,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              onPressed: () => _showAddLogModal(context),
+            ),
           IconButton(
             icon: Icon(
               LucideIcons.refreshCcw,
@@ -136,23 +144,6 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           );
         },
       ),
-      floatingActionButton: context.read<DashboardProvider>().currentUser?.role == 'guest' 
-        ? null 
-        : Padding(
-            padding: const EdgeInsets.only(bottom: 84),
-            child: FloatingActionButton.extended(
-              onPressed: () => _showAddLogModal(context),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              icon: const Icon(LucideIcons.plus, size: 22),
-              label: const Text(
-                'Tambah Log',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
     );
   }
 }

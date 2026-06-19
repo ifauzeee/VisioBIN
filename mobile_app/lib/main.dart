@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -39,7 +40,12 @@ void main() async {
     debugPrint("Initialization error: $e");
   }
 
-  runApp(const VisioBinApp());
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => const VisioBinApp(),
+    ),
+  );
 }
 
 class VisioBinApp extends StatefulWidget {
@@ -266,7 +272,8 @@ class _VisioBinAppState extends State<VisioBinApp> {
             navigatorKey: _navigatorKey,
             title: 'VisioBin',
             debugShowCheckedModeBanner: false,
-            locale: localeProvider.locale,
+            locale: DevicePreview.locale(context) ?? localeProvider.locale,
+            builder: DevicePreview.appBuilder,
             localizationsDelegates: [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
