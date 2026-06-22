@@ -133,7 +133,8 @@ export default function ChatView() {
   return (
     <div style={{ 
       display: "flex", 
-      height: "calc(100vh - 180px)", 
+      height: "calc(100vh - 300px)", 
+      minHeight: "450px",
       background: "var(--bg-card)", 
       border: "1px solid var(--border-color)",
       borderRadius: 12,

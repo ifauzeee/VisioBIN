@@ -756,13 +756,13 @@ export default React.memo(function RingkasanView({
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card hover-elevate"
-          style={{ padding: '20px 24px', cursor: 'pointer' }}
+          style={{ padding: '14px 16px', cursor: 'pointer' }}
         >
           <div className="card-title">
             <LeafIcon size={16} color="var(--brand-organic)" /> {t('total_processed_today')}
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-1px' }}>
               <RollingNumber value={safeSummary.total_processed || 0} />
             </span>
             {(safeSummary.total_processed || 0) > 0 && (
@@ -771,20 +771,20 @@ export default React.memo(function RingkasanView({
               </span>
             )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('items_classified')}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('items_classified')}</div>
         </motion.div>
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card hover-elevate"
-          style={{ padding: '20px 24px', cursor: 'pointer' }}
+          style={{ padding: '14px 16px', cursor: 'pointer' }}
         >
           <div className="card-title">
             <Trash2 size={16} color="#22d3ee" /> {t('bin_level')}
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-1px' }}>
               <RollingNumber value={binLevel} />
             </span>
             <span style={{ color: binLevel > 80 ? '#ef4444' : '#22d3ee', fontSize: 13 }}>%</span>
@@ -809,45 +809,45 @@ export default React.memo(function RingkasanView({
           style={{ padding: '20px 24px', cursor: 'pointer' }}
         >
           <div className="card-title"><Orbit size={16} /> {t('co2_reduced')}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-1px' }}>
               <RollingNumber value={safeSummary.co2 || 0} />
             </span>
-            <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>kg</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>kg</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('monthly_estimate')}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('monthly_estimate')}</div>
         </motion.div>
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card hover-elevate"
-          style={{ padding: '20px 24px', cursor: 'pointer' }}
+          style={{ padding: '14px 16px', cursor: 'pointer' }}
         >
           <div className="card-title"><Cpu size={16} /> {t('edge_latency')}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-1px' }}>
               <RollingNumber value={computedLatency} />
             </span>
-            <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>ms</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>ms</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>{t('response_time')}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('response_time')}</div>
         </motion.div>
 
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card hover-elevate"
-          style={{ padding: '20px 24px', cursor: 'pointer' }}
+          style={{ padding: '14px 16px', cursor: 'pointer' }}
         >
           <div className="card-title"><Award size={16} color="#f59e0b" /> {t('ai_accuracy')}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-1px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-1px' }}>
               <RollingNumber value={computedAccuracy} />
             </span>
-            <span style={{ color: '#f59e0b', fontSize: 13 }}>%</span>
+            <span style={{ color: '#f59e0b', fontSize: 12 }}>%</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {safeLogs.length > 0
               ? t('classifications_from', { count: safeLogs.length })
               : t('avg_7_days')}
@@ -859,7 +859,7 @@ export default React.memo(function RingkasanView({
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="glass-card hover-elevate"
           style={{ 
-            padding: '20px 24px', 
+            padding: '14px 16px',
             border: '1px solid rgba(16, 185, 129, 0.2)',
             background: 'linear-gradient(135deg, var(--glass-bg) 0%, rgba(16, 185, 129, 0.05) 100%)',
             position: 'relative',
@@ -874,14 +874,14 @@ export default React.memo(function RingkasanView({
               <div className="pulse-dot-green" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-organic)', marginLeft: 'auto' }} title={locale === 'id' ? "Koneksi Live Aktif" : "Live Connection Active"} />
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-1px' }}>
+              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-1px' }}>
                 {forecast?.hours_until_full_organic ? (
                   <RollingNumber value={Math.round(forecast.hours_until_full_organic)} />
                 ) : '—'}
               </span>
-              <span style={{ color: 'var(--brand-organic)', fontSize: 13, fontWeight: 600 }}>{t('hours')}</span>
+              <span style={{ color: 'var(--brand-organic)', fontSize: 11, fontWeight: 600 }}>{t('hours')}</span>
             </div>
             
             {/* Sparkline for trend */}
@@ -1188,37 +1188,43 @@ export default React.memo(function RingkasanView({
                   const log = safeLogs[virtualRow.index];
                   const isNewest = virtualRow.index < 5;
                   return (
-                    <motion.div
+                    <div
                       key={log.id}
-                      initial={isNewest ? { opacity: 0, x: -20 } : false}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={isNewest ? { delay: virtualRow.index * 0.05 } : { duration: 0 }}
                       style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         width: '100%',
                         transform: `translateY(${virtualRow.start}px)`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px',
-                        height: `${virtualRow.size - 8}px`,
-                        background: 'var(--bg-elevated)',
-                        borderRadius: 8,
-                        border: '1px solid var(--border-color)',
-                        marginBottom: 8,
+                        height: `${virtualRow.size}px`,
+                        paddingBottom: '8px'
                       }}
                     >
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
-                        <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>{t('bin_reservoir').toLowerCase()}</div>
-                        <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
-                      </div>
-                    </motion.div>
+                      <motion.div
+                        initial={isNewest ? { opacity: 0, x: -20 } : false}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={isNewest ? { delay: virtualRow.index * 0.05 } : { duration: 0 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          height: '100%',
+                          background: 'var(--bg-elevated)',
+                          borderRadius: 8,
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-main)' }}>{log.item}</div>
+                          <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{log.time}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#22d3ee' }}>{t('bin_reservoir').toLowerCase()}</div>
+                          <div className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{log.prob}%</div>
+                        </div>
+                      </motion.div>
+                    </div>
                   );
                 })}
               </div>

@@ -87,54 +87,52 @@ export default React.memo(function AnalitikView() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16 }}>
-        <motion.div 
-          style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, flex: 1 }}
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: { transition: { staggerChildren: 0.05 } }
-          }}
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 16, gap: 12 }}>
+        <motion.button 
+          whileHover={{ scale: 1.02 }} 
+          whileTap={{ scale: 0.98 }}
+          onClick={fetchAnalytics}
+          className="btn-secondary" 
+          style={{ width: 44, height: 44, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
-          {kpi.map(item => (
-            <motion.div 
-              key={item.label} 
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="card" 
-              style={{ padding: 24 }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ padding: 10, background: "rgba(255,255,255,0.03)", borderRadius: 10, color: item.color }}>
-                  {item.icon}
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>{item.label}</span>
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-1px" }}>{item.value}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <div style={{ display: "flex", gap: 12 }}>
-          <motion.button 
-            whileHover={{ scale: 1.02 }} 
-            whileTap={{ scale: 0.98 }}
-            onClick={fetchAnalytics}
-            className="btn-secondary" 
-            style={{ width: 44, height: 44, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <RefreshCw size={18} />
-          </motion.button>
-          <motion.button 
-            whileHover={{ scale: 1.02 }} 
-            whileTap={{ scale: 0.98 }}
-            onClick={() => window.open(`${APP_CONFIG.apiBaseUrl}/classifications/export?token=${token}`, "_blank")}
-            className="btn-primary" 
-            style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
-          >
-            <Download size={18} /> Export Analitik
-          </motion.button>
-        </div>
+          <RefreshCw size={18} />
+        </motion.button>
+        <motion.button 
+          whileHover={{ scale: 1.02 }} 
+          whileTap={{ scale: 0.98 }}
+          onClick={() => window.open(`${APP_CONFIG.apiBaseUrl}/classifications/export?token=${token}`, "_blank")}
+          className="btn-primary" 
+          style={{ padding: "12px 24px", height: "fit-content", display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}
+        >
+          <Download size={18} /> Export Analitik
+        </motion.button>
       </div>
+
+      <motion.div 
+        style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:24, marginBottom: 24 }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+      >
+        {kpi.map(item => (
+          <motion.div 
+            key={item.label} 
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            className="card" 
+            style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <div style={{ padding: 10, background: "rgba(255,255,255,0.03)", borderRadius: 10, color: item.color }}>
+                {item.icon}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>{item.label}</span>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-1px" }}>{item.value}</div>
+          </motion.div>
+        ))}
+      </motion.div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom:24 }}>
         <motion.div 

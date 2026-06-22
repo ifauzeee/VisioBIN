@@ -61,11 +61,19 @@ backend/firebase-service-account.json
 google-services.json
 **/google-services.json
 
-# AI Models (Larger files)
-*.onnx
-*.onnx.data
-*.pt
-*.tflite
+# AI Models (Larger files) - Tracked for Raspberry Pi deployment
+# *.onnx
+# *.onnx.data
+# *.pt
+# *.tflite
+
+# Ignore dataset, raw, and test images in the AI model directory
+/ai-model/**/*.png
+/ai-model/**/*.jpg
+/ai-model/**/*.jpeg
+/ai-model/**/*.bmp
+/ai-model/**/*.gif
+
 
 # Logs
 *.log

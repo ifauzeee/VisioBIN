@@ -124,8 +124,9 @@ h3 {
 .map-main-layout {
   display: flex;
   gap: 12px;
-  height: calc(100vh - 260px);
-  min-height: 320px;
+  height: calc(100vh - 380px); /* Smaller height to guarantee bottom space */
+  min-height: 400px;
+  margin-bottom: 40px;
 }
 
 .map-container-wrapper {
@@ -136,6 +137,12 @@ h3 {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-card);
   min-width: 0;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.map-container-wrapper .leaflet-container {
+  border-radius: 14px !important;
 }
 
 .desktop-only {
@@ -231,7 +238,7 @@ h3 {
 /* Layout Media Queries      */
 /* ========================= */
 
-@media (max-width: 1400px) {
+@media (max-width: 1100px) {
   .dashboard-grid-2-1,
   .dashboard-grid-1-1 {
     grid-template-columns: 1fr;

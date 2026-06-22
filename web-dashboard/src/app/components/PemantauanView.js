@@ -3,7 +3,7 @@ import { Video, Wifi, AlertTriangle, Clock3, VideoOff, RefreshCw, Settings2, Act
 import { useDashboardContext } from '../context/DashboardContext';
 import EmptyState from './shared/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { APP_CONFIG } from '../config/appConfig';
 
 const ICONS_MAP = {
@@ -17,7 +17,36 @@ const ICONS_MAP = {
 
 export default function PemantauanView() {
   const t = useTranslations('monitoring');
+  const locale = useLocale();
   const { alerts = [], unreadCount = 0 } = useDashboardContext();
+
+  const formatEventType = (type) => {
+    const map = {
+      'high_gas': locale === 'id' ? 'Kadar Gas Berbahaya' : 'High Gas Detected',
+      'sensor_error': locale === 'id' ? 'Gangguan Sensor' : 'Sensor Malfunction',
+      'bin_full': locale === 'id' ? 'Kapasitas Penuh' : 'Bin at Capacity',
+      'offline': locale === 'id' ? 'Koneksi Terputus' : 'Connection Lost'
+    };
+    return map[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getSeverityStyle = (sev) => {
+    const s = sev.toLowerCase();
+    if (s === 'critical') return 'high';
+    if (s === 'warning') return 'medium';
+    if (s === 'info') return 'low';
+    return s;
+  };
+
+  const getSeverityLabel = (sev) => {
+    const s = sev.toLowerCase();
+    const map = {
+      'critical': locale === 'id' ? 'Kritis' : 'Critical',
+      'warning': locale === 'id' ? 'Waspada' : 'Warning',
+      'info': locale === 'id' ? 'Info' : 'Info'
+    };
+    return map[s] || sev;
+  };
   const [streamUrl, setStreamUrl] = useState(APP_CONFIG.cameraStreamUrl);
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempUrl, setTempUrl] = useState(streamUrl);
@@ -88,7 +117,7 @@ export default function PemantauanView() {
       </div>
 
       <div className="dashboard-grid-2-1" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative', minHeight: 450, display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative', height: 'fit-content', display: 'flex', flexDirection: 'column' }}>
           <div style={{ 
             position: 'absolute', 
             top: 0, left: 0, right: 0, 
@@ -192,7 +221,7 @@ export default function PemantauanView() {
                     className="live-feed-tile"
                     initial={{ scale: 1, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    style={{ flex: 1, height: '100%', position: 'relative', border: 'none', borderRadius: 0 }}
+                    style={{ flex: 1, position: 'relative', border: 'none', borderRadius: 0, aspectRatio: '16/9', width: '100%' }}
                   >
                       <div
                         className="live-feed-preview"
@@ -268,7 +297,7 @@ export default function PemantauanView() {
           </div>
         </div>
 
-        <div className="card" style={{ minHeight: 420, display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ height: 'fit-content', display: 'flex', flexDirection: 'column' }}>
           <div className="card-title"><Clock3 size={16} /> {t('eventQueue')}</div>
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
             {liveEventQueue.length > 0 ? (
@@ -279,8 +308,8 @@ export default function PemantauanView() {
                   whileHover={{ x: 4, background: 'var(--bg-hover)' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{ev.type}</div>
-                    <span className={`severity-chip ${ev.severity.toLowerCase()}`}>{ev.severity}</span>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{formatEventType(ev.type)}</div>
+                    <span className={`severity-chip ${getSeverityStyle(ev.severity)}`}>{getSeverityLabel(ev.severity)}</span>
                   </div>
                   <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
                     <span>{ev.source}</span>

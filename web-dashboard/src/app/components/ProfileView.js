@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Mail, Lock, Camera, Save, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { motion } from "framer-motion";
 import { useToast } from "./shared/Toast";
 
 export default function ProfileView() {
@@ -11,22 +10,12 @@ export default function ProfileView() {
   const { addToast } = useToast();
   const isGuest = user?.role === "guest";
   
-  if (isGuest) {
-    return (
-      <div className="card" style={{ textAlign: "center", padding: "40px" }}>
-        <AlertCircle size={48} color="#ef4444" style={{ marginBottom: "16px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}>Akses Terbatas</h2>
-        <p style={{ color: "var(--text-muted)" }}>Akun tamu tidak diizinkan untuk mengubah profil atau pengaturan keamanan.</p>
-      </div>
-    );
-  }
-  
+  const [activeSection, setActiveSection] = useState("general");
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
     email: user?.email || "",
     password: "",
   });
-  
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -34,16 +23,20 @@ export default function ProfileView() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, section) => {
     e.preventDefault();
     setLoading(true);
 
-    const payload = {
-      full_name: formData.full_name,
-      email: formData.email,
-    };
-
-    if (formData.password) {
+    const payload = {};
+    if (section === "general") {
+      payload.full_name = formData.full_name;
+      payload.email = formData.email;
+    } else if (section === "security") {
+      if (!formData.password) {
+        addToast("Sandi baru tidak boleh kosong", "error");
+        setLoading(false);
+        return;
+      }
       payload.password = formData.password;
     }
 
@@ -51,240 +44,170 @@ export default function ProfileView() {
     setLoading(false);
 
     if (result.success) {
-      addToast("Profil berhasil diperbarui!", "success");
-      setFormData((prev) => ({ ...prev, password: "" }));
+      addToast("Profil berhasil diperbarui", "success");
+      if (section === "security") setFormData((prev) => ({ ...prev, password: "" }));
     } else {
       addToast(result.error || "Gagal memperbarui profil", "error");
     }
   };
 
+  if (isGuest) {
+    return (
+      <div style={{ maxWidth: 600, margin: "40px auto", padding: 40, border: "1px solid var(--border-color)", borderRadius: 8, background: "var(--bg-card)", textAlign: "center" }}>
+        <ShieldAlert size={48} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text-main)", marginBottom: 8 }}>Akses Terbatas</h2>
+        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Akun tamu tidak diizinkan untuk mengubah profil atau pengaturan keamanan.</p>
+      </div>
+    );
+  }
+
+  const sections = [
+    { id: "general", label: "Profil Umum" },
+    { id: "security", label: "Keamanan" },
+    { id: "danger", label: "Zona Bahaya" }
+  ];
+
+  const inputStyle = {
+    width: "100%",
+    padding: "8px 12px",
+    background: "var(--bg-page)",
+    border: "1px solid var(--border-color)",
+    borderRadius: "6px",
+    color: "var(--text-main)",
+    fontSize: "14px",
+    outline: "none",
+    boxSizing: "border-box"
+  };
+
+  const labelStyle = {
+    display: "block",
+    fontSize: "13px",
+    fontWeight: "500",
+    color: "var(--text-main)",
+    marginBottom: "6px"
+  };
+
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: { transition: { staggerChildren: 0.1 } }
-      }}
-      className="profile-container" 
-      style={{ maxWidth: 800, margin: "0 auto" }}
-    >
-      <motion.div 
-        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-        className="card" 
-        style={{ padding: 0, overflow: "hidden" }}
-      >
-        {/* Header Background */}
-        <div 
-          style={{ 
-            height: 120, 
-            background: "linear-gradient(135deg, var(--brand-inorganic), var(--brand-organic))",
-            opacity: 0.8
-          }} 
-        />
+    <div style={{ maxWidth: 900, margin: "0 auto", paddingBottom: 60 }}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 600, color: "var(--text-main)", margin: "0 0 4px 0" }}>Pengaturan</h1>
+        <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Kelola detail akun dan pengaturan keamanan Anda.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap" }}>
         
-        <div style={{ padding: "0 40px 40px", marginTop: -60 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 24, marginBottom: 40 }}>
-            <motion.div 
-              style={{ position: "relative" }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+        {/* Sidebar Navigasi Klasik */}
+        <div style={{ flex: "0 0 240px", display: "flex", flexDirection: "column", gap: 4 }}>
+          {sections.map((sec) => (
+            <button
+              key={sec.id}
+              onClick={() => setActiveSection(sec.id)}
+              style={{
+                textAlign: "left",
+                padding: "8px 12px",
+                background: activeSection === sec.id ? "var(--bg-hover)" : "transparent",
+                color: activeSection === sec.id ? "var(--text-main)" : "var(--text-muted)",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 14,
+                fontWeight: activeSection === sec.id ? 600 : 400,
+                cursor: "pointer",
+                transition: "background 0.2s"
+              }}
             >
-              <div 
-                style={{ 
-                  width: 120, 
-                  height: 120, 
-                  borderRadius: "50%", 
-                  background: "var(--bg-card)",
-                  border: "4px solid var(--bg-card)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "var(--shadow-card)",
-                  fontSize: 48,
-                  fontWeight: 700,
-                  color: "var(--text-main)"
-                }}
-              >
-                {formData.full_name?.charAt(0).toUpperCase() || <User size={48} />}
-              </div>
-              <button 
-                style={{ 
-                  position: "absolute", 
-                  bottom: 5, 
-                  right: 5, 
-                  background: "var(--brand-organic)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "50%",
-                  width: 32,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-                }}
-              >
-                <Camera size={16} />
-              </button>
-            </motion.div>
-            
-            <motion.div 
-              style={{ paddingBottom: 10 }}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>{formData.full_name || "User Name"}</h2>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)", fontSize: 14 }}>
-                <CheckCircle2 size={14} color="var(--brand-organic)" />
-                <span>ID: {user?.id}</span>
-                <span style={{ margin: "0 8px" }}>•</span>
-                <span style={{ textTransform: "capitalize" }}>{user?.role || "User"}</span>
-              </div>
-            </motion.div>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              <motion.div variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }} className="form-group">
-                <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
-                  Nama Lengkap
-                </label>
-                <div style={{ position: "relative" }}>
-                  <User size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px 12px 12px 40px",
-                      background: "var(--bg-page)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: 8,
-                      color: "var(--text-main)",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }} className="form-group">
-                <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
-                  Email Address
-                </label>
-                <div style={{ position: "relative" }}>
-                  <Mail size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px 12px 12px 40px",
-                      background: "var(--bg-page)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: 8,
-                      color: "var(--text-main)",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="form-group" style={{ gridColumn: "span 2" }}>
-                <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>
-                  Ganti Kata Sandi (Kosongkan jika tidak ingin mengubah)
-                </label>
-                <div style={{ position: "relative" }}>
-                  <Lock size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Kata sandi baru"
-                    value={formData.password}
-                    onChange={handleChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px 12px 12px 40px",
-                      background: "var(--bg-page)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: 8,
-                      color: "var(--text-main)",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-              </motion.div>
-            </div>
-
-            <div style={{ marginTop: 40, display: "flex", justifyContent: "flex-end" }}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={loading}
-                style={{
-                  padding: "12px 24px",
-                  background: "var(--brand-organic)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  opacity: loading ? 0.7 : 1,
-                  boxShadow: "0 4px 15px rgba(16, 185, 129, 0.2)"
-                }}
-              >
-                {loading ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Save size={18} />
-                )}
-                {loading ? "Menyimpan..." : "Simpan Perubahan"}
-              </motion.button>
-            </div>
-          </form>
+              {sec.label}
+            </button>
+          ))}
         </div>
-      </motion.div>
 
-      <motion.div 
-        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-        className="card" 
-        style={{ marginTop: 24, border: "1px solid rgba(239, 68, 68, 0.2)" }}
-      >
-        <h3 style={{ fontSize: 18, fontWeight: 600, color: "#ef4444", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-          <AlertCircle size={20} />
-          Zona Bahaya
-        </h3>
-        <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 20 }}>
-          Menghapus akun akan menghapus semua data Anda secara permanen. Tindakan ini tidak dapat dibatalkan.
-        </p>
-        <button 
-          style={{ 
-            padding: "10px 16px", 
-            background: "transparent", 
-            border: "1px solid #ef4444", 
-            color: "#ef4444",
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: "pointer"
-          }}
-        >
-          Hapus Akun Saya
-        </button>
-      </motion.div>
-    </motion.div>
+        {/* Konten Kanan */}
+        <div style={{ flex: "1 1 400px", display: "flex", flexDirection: "column", gap: 32 }}>
+          
+          {activeSection === "general" && (
+            <div style={{ border: "1px solid var(--border-color)", borderRadius: 8, background: "var(--bg-card)", overflow: "hidden" }}>
+              <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 4px 0" }}>Informasi Personal</h2>
+                <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>Detail identitas yang akan ditampilkan di dalam sistem.</p>
+              </div>
+              
+              <form onSubmit={(e) => handleSubmit(e, "general")}>
+                <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div>
+                    <label style={labelStyle}>Nama Lengkap</label>
+                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} style={inputStyle} required />
+                  </div>
+                  
+                  <div>
+                    <label style={labelStyle}>Alamat Email</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} required />
+                  </div>
+                  
+                  <div>
+                    <label style={labelStyle}>Peran Pengguna (Role)</label>
+                    <input type="text" value={user?.role || ""} disabled style={{ ...inputStyle, background: "var(--bg-body)", color: "var(--text-muted)", cursor: "not-allowed" }} />
+                  </div>
+                </div>
+
+                <div style={{ padding: "16px 24px", background: "var(--bg-body)", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn-primary" disabled={loading} style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6, borderRadius: 6 }}>
+                    {loading && <Loader2 size={14} className="animate-spin" />}
+                    Simpan Perubahan
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {activeSection === "security" && (
+            <div style={{ border: "1px solid var(--border-color)", borderRadius: 8, background: "var(--bg-card)", overflow: "hidden" }}>
+              <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 4px 0" }}>Ubah Kata Sandi</h2>
+                <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>Perbarui kata sandi untuk mengamankan akun Anda.</p>
+              </div>
+              
+              <form onSubmit={(e) => handleSubmit(e, "security")}>
+                <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div>
+                    <label style={labelStyle}>Kata Sandi Baru</label>
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Minimal 8 karakter" style={inputStyle} required />
+                  </div>
+                </div>
+
+                <div style={{ padding: "16px 24px", background: "var(--bg-body)", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn-primary" disabled={loading || !formData.password} style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6, borderRadius: 6 }}>
+                    {loading && <Loader2 size={14} className="animate-spin" />}
+                    Perbarui Sandi
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {activeSection === "danger" && (
+            <div style={{ border: "1px solid var(--border-color)", borderRadius: 8, background: "var(--bg-card)", overflow: "hidden" }}>
+              <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#ef4444", margin: "0 0 4px 0" }}>Hapus Akun</h2>
+                <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>Menghapus akun Anda dari sistem secara permanen.</p>
+              </div>
+              
+              <div style={{ padding: 24 }}>
+                <div style={{ background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: 6, padding: 16, marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, color: "var(--text-main)", margin: 0, lineHeight: 1.5 }}>
+                    Peringatan: Seluruh data, konfigurasi, dan riwayat yang terkait dengan akun Anda akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                </div>
+                <button style={{ 
+                  background: "#ef4444", color: "#fff", border: "none", padding: "8px 16px", 
+                  borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer" 
+                }}>
+                  Hapus Akun Saya
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
   );
 }

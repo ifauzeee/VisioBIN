@@ -555,11 +555,12 @@ export default function PetaView({ bins }) {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: 0.15 }}
+          style={{ borderRadius: 14, overflow: 'hidden' }}
         >
           <MapContainer
             center={DEFAULT_CENTER}
             zoom={15}
-            style={{ height: "100%", width: "100%", background: isDarkMode ? '#1a1a2e' : '#f8fafc' }}
+            style={{ height: "100%", width: "100%", background: isDarkMode ? '#1a1a2e' : '#f8fafc', borderRadius: 14 }}
             zoomControl={true}
           >
             <TileLayer
