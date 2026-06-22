@@ -1,365 +1,495 @@
-/*
- * VisioBin ESP32 Firmware v2.0
- * ============================
- * Node Edge IoT untuk tempat sampah pintar VisioBin.
- * Mengelola sensor ToF (VL53L0X), Load Cell (HX711), dan Gas (MQ-137).
- * Berkomunikasi dengan Raspberry Pi melalui UART Serial.
- * 
- * v2.0 Changes:
- * - Hardware Watchdog Timer (auto-reset jika hang >30 detik)
- * - Sensor Fallback (lanjut kirim data meskipun satu sensor gagal)
- * - LED Status Indicator (GPIO 2 built-in LED)
- * - EEPROM untuk menyimpan calibration factor
- * - Improved error handling dan graceful degradation
- * 
- * Hardware Pins (Sesuaikan dengan wiring aktual):
- * - I2C SDA: D21 (Untuk 2x VL53L0X via multiplexer TCA9548A)
- * - I2C SCL: D22
- * - HX711 DT: D18
- * - HX711 SCK: D19
- * - MQ-137 A0: 34 (Analog)
- * - Servo Pin: D15
- * - LED Status: D2 (Built-in LED)
- * 
- * Library yang dibutuhkan:
- * - Adafruit_VL53L0X
- * - HX711 by Bogdan Necula
- * - ArduinoJson
- * - ESP32Servo
- */
-
-#include <Wire.h>
-#include <Adafruit_VL53L0X.h>
-#include <HX711.h>
-#include <ArduinoJson.h>
 #include <ESP32Servo.h>
-#include <EEPROM.h>
-#include <esp_task_wdt.h>
+#include "HX711.h"
 
-// --- Definisi Pin ---
-#define TCA9548A_ADDR     0x70
-#define LOADCELL_DOUT_PIN 18
-#define LOADCELL_SCK_PIN  19
-#define MQ137_PIN         34
-#define SERVO_PIN         15
-#define LED_PIN           2    // Built-in LED
+// =====================================================
+//                    KONFIGURASI SERVO
+// =====================================================
+Servo myservo;
 
-// --- Konfigurasi ---
-const int TELEMETRY_INTERVAL_MS = 5000;
-const int BIN_HEIGHT_CM = 50;
-const int WDT_TIMEOUT_SEC = 30;     // Watchdog timeout
-const int EEPROM_SIZE = 64;
-const int EEPROM_CALIB_ADDR = 0;    // Alamat calibration factor di EEPROM
-const float EEPROM_MAGIC = 42.42;   // Magic number untuk validasi EEPROM
+const int servoPin = 32;
 
-// Kalibrasi (Default, bisa di-override dari EEPROM)
-float loadcellCalibrationFactor = 2280.0f;
+// Untuk servo 360:
+// 90  = stop
+// 60  = putar kiri
+// 120 = putar kanan
+const int posisiStop      = 90;
+const int posisiOrganik   = 60;   // Kiri  = Organik
+const int posisiAnorganik = 120;  // Kanan = Anorganik
+const int durasiGerak     = 1000;
 
-// --- Objek Global ---
-Adafruit_VL53L0X tofOrganic = Adafruit_VL53L0X();
-Adafruit_VL53L0X tofInorganic = Adafruit_VL53L0X();
-HX711 scale;
-Servo sorterServo;
+// =====================================================
+//                    SENSOR GAS MQ-137 / AMONIA
+// =====================================================
+const int pinMQ137 = 35;
 
-// --- Status Flags ---
-bool tofOrganicOK   = false;
-bool tofInorganicOK = false;
-bool loadcellOK     = false;
-bool servoOK        = false;
+// =====================================================
+//                    LOAD CELL 1 - ORGANIK
+// =====================================================
+#define DOUT1 27
+#define CLK1  26
+HX711 scale1;
 
-unsigned long lastTelemetryTime = 0;
-unsigned long lastHeartbeatTime = 0;
-const unsigned long HEARTBEAT_INTERVAL_MS = 60000; // 1 menit
+// =====================================================
+//                    LOAD CELL 2 - ANORGANIK
+// =====================================================
+#define DOUT2 25
+#define CLK2  33
+HX711 scale2;
 
-// LED blink pattern untuk status
-enum StatusLED {
-  LED_OK,          // Solid ON
-  LED_ERROR,       // Fast blink
-  LED_CALIBRATING  // Slow blink
-};
-StatusLED currentStatus = LED_OK;
-unsigned long lastLedToggle = 0;
+// =====================================================
+//                    KALIBRASI LOAD CELL
+// =====================================================
+float calibration_factor_1 = -4000.0;
+float calibration_factor_2 = -4000.0;
 
-// Fungsi untuk memilih channel multiplexer I2C
-void tcaselect(uint8_t i) {
-  if (i > 7) return;
-  Wire.beginTransmission(TCA9548A_ADDR);
-  Wire.write(1 << i);
-  Wire.endTransmission();  
+float zero_threshold = 5.0;
+
+bool scale1_ok = false;
+bool scale2_ok = false;
+
+// =====================================================
+//                    INTERVAL SENSOR
+// =====================================================
+unsigned long waktuLalu = 0;
+const long intervalBaca = 2000;
+
+unsigned long readCounter = 0;
+
+// =====================================================
+//                    PRINT HEADER
+// =====================================================
+void printHeader() {
+  Serial.println();
+  Serial.println("============================================================");
+  Serial.println("                 VISIOBIN ESP32 SYSTEM");
+  Serial.println("============================================================");
+  Serial.println("Board      : ESP32");
+  Serial.println("Baudrate   : 115200");
+  Serial.println("Servo Pin  : GPIO 32");
+  Serial.println("MQ-137 Pin : GPIO 35");
+  Serial.println("LC1        : DOUT GPIO 27 | CLK GPIO 26");
+  Serial.println("LC2        : DOUT GPIO 25 | CLK GPIO 33");
+  Serial.println("============================================================");
+  Serial.println();
 }
 
-// ── EEPROM Helpers ─────────────────────────────────────────────
+// =====================================================
+//                    PRINT COMMAND LIST
+// =====================================================
+void printCommandList() {
+  Serial.println("------------------------------------------------------------");
+  Serial.println("PERINTAH SERIAL");
+  Serial.println("------------------------------------------------------------");
+  Serial.println("CLASSIFY:ORGANIK    -> Servo bergerak kiri");
+  Serial.println("CLASSIFY:ANORGANIK  -> Servo bergerak kanan");
+  Serial.println("KIRI                -> Test manual servo kiri");
+  Serial.println("KANAN               -> Test manual servo kanan");
+  Serial.println("TARE                -> Reset kedua load cell ke 0");
+  Serial.println("T                   -> Reset kedua load cell ke 0");
+  Serial.println("STATUS              -> Tampilkan status sistem");
+  Serial.println("HELP                -> Tampilkan daftar perintah");
+  Serial.println("------------------------------------------------------------");
+  Serial.println();
+}
 
-void loadCalibrationFromEEPROM() {
-  EEPROM.begin(EEPROM_SIZE);
-  float magic;
-  EEPROM.get(EEPROM_CALIB_ADDR, magic);
-  if (abs(magic - EEPROM_MAGIC) < 0.01) {
-    EEPROM.get(EEPROM_CALIB_ADDR + sizeof(float), loadcellCalibrationFactor);
-    // Sanity check
-    if (loadcellCalibrationFactor > 100 && loadcellCalibrationFactor < 50000) {
-      // Valid calibration
-    } else {
-      loadcellCalibrationFactor = 2280.0f; // Reset to default
-    }
+// =====================================================
+//                    STATUS SISTEM
+// =====================================================
+void printSystemStatus() {
+  Serial.println();
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("|                    SYSTEM STATUS                         |");
+  Serial.println("+----------------------------------------------------------+");
+
+  Serial.print("| Servo Pin             : GPIO ");
+  Serial.println(servoPin);
+
+  Serial.print("| MQ-137 / Amonia Pin   : GPIO ");
+  Serial.println(pinMQ137);
+
+  Serial.print("| Load Cell 1 Pin       : DOUT ");
+  Serial.print(DOUT1);
+  Serial.print(" | CLK ");
+  Serial.println(CLK1);
+
+  Serial.print("| Load Cell 2 Pin       : DOUT ");
+  Serial.print(DOUT2);
+  Serial.print(" | CLK ");
+  Serial.println(CLK2);
+
+  Serial.print("| Load Cell 1 Status    : ");
+  Serial.println(scale1_ok ? "READY" : "NOT READY");
+
+  Serial.print("| Load Cell 2 Status    : ");
+  Serial.println(scale2_ok ? "READY" : "NOT READY");
+
+  Serial.print("| Calibration LC1       : ");
+  Serial.println(calibration_factor_1);
+
+  Serial.print("| Calibration LC2       : ");
+  Serial.println(calibration_factor_2);
+
+  Serial.print("| Zero Threshold        : ");
+  Serial.print(zero_threshold);
+  Serial.println(" gram");
+
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println();
+}
+
+// =====================================================
+//                    FUNGSI SERVO
+// =====================================================
+void gerakOrganik() {
+  Serial.println();
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("|                    SERVO ACTION                          |");
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("| Kategori             : ORGANIK");
+  Serial.println("| Arah                 : KIRI");
+  Serial.print("| Servo Pin            : GPIO ");
+  Serial.println(servoPin);
+  Serial.print("| Posisi Gerak         : ");
+  Serial.println(posisiOrganik);
+  Serial.print("| Durasi               : ");
+  Serial.print(durasiGerak);
+  Serial.println(" ms");
+  Serial.println("+----------------------------------------------------------+");
+
+  myservo.write(posisiOrganik);
+  delay(durasiGerak);
+
+  myservo.write(posisiStop);
+
+  Serial.println("[OK] Servo kembali ke posisi stop/tengah");
+  Serial.println("{\"type\":\"servo_done\",\"direction\":\"organic\"}");
+  Serial.println();
+}
+
+void gerakAnorganik() {
+  Serial.println();
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("|                    SERVO ACTION                          |");
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("| Kategori             : ANORGANIK");
+  Serial.println("| Arah                 : KANAN");
+  Serial.print("| Servo Pin            : GPIO ");
+  Serial.println(servoPin);
+  Serial.print("| Posisi Gerak         : ");
+  Serial.println(posisiAnorganik);
+  Serial.print("| Durasi               : ");
+  Serial.print(durasiGerak);
+  Serial.println(" ms");
+  Serial.println("+----------------------------------------------------------+");
+
+  myservo.write(posisiAnorganik);
+  delay(durasiGerak);
+
+  myservo.write(posisiStop);
+
+  Serial.println("[OK] Servo kembali ke posisi stop/tengah");
+  Serial.println("{\"type\":\"servo_done\",\"direction\":\"inorganic\"}");
+  Serial.println();
+}
+
+// =====================================================
+//                    FUNGSI BACA LOAD CELL
+// =====================================================
+float readScale(HX711 &scale, const char *name, float calibration_factor) {
+  if (!scale.wait_ready_timeout(1000)) {
+    Serial.print("| ");
+    Serial.print(name);
+    Serial.println(" : ERROR - HX711 NOT READY");
+    return 0.0;
   }
-}
 
-void saveCalibrationToEEPROM(float factor) {
-  EEPROM.begin(EEPROM_SIZE);
-  float magic = EEPROM_MAGIC;
-  EEPROM.put(EEPROM_CALIB_ADDR, magic);
-  EEPROM.put(EEPROM_CALIB_ADDR + sizeof(float), factor);
-  EEPROM.commit();
-}
+  scale.set_scale(calibration_factor);
 
-// ── LED Status ─────────────────────────────────────────────────
+  float berat = scale.get_units(10);
 
-void updateStatusLED() {
-  unsigned long now = millis();
-  switch (currentStatus) {
-    case LED_OK:
-      digitalWrite(LED_PIN, HIGH);
-      break;
-    case LED_ERROR:
-      if (now - lastLedToggle > 200) { // Fast blink
-        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-        lastLedToggle = now;
-      }
-      break;
-    case LED_CALIBRATING:
-      if (now - lastLedToggle > 1000) { // Slow blink
-        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-        lastLedToggle = now;
-      }
-      break;
+  if (abs(berat) < zero_threshold) {
+    berat = 0.0;
   }
+
+  Serial.print("| ");
+  Serial.print(name);
+
+  int nameLength = strlen(name);
+  for (int i = nameLength; i < 22; i++) {
+    Serial.print(" ");
+  }
+
+  Serial.print(": ");
+  Serial.print(berat, 2);
+  Serial.println(" gram");
+
+  return berat;
 }
 
-// ── Setup ──────────────────────────────────────────────────────
+// =====================================================
+//                    FUNGSI TARE ULANG
+// =====================================================
+void tareAll() {
+  Serial.println();
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("|                    TARE ULANG LOAD CELL                  |");
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("| Instruksi : Kosongkan kedua load cell                    |");
+  Serial.println("| Catatan   : Jangan disentuh selama proses tare            |");
+  Serial.println("+----------------------------------------------------------+");
 
+  Serial.println("[INFO] Menunggu 3 detik sebelum tare...");
+  delay(3000);
+
+  if (scale1.wait_ready_timeout(3000)) {
+    scale1.tare(30);
+    scale1_ok = true;
+    Serial.println("[OK] Load Cell 1 tare ulang selesai");
+  } else {
+    scale1_ok = false;
+    Serial.println("[ERROR] Load Cell 1 gagal tare");
+    Serial.println("        Cek wiring: DOUT1=27, CLK1=26, VCC, GND");
+  }
+
+  delay(500);
+
+  if (scale2.wait_ready_timeout(3000)) {
+    scale2.tare(30);
+    scale2_ok = true;
+    Serial.println("[OK] Load Cell 2 tare ulang selesai");
+  } else {
+    scale2_ok = false;
+    Serial.println("[ERROR] Load Cell 2 gagal tare");
+    Serial.println("        Cek wiring: DOUT2=25, CLK2=33, VCC, GND");
+  }
+
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println();
+}
+
+// =====================================================
+//                    SETUP
+// =====================================================
 void setup() {
-  Serial.begin(115200); // UART ke Raspberry Pi
-  Wire.begin();
-  pinMode(LED_PIN, OUTPUT);
+  Serial.begin(115200);
+  delay(2000);
 
-  // 1. Load calibration dari EEPROM
-  loadCalibrationFromEEPROM();
+  printHeader();
 
-  // 2. Inisialisasi Watchdog Timer
-  esp_task_wdt_init(WDT_TIMEOUT_SEC, true); // true = restart on timeout
-  esp_task_wdt_add(NULL);                    // Watch main task
+  // =====================================================
+  //                    SETUP SERVO
+  // =====================================================
+  Serial.println("[SETUP] Inisialisasi servo...");
 
-  // 3. Inisialisasi ToF Sensor (Organik di Ch 0, Anorganik di Ch 1)
-  tcaselect(0);
-  if (tofOrganic.begin()) {
-    tofOrganicOK = true;
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  myservo.setPeriodHertz(50);
+  myservo.attach(servoPin, 1000, 2000);
+  myservo.write(posisiStop);
+
+  Serial.println("[OK] Servo siap di GPIO 32");
+  Serial.println("[OK] Servo berada di posisi stop/tengah");
+
+  // =====================================================
+  //                    SETUP MQ-137
+  // =====================================================
+  Serial.println();
+  Serial.println("[SETUP] Inisialisasi sensor MQ-137 / amonia...");
+  pinMode(pinMQ137, INPUT);
+  Serial.println("[OK] MQ-137 siap di GPIO 35");
+
+  // =====================================================
+  //                    SETUP LOAD CELL
+  // =====================================================
+  Serial.println();
+  Serial.println("[SETUP] Inisialisasi HX711 Load Cell...");
+
+  scale1.begin(DOUT1, CLK1);
+  scale2.begin(DOUT2, CLK2);
+
+  scale1.set_scale(calibration_factor_1);
+  scale2.set_scale(calibration_factor_2);
+
+  Serial.println("[INFO] Menunggu HX711 stabil selama 3 detik...");
+  delay(3000);
+
+  Serial.println();
+  Serial.println("+----------------------------------------------------------+");
+  Serial.println("|                    LOAD CELL SETUP                       |");
+  Serial.println("+----------------------------------------------------------+");
+
+  if (scale1.wait_ready_timeout(3000)) {
+    scale1.tare(30);
+    scale1_ok = true;
+    Serial.println("| Load Cell 1 / Organik    : READY - tare selesai          |");
   } else {
-    sendError("Gagal inisialisasi VL53L0X (Organik)");
-  }
-  
-  tcaselect(1);
-  if (tofInorganic.begin()) {
-    tofInorganicOK = true;
-  } else {
-    sendError("Gagal inisialisasi VL53L0X (Anorganik)");
+    scale1_ok = false;
+    Serial.println("| Load Cell 1 / Organik    : ERROR - belum ready           |");
+    Serial.println("| Cek                      : DOUT=27, CLK=26, VCC, GND     |");
   }
 
-  // 4. Inisialisasi Load Cell
-  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  if (scale.wait_ready_timeout(2000)) {
-    scale.set_scale(loadcellCalibrationFactor);
-    scale.tare(); // Asumsi tempat sampah kosong saat dinyalakan
-    loadcellOK = true;
+  delay(500);
+
+  if (scale2.wait_ready_timeout(3000)) {
+    scale2.tare(30);
+    scale2_ok = true;
+    Serial.println("| Load Cell 2 / Anorganik  : READY - tare selesai          |");
   } else {
-    sendError("Gagal inisialisasi HX711 Load Cell");
+    scale2_ok = false;
+    Serial.println("| Load Cell 2 / Anorganik  : ERROR - belum ready           |");
+    Serial.println("| Cek                      : DOUT=25, CLK=33, VCC, GND     |");
   }
 
-  // 5. Inisialisasi Servo
-  if (sorterServo.attach(SERVO_PIN)) {
-    sorterServo.write(90); // Posisi netral di tengah
-    servoOK = true;
-  } else {
-    sendError("Gagal inisialisasi Servo");
-  }
-  
-  // Tentukan status LED
-  if (tofOrganicOK && tofInorganicOK && loadcellOK && servoOK) {
-    currentStatus = LED_OK;
-  } else {
-    currentStatus = LED_ERROR;
-  }
+  Serial.println("+----------------------------------------------------------+");
 
-  sendHeartbeat("System Boot OK");
+  Serial.println();
+  Serial.println("============================================================");
+  Serial.println("                    SISTEM SIAP");
+  Serial.println("============================================================");
+
+  printCommandList();
+  printSystemStatus();
 }
 
-// ── Main Loop ──────────────────────────────────────────────────
-
+// =====================================================
+//                    LOOP
+// =====================================================
 void loop() {
-  // Feed watchdog - jika loop hang >30 detik, ESP32 auto-restart
-  esp_task_wdt_reset();
+  unsigned long waktuSekarang = millis();
 
-  // Update LED status
-  updateStatusLED();
-
-  // 1. Cek perintah masuk dari Raspberry Pi (UART)
+  // =====================================================
+  //              TERIMA PERINTAH SERIAL
+  // =====================================================
   if (Serial.available() > 0) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();
-    if (cmd.startsWith("CLASSIFY:")) {
-      String direction = cmd.substring(9);
-      handleServoAction(direction);
-    } else if (cmd.startsWith("CALIBRATE:")) {
-      // Perintah kalibrasi load cell dari RPi
-      float newFactor = cmd.substring(10).toFloat();
-      if (newFactor > 100 && newFactor < 50000) {
-        loadcellCalibrationFactor = newFactor;
-        scale.set_scale(newFactor);
-        saveCalibrationToEEPROM(newFactor);
-        sendHeartbeat("Calibration updated: " + String(newFactor));
-      }
+    String perintah = Serial.readStringUntil('\n');
+    perintah.trim();
+
+    String perintahUpper = perintah;
+    perintahUpper.toUpperCase();
+
+    if (perintahUpper == "CLASSIFY:ORGANIK") {
+      gerakOrganik();
+
+    } else if (perintahUpper == "CLASSIFY:ANORGANIK") {
+      gerakAnorganik();
+
+    } else if (perintahUpper == "KIRI") {
+      Serial.println();
+      Serial.println("[MANUAL] Test servo kiri...");
+      myservo.write(posisiOrganik);
+      delay(durasiGerak);
+      myservo.write(posisiStop);
+      Serial.println("[OK] Servo stop/tengah");
+
+    } else if (perintahUpper == "KANAN") {
+      Serial.println();
+      Serial.println("[MANUAL] Test servo kanan...");
+      myservo.write(posisiAnorganik);
+      delay(durasiGerak);
+      myservo.write(posisiStop);
+      Serial.println("[OK] Servo stop/tengah");
+
+    } else if (perintahUpper == "TARE" || perintahUpper == "T") {
+      tareAll();
+
+    } else if (perintahUpper == "STATUS") {
+      printSystemStatus();
+
+    } else if (perintahUpper == "HELP") {
+      printCommandList();
+
+    } else {
+      Serial.println();
+      Serial.print("[WARNING] Perintah tidak dikenal: ");
+      Serial.println(perintah);
+      Serial.println("[INFO] Ketik HELP untuk melihat daftar perintah.");
+    }
+
+    while (Serial.available() > 0) {
+      Serial.read();
     }
   }
 
-  // 2. Kirim telemetri periodik
-  if (millis() - lastTelemetryTime > TELEMETRY_INTERVAL_MS) {
-    lastTelemetryTime = millis();
-    sendTelemetry();
-  }
+  // =====================================================
+  //              BACA SENSOR SETIAP 2 DETIK
+  // =====================================================
+  if (waktuSekarang - waktuLalu >= intervalBaca) {
+    waktuLalu = waktuSekarang;
+    readCounter++;
 
-  // 3. Kirim heartbeat periodik (1 menit)
-  if (millis() - lastHeartbeatTime > HEARTBEAT_INTERVAL_MS) {
-    lastHeartbeatTime = millis();
-    sendHeartbeat("Running");
-  }
-}
+    int nilaiMQ = analogRead(pinMQ137);
 
-// ── Servo Handler ──────────────────────────────────────────────
+    float teganganMQ = nilaiMQ * (3.3 / 4095.0);
 
-void handleServoAction(String direction) {
-  if (!servoOK) {
-    sendError("Servo tidak tersedia");
-    return;
-  }
+    float berat_organik = 0.0;
+    float berat_anorganik = 0.0;
 
-  if (direction == "ORGANIC" || direction == "ORGANIK") {
-    sorterServo.write(45); // Miring ke kompartemen organik
-  } else if (direction == "INORGANIC" || direction == "ANORGANIK") {
-    sorterServo.write(135); // Miring ke kompartemen anorganik
-  } else {
-    sendError("Unknown direction: " + direction);
-    return;
-  }
-  
-  // Feed watchdog selama delay
-  esp_task_wdt_reset();
-  delay(2000); // Tunggu sampah jatuh
-  esp_task_wdt_reset();
-  sorterServo.write(90); // Kembali netral
-  
-  // Konfirmasi ke Pi
-  StaticJsonDocument<128> doc;
-  doc["type"] = "servo_done";
-  doc["direction"] = direction;
-  serializeJson(doc, Serial);
-  Serial.println();
-}
+    Serial.println();
+    Serial.println("+----------------------------------------------------------+");
+    Serial.println("|                    SENSOR SNAPSHOT                       |");
+    Serial.println("+----------------------------------------------------------+");
 
-// ── Telemetry ──────────────────────────────────────────────────
+    Serial.print("| Read #                  : ");
+    Serial.println(readCounter);
 
-void sendTelemetry() {
-  StaticJsonDocument<256> doc;
-  doc["type"] = "telemetry";
-  
-  float distOrg = BIN_HEIGHT_CM;
-  float distInorg = BIN_HEIGHT_CM;
-  float weight = 0;
-  float ppm = 0;
+    Serial.print("| MQ-137 Raw ADC          : ");
+    Serial.println(nilaiMQ);
 
-  // Baca ToF Organik (dengan fallback)
-  if (tofOrganicOK) {
-    tcaselect(0);
-    VL53L0X_RangingMeasurementData_t measure1;
-    tofOrganic.rangingTest(&measure1, false);
-    if (measure1.RangeStatus != 4) {
-      distOrg = measure1.RangeMilliMeter / 10.0;
+    Serial.print("| MQ-137 Voltage          : ");
+    Serial.print(teganganMQ, 3);
+    Serial.println(" V");
+
+    Serial.print("| Load Cell 1 Status      : ");
+    Serial.println(scale1_ok ? "READY" : "NOT READY");
+
+    if (scale1_ok) {
+      berat_organik = readScale(scale1, "Load Cell 1 Organik", calibration_factor_1);
+    } else {
+      Serial.println("| Load Cell 1 Organik     : -");
     }
-  }
-  
-  // Baca ToF Anorganik (dengan fallback)
-  if (tofInorganicOK) {
-    tcaselect(1);
-    VL53L0X_RangingMeasurementData_t measure2;
-    tofInorganic.rangingTest(&measure2, false);
-    if (measure2.RangeStatus != 4) {
-      distInorg = measure2.RangeMilliMeter / 10.0;
+
+    delay(200);
+
+    Serial.print("| Load Cell 2 Status      : ");
+    Serial.println(scale2_ok ? "READY" : "NOT READY");
+
+    if (scale2_ok) {
+      berat_anorganik = readScale(scale2, "Load Cell 2 Anorganik", calibration_factor_2);
+    } else {
+      Serial.println("| Load Cell 2 Anorganik   : -");
     }
+
+    delay(200);
+
+    float totalBerat = berat_organik + berat_anorganik;
+
+    Serial.print("| Total Berat             : ");
+    Serial.print(totalBerat, 2);
+    Serial.println(" gram");
+
+    Serial.println("+----------------------------------------------------------+");
+
+    // JSON untuk Raspberry Pi / backend
+    Serial.print("{\"type\":\"telemetry\"");
+    Serial.print(",\"read\":");
+    Serial.print(readCounter);
+    Serial.print(",\"mq137\":");
+    Serial.print(nilaiMQ);
+    Serial.print(",\"mq137_voltage\":");
+    Serial.print(teganganMQ, 3);
+    Serial.print(",\"weight_org\":");
+    Serial.print(berat_organik, 2);
+    Serial.print(",\"weight_inorg\":");
+    Serial.print(berat_anorganik, 2);
+    Serial.print(",\"total_weight\":");
+    Serial.print(totalBerat, 2);
+    Serial.print(",\"lc1_ready\":");
+    Serial.print(scale1_ok ? "true" : "false");
+    Serial.print(",\"lc2_ready\":");
+    Serial.print(scale2_ok ? "true" : "false");
+    Serial.println("}");
   }
-
-  // Batasi nilai
-  if(distOrg > BIN_HEIGHT_CM) distOrg = BIN_HEIGHT_CM;
-  if(distOrg < 0) distOrg = 0;
-  if(distInorg > BIN_HEIGHT_CM) distInorg = BIN_HEIGHT_CM;
-  if(distInorg < 0) distInorg = 0;
-
-  // Baca Berat (dengan fallback)
-  if (loadcellOK && scale.is_ready()) {
-    weight = scale.get_units(5); // Ambil rata-rata 5 bacaan
-    if(weight < 0) weight = 0;
-    if(weight > 100) weight = 0; // Nilai abnormal, skip
-  }
-
-  // Baca MQ-137 (Amonia)
-  int mq137_raw = analogRead(MQ137_PIN);
-  float voltage = mq137_raw * (3.3 / 4095.0);
-  // Konversi kasar ke PPM (memerlukan kalibrasi Rs/R0 untuk akurasi)
-  ppm = voltage * 20.0;
-  if(ppm < 0) ppm = 0;
-
-  // ESP32 telemetry additions: battery level (uptime-based discharge simulator)
-  int battery_pct = 100 - (millis() / 600000); // drops 1% every 10 mins
-  if (battery_pct < 10) battery_pct = 10;
-  
-  // WiFi RSSI: simulate minor fluctuations around -50 dBm
-  int wifi_rssi = -50 - ((millis() / 5000) % 15); // fluctuates between -50 and -64 dBm
-
-  // Susun JSON
-  doc["dist_org"] = round(distOrg * 100) / 100.0;
-  doc["dist_inorg"] = round(distInorg * 100) / 100.0;
-  
-  // Catatan: Jika ada 2 load cell, baca keduanya. Di sini contoh 1 loadcell
-  // Untuk data terpisah, backend/simulator akan mengelola alokasinya.
-  doc["weight_org"] = round(weight * 0.4 * 1000) / 1000.0;  // Mock split
-  doc["weight_inorg"] = round(weight * 0.6 * 1000) / 1000.0; // Mock split
-  
-  doc["gas_ppm"] = round(ppm * 100) / 100.0;
-  doc["battery_pct"] = battery_pct;
-  doc["wifi_rssi_dbm"] = wifi_rssi;
-
-  serializeJson(doc, Serial);
-  Serial.println(); // Newline penting untuk parser di Pi!
-}
-
-// ── Utility Functions ──────────────────────────────────────────
-
-void sendHeartbeat(String msg) {
-  StaticJsonDocument<256> doc;
-  doc["type"] = "heartbeat";
-  doc["uptime"] = millis() / 1000;
-  doc["message"] = msg;
-  doc["sensors"]["tof_org"] = tofOrganicOK;
-  doc["sensors"]["tof_inorg"] = tofInorganicOK;
-  doc["sensors"]["loadcell"] = loadcellOK;
-  doc["sensors"]["servo"] = servoOK;
-  doc["free_heap"] = ESP.getFreeHeap();
-  serializeJson(doc, Serial);
-  Serial.println();
-}
-
-void sendError(String msg) {
-  StaticJsonDocument<128> doc;
-  doc["type"] = "error";
-  doc["message"] = msg;
-  serializeJson(doc, Serial);
-  Serial.println();
 }
