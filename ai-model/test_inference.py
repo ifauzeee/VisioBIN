@@ -3,6 +3,12 @@ import time
 import sys
 import cv2
 import torch
+import pathlib
+
+# Fix for loading PosixPath models on Windows
+if sys.platform == 'win32':
+    temp = pathlib.PosixPath
+    pathlib.PosixPath = pathlib.WindowsPath
 
 def run_inference(weights):
     print(f"Initializing model: {weights}")

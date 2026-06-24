@@ -63,6 +63,7 @@ class QuickActions extends StatelessWidget {
     ];
 
     return GridView.count(
+      padding: EdgeInsets.zero,
       crossAxisCount: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

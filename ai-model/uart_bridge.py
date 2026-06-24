@@ -284,20 +284,57 @@ class UARTBridge:
 
     def _send_telemetry(self, data: dict):
         """Kirim data telemetri ke backend, buffer jika gagal."""
+        # Deteksi format data
+        # Format baru dari user: "mq137" atau "mq137_voltage" ada di data
+        is_new_firmware = "mq137" in data or "mq137_voltage" in data
+
+        if is_new_firmware:
+            # Format baru (user): berat dalam gram, gas dalam voltage/ADC raw
+            # Konversi berat ke kg (backend mengharapkan kg)
+            # Dan cegah nilai negatif dari load cell yang belum terkalibrasi stabil
+            weight_org_g = data.get("weight_org", 0.0)
+            weight_inorg_g = data.get("weight_inorg", 0.0)
+            weight_organic_kg = max(0.0, weight_org_g / 1000.0)
+            weight_inorganic_kg = max(0.0, weight_inorg_g / 1000.0)
+
+            # Konversi tegangan MQ-137 ke PPM amonia (kasar)
+            # Rumus standar: ppm = voltage * 20.0
+            mq137_voltage = data.get("mq137_voltage", 0.0)
+            gas_amonia_ppm = max(0.0, mq137_voltage * 20.0)
+
+            # Estimasi volume/jarak sampah (ToF) menggunakan berat karena sensor ToF tidak dipasang.
+            # Kapasitas maksimum per kompartemen = 20.0 kg (default) atau dari environment variable.
+            max_capacity_kg = float(os.environ.get("VISIOBIN_MAX_WEIGHT_KG", "20.0"))
+            vol_org_pct = min(100.0, (weight_organic_kg / max_capacity_kg) * 100.0)
+            vol_inorg_pct = min(100.0, (weight_inorganic_kg / max_capacity_kg) * 100.0)
+
+            # Inversi rumus jarak: distance_cm = max_volume_cm * (1 - volume_pct/100)
+            # Default tinggi bin = 50.0 cm
+            default_height_cm = 50.0
+            distance_organic_cm = default_height_cm * (1.0 - vol_org_pct / 100.0)
+            distance_inorganic_cm = default_height_cm * (1.0 - vol_inorg_pct / 100.0)
+        else:
+            # Format lama / simulator
+            distance_organic_cm = data.get("dist_org", 0.0)
+            distance_inorganic_cm = data.get("dist_inorg", 0.0)
+            weight_organic_kg = data.get("weight_org", 0.0)
+            weight_inorganic_kg = data.get("weight_inorg", 0.0)
+            gas_amonia_ppm = data.get("gas_ppm", 0.0)
+
         payload = {
             "bin_id":               self.bin_id,
-            "distance_organic_cm":  data.get("dist_org",    0.0),
-            "distance_inorganic_cm": data.get("dist_inorg", 0.0),
-            "weight_organic_kg":    data.get("weight_org",  0.0),
-            "weight_inorganic_kg":  data.get("weight_inorg", 0.0),
-            "gas_amonia_ppm":       data.get("gas_ppm",     0.0),
+            "distance_organic_cm":  distance_organic_cm,
+            "distance_inorganic_cm": distance_inorganic_cm,
+            "weight_organic_kg":    weight_organic_kg,
+            "weight_inorganic_kg":  weight_inorganic_kg,
+            "gas_amonia_ppm":       gas_amonia_ppm,
             "battery_pct":          int(data.get("battery_pct", 100)),
             "wifi_rssi_dbm":        int(data.get("wifi_rssi_dbm", -50)),
         }
 
         if self._send_to_backend("telemetry", payload):
-            vol_o = ((50 - payload["distance_organic_cm"]) / 50) * 100
-            vol_i = ((50 - payload["distance_inorganic_cm"]) / 50) * 100
+            vol_o = ((50.0 - payload["distance_organic_cm"]) / 50.0) * 100.0
+            vol_i = ((50.0 - payload["distance_inorganic_cm"]) / 50.0) * 100.0
             log.info(
                 f"✓ Telemetri terkirim | "
                 f"Vol: {vol_o:.0f}%/{vol_i:.0f}% | "

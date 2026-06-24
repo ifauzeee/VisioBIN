@@ -34,8 +34,12 @@ void main() async {
   
   // Inisialisasi Firebase
   try {
-    await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    } else {
+      debugPrint("Firebase not supported on this platform, skipping initialization.");
+    }
   } catch (e) {
     debugPrint("Initialization error: $e");
   }
@@ -93,6 +97,11 @@ class _VisioBinAppState extends State<VisioBinApp> {
   }
 
   Future<void> _setupPushNotifications() async {
+    if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
+      debugPrint("FCM not supported on this platform, skipping push notifications setup.");
+      return;
+    }
+
     try {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
 

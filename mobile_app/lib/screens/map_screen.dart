@@ -242,6 +242,7 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: Text(l10n.map, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -310,13 +311,13 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
                 Positioned(
-                  top: 12,
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 12,
                   right: 12,
                   child: _buildLegend(isDark),
                 ),
                 if (_selectedBin != null)
                   Positioned(
-                    bottom: 24,
+                    bottom: MediaQuery.of(context).padding.bottom + 16,
                     left: 16,
                     right: 16,
                     child: _buildBinCard(_selectedBin!, isDark),

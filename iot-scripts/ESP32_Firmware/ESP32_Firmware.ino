@@ -80,10 +80,10 @@ void printCommandList() {
   Serial.println("------------------------------------------------------------");
   Serial.println("PERINTAH SERIAL");
   Serial.println("------------------------------------------------------------");
-  Serial.println("CLASSIFY:ORGANIK    -> Servo bergerak kiri");
-  Serial.println("CLASSIFY:ANORGANIK  -> Servo bergerak kanan");
-  Serial.println("KIRI                -> Test manual servo kiri");
-  Serial.println("KANAN               -> Test manual servo kanan");
+  Serial.println("CLASSIFY:ORGANIK / ORGANIC      -> Servo bergerak kiri");
+  Serial.println("CLASSIFY:ANORGANIK / INORGANIC  -> Servo bergerak kanan");
+  Serial.println("KIRI / LEFT                     -> Test manual servo kiri");
+  Serial.println("KANAN / RIGHT                   -> Test manual servo kanan");
   Serial.println("TARE                -> Reset kedua load cell ke 0");
   Serial.println("T                   -> Reset kedua load cell ke 0");
   Serial.println("STATUS              -> Tampilkan status sistem");
@@ -370,13 +370,13 @@ void loop() {
     String perintahUpper = perintah;
     perintahUpper.toUpperCase();
 
-    if (perintahUpper == "CLASSIFY:ORGANIK") {
+    if (perintahUpper == "CLASSIFY:ORGANIK" || perintahUpper == "CLASSIFY:ORGANIC") {
       gerakOrganik();
 
-    } else if (perintahUpper == "CLASSIFY:ANORGANIK") {
+    } else if (perintahUpper == "CLASSIFY:ANORGANIK" || perintahUpper == "CLASSIFY:INORGANIC") {
       gerakAnorganik();
 
-    } else if (perintahUpper == "KIRI") {
+    } else if (perintahUpper == "KIRI" || perintahUpper == "LEFT") {
       Serial.println();
       Serial.println("[MANUAL] Test servo kiri...");
       myservo.write(posisiOrganik);
@@ -384,7 +384,7 @@ void loop() {
       myservo.write(posisiStop);
       Serial.println("[OK] Servo stop/tengah");
 
-    } else if (perintahUpper == "KANAN") {
+    } else if (perintahUpper == "KANAN" || perintahUpper == "RIGHT") {
       Serial.println();
       Serial.println("[MANUAL] Test servo kanan...");
       myservo.write(posisiAnorganik);

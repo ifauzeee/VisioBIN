@@ -4,8 +4,14 @@ import threading
 import numpy as np
 import cv2
 import onnxruntime as ort
-from picamera2 import Picamera2
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import sys
+
+# Fix for loading PosixPath models on Windows
+if sys.platform == 'win32':
+    import pathlib
+    temp = pathlib.PosixPath
+    pathlib.PosixPath = pathlib.WindowsPath
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from env_config import env_float, env_int, load_root_env, require_env
 
 load_root_env()
@@ -31,35 +37,56 @@ def load_model():
 def inference_loop():
     global latest_frame, latest_result
     session, input_name = load_model()
-    picam2 = Picamera2()
-    config = picam2.create_preview_configuration(
-        main={"size": (WIDTH, HEIGHT), "format": "RGB888"}
-    )
-    picam2.configure(config)
-    picam2.start()
-    time.sleep(2)
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     print("📷 Camera started!")
 
     while True:
-        frame = picam2.capture_array()
+        ret, frame = cap.read()
+        if not ret:
+            time.sleep(0.1)
+            continue
+        
+        # Get actual dimensions
+        fh, fw, _ = frame.shape
+        
+        # Convert BGR to RGB since cv2 captures in BGR, keeping compatibility with existing code
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = cv2.resize(frame, (224, 224)).astype(np.float32) / 255.0
         img = np.expand_dims(np.transpose(img, (2, 0, 1)), axis=0)
 
         t0 = time.time()
-        outputs = session.run(None, {input_name: img})
-        ms = int((time.time() - t0) * 1000)
-        probs = outputs[0][0]
-        idx = int(np.argmax(probs))
-        conf = float(probs[idx])
-        label = LABELS[idx]
+        try:
+            outputs = session.run(None, {input_name: img})
+            ms = int((time.time() - t0) * 1000)
+            probs = outputs[0][0]
+            
+            # Apply softmax for raw logits
+            exp_probs = np.exp(probs - np.max(probs))
+            probs = exp_probs / exp_probs.sum()
+            
+            idx = int(np.argmax(probs))
+            conf = float(probs[idx])
+            label = LABELS[idx]
+        except Exception as e:
+            print(f"Inference error: {e}")
+            label = "Error"
+            conf = 0.0
+            ms = 0
 
         # Draw overlay on frame
         bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         color = (0, 200, 0) if conf >= THRESHOLD else (0, 140, 255)
-        cv2.rectangle(bgr, (0, 0), (WIDTH, 60), (0, 0, 0), -1)
-        cv2.putText(bgr, f"{label} {conf*100:.1f}%", (10, 35),
+        
+        # Draw a black semi-transparent background for text (bottom-left so it's less likely to be cropped at top)
+        overlay = bgr.copy()
+        cv2.rectangle(overlay, (10, fh - 70), (320, fh - 10), (0, 0, 0), -1)
+        bgr = cv2.addWeighted(overlay, 0.6, bgr, 0.4, 0)
+        
+        cv2.putText(bgr, f"{label} {conf*100:.1f}%", (20, fh - 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
-        cv2.putText(bgr, f"{ms}ms", (WIDTH-80, 35),
+        cv2.putText(bgr, f"{ms}ms", (20, fh - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
 
         _, jpeg = cv2.imencode('.jpg', bgr, [cv2.IMWRITE_JPEG_QUALITY, 70])
@@ -136,4 +163,4 @@ if __name__ == "__main__":
     t.start()
     print(f"🌐 Stream server running at {require_env('CAMERA_STREAM_URL')}")
     print("   Buka di browser laptop kamu!")
-    HTTPServer((STREAM_HOST, STREAM_PORT), StreamHandler).serve_forever()
+    ThreadingHTTPServer((STREAM_HOST, STREAM_PORT), StreamHandler).serve_forever()
