@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -51,3 +52,15 @@ func clampFloat(val, min, max float64) float64 {
 	return val
 }
 
+// normalizePredictedClass maps accepted class labels onto the canonical English
+// values stored in classification_logs; dashboard analytics filter on those.
+func normalizePredictedClass(value string) (string, bool) {
+	switch strings.ToLower(value) {
+	case "organic", "organik":
+		return "organic", true
+	case "inorganic", "anorganik":
+		return "inorganic", true
+	default:
+		return "", false
+	}
+}

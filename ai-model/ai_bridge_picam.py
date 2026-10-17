@@ -23,6 +23,7 @@ load_root_env()
 
 DEFAULT_ONNX      = os.environ.get("VISIOBIN_ONNX", "best.onnx")
 DEFAULT_BACKEND   = require_env("VISIOBIN_BACKEND")
+DEFAULT_API_KEY   = require_env("API_KEY")
 DEFAULT_BIN_ID    = os.environ.get("VISIOBIN_BIN_ID", "VBIN-01")
 DEFAULT_THRESHOLD = float(os.environ.get("VISIOBIN_THRESHOLD", "0.75"))
 DEFAULT_COOLDOWN  = float(os.environ.get("VISIOBIN_COOLDOWN", "3.0"))
@@ -65,7 +66,11 @@ def send_to_backend(url, bin_id, label, conf, token=None):
         "confidence": round(conf, 4),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     }
-    headers = {"Content-Type": "application/json"}
+    # IoT ingest endpoints authenticate via the X-API-Key header, not the bearer token.
+    headers = {
+        "Content-Type": "application/json",
+        "X-API-Key": DEFAULT_API_KEY,
+    }
     if token:
         headers["Authorization"] = f"Bearer {token}"
     try:
