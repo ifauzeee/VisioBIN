@@ -50,11 +50,11 @@ func TestValidRoles(t *testing.T) {
 
 func TestClampFloat(t *testing.T) {
 	tests := []struct {
-		name       string
-		val        float64
-		min        float64
-		max        float64
-		want       float64
+		name string
+		val  float64
+		min  float64
+		max  float64
+		want float64
 	}{
 		{"within range", 50, 0, 100, 50},
 		{"at min", 0, 0, 100, 0},
@@ -70,6 +70,34 @@ func TestClampFloat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := clampFloat(tt.val, tt.min, tt.max); got != tt.want {
 				t.Errorf("clampFloat(%v, %v, %v) = %v, want %v", tt.val, tt.min, tt.max, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNormalizePredictedClass(t *testing.T) {
+	tests := []struct {
+		name      string
+		value     string
+		wantClass string
+		wantOK    bool
+	}{
+		{"canonical english organic", "organic", "organic", true},
+		{"canonical english inorganic", "inorganic", "inorganic", true},
+		{"uppercase indonesian organic", "ORGANIK", "organic", true},
+		{"indonesian organic from edge device", "organik", "organic", true},
+		{"mixed case indonesian inorganic", "Anorganik", "inorganic", true},
+		{"indonesian inorganic from edge device", "anorganik", "inorganic", true},
+		{"unknown label", "plastic", "", false},
+		{"empty label", "", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotClass, gotOK := normalizePredictedClass(tt.value)
+			if gotClass != tt.wantClass || gotOK != tt.wantOK {
+				t.Errorf("normalizePredictedClass(%q) = (%q, %v), want (%q, %v)",
+					tt.value, gotClass, gotOK, tt.wantClass, tt.wantOK)
 			}
 		})
 	}

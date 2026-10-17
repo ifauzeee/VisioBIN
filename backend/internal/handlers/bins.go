@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -312,15 +311,15 @@ func (h *BinHandler) LogClassification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Input validation: normalize predicted_class and clamp confidence
-	req.PredictedClass = strings.ToLower(req.PredictedClass)
-	if req.PredictedClass != "organic" && req.PredictedClass != "inorganic" &&
-		req.PredictedClass != "organik" && req.PredictedClass != "anorganik" {
+	// Input validation: canonicalize predicted_class and clamp confidence
+	canonicalClass, ok := normalizePredictedClass(req.PredictedClass)
+	if !ok {
 		writeJSON(w, http.StatusBadRequest, models.APIResponse{
 			Success: false, Message: "predicted_class must be 'organic' or 'inorganic'",
 		})
 		return
 	}
+	req.PredictedClass = canonicalClass
 	req.Confidence = clampFloat(req.Confidence, 0, 1.0)
 	if req.InferenceTimeMs < 0 {
 		req.InferenceTimeMs = 0
